@@ -71,6 +71,18 @@ func TestRecurrenceExamples(t *testing.T) {
 	if len(customRecurrence.Weekdays) != 3 {
 		t.Errorf("Expected 3 weekdays, got %d", len(customRecurrence.Weekdays))
 	}
+
+	// Example 6: Monthly on the 1st and 15th day of the month
+	monthlyRecurrence := &Recurrence{Type: "monthly", DayOfMonth: []int{1, 15}}
+	if !monthlyRecurrence.IsMonthly() {
+		t.Error("Expected IsMonthly() to return true")
+	}
+	if len(monthlyRecurrence.DayOfMonth) != 2 {
+		t.Errorf("Expected 2 days of month, got %d", len(monthlyRecurrence.DayOfMonth))
+	}
+	if monthlyRecurrence.DayOfMonth[0] != 1 || monthlyRecurrence.DayOfMonth[1] != 15 {
+		t.Errorf("Expected 1 and 15, got %v", monthlyRecurrence.DayOfMonth)
+	}
 }
 
 func TestRecurrenceHelperMethods(t *testing.T) {
@@ -90,7 +102,7 @@ func TestRecurrenceHelperMethods(t *testing.T) {
 		t.Error("Expected IsDaily() to return true")
 	}
 
-	monthlyRecurrence := &Recurrence{Type: "monthly", DayOfMonth: 15}
+	monthlyRecurrence := &Recurrence{Type: "monthly", DayOfMonth: []int{1, 15}}
 	if !monthlyRecurrence.IsMonthly() {
 		t.Error("Expected IsMonthly() to return true")
 	}
@@ -130,48 +142,4 @@ func CleaningEveryFriday(timeOfDay string) *Recurrence {
 		Weekdays:  []time.Weekday{time.Friday},
 		TimeOfDay: timeOfDay,
 	}
-}
-
-// CustomWeekly creates a custom weekly recurrence on specific weekdays
-func CustomWeekly(weekdays []time.Weekday, timeOfDay string) *Recurrence {
-	return &Recurrence{
-		Type:      "weekly",
-		Weekdays:  weekdays,
-		TimeOfDay: timeOfDay,
-	}
-}
-
-// DailyAt creates a daily recurrence at a specific time
-func DailyAt(timeOfDay string) *Recurrence {
-	return &Recurrence{
-		Type:      "daily",
-		TimeOfDay: timeOfDay,
-	}
-}
-
-// MonthlyOnDay creates a monthly recurrence on a specific day of the month
-func MonthlyOnDay(dayOfMonth int, timeOfDay string) *Recurrence {
-	return &Recurrence{
-		Type:       "monthly",
-		DayOfMonth: dayOfMonth,
-		TimeOfDay:  timeOfDay,
-	}
-}
-
-// WithStartDate adds a start date to a recurrence
-func (r *Recurrence) WithStartDate(startDate time.Time) *Recurrence {
-	r.StartDate = &startDate
-	return r
-}
-
-// WithEndDate adds an end date to a recurrence
-func (r *Recurrence) WithEndDate(endDate time.Time) *Recurrence {
-	r.EndDate = &endDate
-	return r
-}
-
-// WithOccurrences adds a limit on the number of occurrences
-func (r *Recurrence) WithOccurrences(occurrences int) *Recurrence {
-	r.Occurrences = &occurrences
-	return r
 }
