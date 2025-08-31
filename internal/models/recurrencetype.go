@@ -1,5 +1,7 @@
 package models
 
+import "errors"
+
 type RecurrenceType int64
 
 const (
@@ -32,5 +34,22 @@ func (r RecurrenceType) String() string {
 		return "custom"
 	default:
 		return "unknown"
+	}
+}
+
+func ToRecurrenceType(s string) (RecurrenceType, error) {
+	switch s {
+	case "daily":
+		return Daily, nil
+	case "weekly":
+		return Weekly, nil
+	case "monthly":
+		return Monthly, nil
+	case "interval":
+		return Interval, nil
+	case "custom":
+		return Custom, nil
+	default:
+		return -1, errors.New("unknown recurrence")
 	}
 }

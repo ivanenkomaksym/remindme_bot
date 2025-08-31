@@ -3,10 +3,12 @@ package main
 
 import (
 	"encoding/json"
+	"fmt"
 	"log"
 	"net/http"
 	"os"
 
+	"github.com/ivanenkomaksym/offerforyou_bot/internal/keyboards"
 	"github.com/ivanenkomaksym/offerforyou_bot/internal/models"
 	"github.com/joho/godotenv"
 
@@ -140,6 +142,29 @@ func handleUpdate(update tgbotapi.Update) {
 		text := update.CallbackQuery.Data
 
 		log.Printf("'[%s] %s %s' selected '%s'", user.UserName, user.FirstName, user.LastName, text)
+
+		msg := tgbotapi.NewEditMessageText(
+			update.CallbackQuery.Message.Chat.ID,
+			update.CallbackQuery.Message.MessageID,
+			"", // Текст буде встановлено нижче
+		)
+		var markup tgbotapi.InlineKeyboardMarkup
+
+		recurrenceType, err := models.ToRecurrenceType(update.CallbackQuery.Data)
+		if err != nil {
+			fmt.Println("Failed to resolve selected recurrence type: ", err)
+			return
+		}
+
+		switch recurrenceType {
+		case models.Daily:
+			msg.Text = "Daily"
+			markup = keyboards.GetHourRangeMarkup()
+		}
+
+		msg.ReplyMarkup = &markup
+		msg.ParseMode = "HTML" // Важливо, щоб теги <b> працювали
+		bot.Send(msg)
 	}
 
 	if update.Message != nil && update.Message.IsCommand() {
