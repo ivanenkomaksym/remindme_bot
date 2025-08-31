@@ -10,6 +10,14 @@ const (
 	Custom
 )
 
+var RecurrenceTypeValues = []RecurrenceType{
+	Daily,
+	Weekly,
+	Monthly,
+	Interval,
+	Custom,
+}
+
 func (r RecurrenceType) String() string {
 	switch r {
 	case Daily:
