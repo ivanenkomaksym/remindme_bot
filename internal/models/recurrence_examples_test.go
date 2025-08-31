@@ -8,7 +8,7 @@ import (
 func TestRecurrenceExamples(t *testing.T) {
 	// Example 1: Gym on Tuesday and Thursday at 6:00 AM
 	gymRecurrence := GymOnTueThu("06:00")
-	if gymRecurrence.Type != "weekly" {
+	if gymRecurrence.Type != Weekly {
 		t.Errorf("Expected weekly type, got %s", gymRecurrence.Type)
 	}
 	if len(gymRecurrence.Weekdays) != 2 {
@@ -23,7 +23,7 @@ func TestRecurrenceExamples(t *testing.T) {
 
 	// Example 2: Classes on Wednesday and Friday at 2:00 PM
 	classesRecurrence := ClassesOnWedFri("14:00")
-	if classesRecurrence.Type != "weekly" {
+	if classesRecurrence.Type != Weekly {
 		t.Errorf("Expected weekly type, got %s", classesRecurrence.Type)
 	}
 	if len(classesRecurrence.Weekdays) != 2 {
@@ -35,7 +35,7 @@ func TestRecurrenceExamples(t *testing.T) {
 
 	// Example 3: Medicine every 5 days at 9:00 AM
 	medicineRecurrence := MedicineEveryNDays(5, "09:00")
-	if medicineRecurrence.Type != "interval" {
+	if medicineRecurrence.Type != Interval {
 		t.Errorf("Expected interval type, got %s", medicineRecurrence.Type)
 	}
 	if medicineRecurrence.Interval != 5 {
@@ -47,7 +47,7 @@ func TestRecurrenceExamples(t *testing.T) {
 
 	// Example 4: Cleaning every Friday at 10:00 AM
 	cleaningRecurrence := CleaningEveryFriday("10:00")
-	if cleaningRecurrence.Type != "weekly" {
+	if cleaningRecurrence.Type != Weekly {
 		t.Errorf("Expected weekly type, got %s", cleaningRecurrence.Type)
 	}
 	if len(cleaningRecurrence.Weekdays) != 1 {
@@ -73,7 +73,7 @@ func TestRecurrenceExamples(t *testing.T) {
 	}
 
 	// Example 6: Monthly on the 1st and 15th day of the month
-	monthlyRecurrence := &Recurrence{Type: "monthly", DayOfMonth: []int{1, 15}}
+	monthlyRecurrence := &Recurrence{Type: Monthly, DayOfMonth: []int{1, 15}}
 	if !monthlyRecurrence.IsMonthly() {
 		t.Error("Expected IsMonthly() to return true")
 	}
@@ -87,22 +87,22 @@ func TestRecurrenceExamples(t *testing.T) {
 
 func TestRecurrenceHelperMethods(t *testing.T) {
 	// Test helper methods
-	weeklyRecurrence := &Recurrence{Type: "weekly", Weekdays: []time.Weekday{time.Monday}}
+	weeklyRecurrence := &Recurrence{Type: Weekly, Weekdays: []time.Weekday{time.Monday}}
 	if !weeklyRecurrence.IsWeekly() {
 		t.Error("Expected IsWeekly() to return true")
 	}
 
-	intervalRecurrence := &Recurrence{Type: "interval", Interval: 3}
+	intervalRecurrence := &Recurrence{Type: Interval, Interval: 3}
 	if !intervalRecurrence.IsInterval() {
 		t.Error("Expected IsInterval() to return true")
 	}
 
-	dailyRecurrence := &Recurrence{Type: "daily"}
+	dailyRecurrence := &Recurrence{Type: Daily}
 	if !dailyRecurrence.IsDaily() {
 		t.Error("Expected IsDaily() to return true")
 	}
 
-	monthlyRecurrence := &Recurrence{Type: "monthly", DayOfMonth: []int{1, 15}}
+	monthlyRecurrence := &Recurrence{Type: Monthly, DayOfMonth: []int{1, 15}}
 	if !monthlyRecurrence.IsMonthly() {
 		t.Error("Expected IsMonthly() to return true")
 	}
@@ -111,7 +111,7 @@ func TestRecurrenceHelperMethods(t *testing.T) {
 // GymOnTueThu creates a recurrence for gym on Tuesday and Thursday
 func GymOnTueThu(timeOfDay string) *Recurrence {
 	return &Recurrence{
-		Type:      "weekly",
+		Type:      Weekly,
 		Weekdays:  []time.Weekday{time.Tuesday, time.Thursday},
 		TimeOfDay: timeOfDay,
 	}
@@ -120,7 +120,7 @@ func GymOnTueThu(timeOfDay string) *Recurrence {
 // ClassesOnWedFri creates a recurrence for classes on Wednesday and Friday
 func ClassesOnWedFri(timeOfDay string) *Recurrence {
 	return &Recurrence{
-		Type:      "weekly",
+		Type:      Weekly,
 		Weekdays:  []time.Weekday{time.Wednesday, time.Friday},
 		TimeOfDay: timeOfDay,
 	}
@@ -129,7 +129,7 @@ func ClassesOnWedFri(timeOfDay string) *Recurrence {
 // MedicineEveryNDays creates a recurrence for medicine every N days
 func MedicineEveryNDays(interval int, timeOfDay string) *Recurrence {
 	return &Recurrence{
-		Type:      "interval",
+		Type:      Interval,
 		Interval:  interval,
 		TimeOfDay: timeOfDay,
 	}
@@ -138,7 +138,7 @@ func MedicineEveryNDays(interval int, timeOfDay string) *Recurrence {
 // CleaningEveryFriday creates a recurrence for cleaning every Friday
 func CleaningEveryFriday(timeOfDay string) *Recurrence {
 	return &Recurrence{
-		Type:      "weekly",
+		Type:      Weekly,
 		Weekdays:  []time.Weekday{time.Friday},
 		TimeOfDay: timeOfDay,
 	}

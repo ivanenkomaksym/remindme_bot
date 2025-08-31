@@ -3,7 +3,7 @@ package models
 import "time"
 
 type Recurrence struct {
-	Type       string         `json:"type"`          // e.g., "daily", "weekly", "monthly", "interval", "custom"
+	Type       RecurrenceType `json:"type"`          // e.g., "daily", "weekly", "monthly", "interval", "custom"
 	Interval   int            `json:"interval"`      // e.g., every N days/hours/minutes
 	Weekdays   []time.Weekday `json:"weekdays"`      // For weekly recurrence (e.g., [Tuesday, Thursday])
 	DayOfMonth []int          `json:"days_of_month"` // For monthly recurrence (e.g., [1, 15])
@@ -27,7 +27,7 @@ func (r *Recurrence) WithEndDate(endDate time.Time) *Recurrence {
 // CustomWeekly creates a custom weekly recurrence on specific weekdays
 func CustomWeekly(weekdays []time.Weekday, timeOfDay string) *Recurrence {
 	return &Recurrence{
-		Type:      "weekly",
+		Type:      Weekly,
 		Weekdays:  weekdays,
 		TimeOfDay: timeOfDay,
 	}
@@ -36,7 +36,7 @@ func CustomWeekly(weekdays []time.Weekday, timeOfDay string) *Recurrence {
 // DailyAt creates a daily recurrence at a specific time
 func DailyAt(timeOfDay string) *Recurrence {
 	return &Recurrence{
-		Type:      "daily",
+		Type:      Daily,
 		TimeOfDay: timeOfDay,
 	}
 }
@@ -44,24 +44,24 @@ func DailyAt(timeOfDay string) *Recurrence {
 // MonthlyOnDay creates a monthly recurrence on a specific day of the month
 func MonthlyOnDay(daysOfMonth []int, timeOfDay string) *Recurrence {
 	return &Recurrence{
-		Type:       "monthly",
+		Type:       Monthly,
 		DayOfMonth: daysOfMonth,
 		TimeOfDay:  timeOfDay,
 	}
 }
 
 func (r *Recurrence) IsWeekly() bool {
-	return r.Type == "weekly" && len(r.Weekdays) > 0
+	return r.Type == Weekly && len(r.Weekdays) > 0
 }
 
 func (r *Recurrence) IsInterval() bool {
-	return r.Type == "interval" && r.Interval > 0
+	return r.Type == Interval && r.Interval > 0
 }
 
 func (r *Recurrence) IsMonthly() bool {
-	return r.Type == "monthly" && len(r.DayOfMonth) > 0
+	return r.Type == Monthly && len(r.DayOfMonth) > 0
 }
 
 func (r *Recurrence) IsDaily() bool {
-	return r.Type == "daily"
+	return r.Type == Daily
 }
