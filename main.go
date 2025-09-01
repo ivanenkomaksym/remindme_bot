@@ -7,6 +7,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"strings"
 
 	"github.com/ivanenkomaksym/offerforyou_bot/internal/keyboards"
 	"github.com/ivanenkomaksym/offerforyou_bot/internal/models"
@@ -150,16 +151,28 @@ func handleUpdate(update tgbotapi.Update) {
 		)
 		var markup tgbotapi.InlineKeyboardMarkup
 
+		// Check if this is a time selection callback
 		recurrenceType, err := models.ToRecurrenceType(update.CallbackQuery.Data)
 		if err != nil {
-			fmt.Println("Failed to resolve selected recurrence type: ", err)
-			return
-		}
-
-		switch recurrenceType {
-		case models.Daily:
-			msg.Text = "Daily"
-			markup = keyboards.GetHourRangeMarkup()
+			handleTimeSelection(update, &msg, &markup)
+		} else {
+			switch recurrenceType {
+			case models.Daily:
+				msg.Text = "Select time for daily reminders:"
+				markup = keyboards.GetHourRangeMarkup()
+			case models.Weekly:
+				msg.Text = "Select time for weekly reminders:"
+				markup = keyboards.GetHourRangeMarkup()
+			case models.Monthly:
+				msg.Text = "Select time for monthly reminders:"
+				markup = keyboards.GetHourRangeMarkup()
+			case models.Interval:
+				msg.Text = "Select time for interval reminders:"
+				markup = keyboards.GetHourRangeMarkup()
+			case models.Custom:
+				msg.Text = "Please type your custom time in HH:MM format (e.g., 14:05):"
+				markup = keyboards.GetHourRangeMarkup()
+			}
 		}
 
 		msg.ReplyMarkup = &markup
@@ -167,15 +180,87 @@ func handleUpdate(update tgbotapi.Update) {
 		bot.Send(msg)
 	}
 
-	if update.Message != nil && update.Message.IsCommand() {
+	if update.Message != nil {
 		user := update.Message.From
-		log.Printf("'[%s] %s %s' started chat", user.UserName, user.FirstName, user.LastName)
 
-		if update.Message.Command() == "start" {
-			msg := tgbotapi.NewMessage(update.Message.Chat.ID, welcomeMessage)
-			msg.ParseMode = "HTML"
-			msg.ReplyMarkup = buildMainMenu()
-			bot.Send(msg)
+		if update.Message.IsCommand() {
+			log.Printf("'[%s] %s %s' started chat", user.UserName, user.FirstName, user.LastName)
+
+			if update.Message.Command() == "start" {
+				msg := tgbotapi.NewMessage(update.Message.Chat.ID, welcomeMessage)
+				msg.ParseMode = "HTML"
+				msg.ReplyMarkup = buildMainMenu()
+				bot.Send(msg)
+			}
+		} else if update.Message.Text != "" {
+			// Handle custom time input (e.g., "14:30")
+			if isValidTimeFormat(update.Message.Text) {
+				msg := tgbotapi.NewMessage(update.Message.Chat.ID, fmt.Sprintf("Custom time '%s' accepted! You will receive daily reminders at this time.", update.Message.Text))
+				msg.ParseMode = "HTML"
+				// Clear markup for confirmation
+				bot.Send(msg)
+			}
 		}
 	}
+}
+
+// handleTimeSelection processes time selection callbacks and shows appropriate keyboards
+func handleTimeSelection(update tgbotapi.Update, msg *tgbotapi.EditMessageTextConfig, markup *tgbotapi.InlineKeyboardMarkup) {
+	callbackData := update.CallbackQuery.Data
+
+	switch {
+	case callbackData == "back_to_main":
+		// User wants to go back to main menu
+		msg.Text = "Select reminder frequency:"
+		*markup = buildMainMenu()
+
+	case callbackData == "back_to_hour_range":
+		// User wants to go back to hour range selection
+		msg.Text = "Select time for your reminders:"
+		*markup = keyboards.GetHourRangeMarkup()
+
+	case strings.Contains(callbackData, keyboards.CallbackPrefixHourRange):
+		// User selected a 4-hour range, show 1-hour ranges
+		startHour := 0
+		fmt.Sscanf(callbackData[len(keyboards.CallbackPrefixHourRange):], "%d", &startHour)
+		msg.Text = fmt.Sprintf("Select hour within %02d:00-%02d:00:", startHour, (startHour+4)%24)
+		*markup = keyboards.GetMinuteRangeMarkup(startHour)
+
+	case strings.Contains(callbackData, keyboards.CallbackPrefixMinuteRange):
+		// User selected a 1-hour range, show 15-minute intervals
+		startHour := 0
+		fmt.Sscanf(callbackData[len(keyboards.CallbackPrefixMinuteRange):], "%d", &startHour)
+		msg.Text = fmt.Sprintf("Select time within %02d:00-%02d:00:", startHour, (startHour+1)%24)
+		*markup = keyboards.GetSpecificTimeMarkup(startHour)
+
+	case strings.Contains(callbackData, keyboards.CallbackPrefixSpecificTime):
+		// User selected a specific time, show confirmation
+		timeStr := callbackData[len(keyboards.CallbackPrefixSpecificTime):]
+		msg.Text = fmt.Sprintf("Reminder set for %s! You will receive daily reminders at this time.", timeStr)
+		// Clear markup for final confirmation
+		*markup = tgbotapi.InlineKeyboardMarkup{}
+
+	case strings.Contains(callbackData, keyboards.CallbackPrefixCustom):
+		// User wants custom time input
+		msg.Text = "Please type your custom time in HH:MM format (e.g., 14:30):"
+		// Clear markup for custom input
+		*markup = tgbotapi.InlineKeyboardMarkup{}
+	}
+}
+
+// isValidTimeFormat checks if the input string is a valid time format (HH:MM)
+func isValidTimeFormat(timeStr string) bool {
+	if len(timeStr) != 5 || timeStr[2] != ':' {
+		return false
+	}
+
+	hour := timeStr[:2]
+	minute := timeStr[3:]
+
+	// Check if hour and minute are valid numbers
+	if hour < "00" || hour > "23" || minute < "00" || minute > "59" {
+		return false
+	}
+
+	return true
 }

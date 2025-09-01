@@ -35,6 +35,7 @@ func GetHourRangeMarkup() tgbotapi.InlineKeyboardMarkup {
 	rows = append(rows, buttons)
 	rows = append(rows, tgbotapi.NewInlineKeyboardRow(
 		tgbotapi.NewInlineKeyboardButtonData("Custom", CallbackPrefixCustom),
+		tgbotapi.NewInlineKeyboardButtonData("← Back", "back_to_main"),
 	))
 
 	return tgbotapi.NewInlineKeyboardMarkup(rows...)
@@ -55,6 +56,11 @@ func GetMinuteRangeMarkup(startHour int) tgbotapi.InlineKeyboardMarkup {
 	}
 
 	rows = append(rows, buttons)
+	rows = append(rows, tgbotapi.NewInlineKeyboardRow(
+		tgbotapi.NewInlineKeyboardButtonData("Custom", CallbackPrefixCustom),
+		tgbotapi.NewInlineKeyboardButtonData("← Back", "back_to_main"),
+	))
+
 	return tgbotapi.NewInlineKeyboardMarkup(rows...)
 }
 
@@ -78,6 +84,7 @@ func GetSpecificTimeMarkup(startHour int) tgbotapi.InlineKeyboardMarkup {
 	rows = append(rows, buttons)
 	rows = append(rows, tgbotapi.NewInlineKeyboardRow(
 		tgbotapi.NewInlineKeyboardButtonData("Custom", CallbackPrefixCustom),
+		tgbotapi.NewInlineKeyboardButtonData("← Back", "back_to_hour_range"),
 	))
 
 	return tgbotapi.NewInlineKeyboardMarkup(rows...)
