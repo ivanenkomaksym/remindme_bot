@@ -2,6 +2,7 @@ package keyboards
 
 import (
 	"fmt"
+	"strings"
 
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 )
@@ -17,6 +18,10 @@ const (
 	// Represents the custom time selection option.
 	CallbackPrefixCustom = "time_custom:"
 )
+
+func IsTimeSelectionCallback(callbackData string) bool {
+	return strings.HasPrefix(callbackData, "time_")
+}
 
 // getHourRangeMarkup generates the first level of the menu (4-hour ranges).
 func GetHourRangeMarkup() tgbotapi.InlineKeyboardMarkup {

@@ -9,8 +9,8 @@ import (
 	"os"
 	"strings"
 
-	"github.com/ivanenkomaksym/offerforyou_bot/internal/keyboards"
-	"github.com/ivanenkomaksym/offerforyou_bot/internal/models"
+	"github.com/ivanenkomaksym/remindme_bot/internal/keyboards"
+	"github.com/ivanenkomaksym/remindme_bot/internal/models"
 	"github.com/joho/godotenv"
 
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
@@ -152,29 +152,18 @@ func handleUpdate(update tgbotapi.Update) {
 		var markup tgbotapi.InlineKeyboardMarkup
 
 		// Check if this is a time selection callback
-		recurrenceType, err := models.ToRecurrenceType(update.CallbackQuery.Data)
-		if err != nil {
-			handleTimeSelection(update, &msg, &markup)
-		} else {
-			switch recurrenceType {
-			case models.Daily:
-				msg.Text = "Select time for daily reminders:"
-				markup = keyboards.GetHourRangeMarkup()
-			case models.Weekly:
-				msg.Text = "Select time for weekly reminders:"
-				markup = keyboards.GetHourRangeMarkup()
-			case models.Monthly:
-				msg.Text = "Select time for monthly reminders:"
-				markup = keyboards.GetHourRangeMarkup()
-			case models.Interval:
-				msg.Text = "Select time for interval reminders:"
-				markup = keyboards.GetHourRangeMarkup()
-			case models.Custom:
-				msg.Text = "Please type your custom time in HH:MM format (e.g., 14:05):"
-				markup = keyboards.GetHourRangeMarkup()
+		keyboardType := keyboards.GetKeyboardType(update.CallbackQuery.Data)
+		switch keyboardType {
+		case keyboards.Reccurence:
+			recurrenceType, err := models.ToRecurrenceType(update.CallbackQuery.Data)
+			if err != nil {
+				log.Printf("Failed to resolve selected recurrence type: %v", err)
+				return
 			}
+			handleRecurrenceTypeSelection(recurrenceType, &msg, &markup)
+		case keyboards.Time:
+			handleTimeSelection(update, &msg, &markup)
 		}
-
 		msg.ReplyMarkup = &markup
 		msg.ParseMode = "HTML" // Важливо, щоб теги <b> працювали
 		bot.Send(msg)
@@ -204,7 +193,26 @@ func handleUpdate(update tgbotapi.Update) {
 	}
 }
 
-// handleTimeSelection processes time selection callbacks and shows appropriate keyboards
+func handleRecurrenceTypeSelection(recurrenceType models.RecurrenceType, msg *tgbotapi.EditMessageTextConfig, markup *tgbotapi.InlineKeyboardMarkup) {
+	switch recurrenceType {
+	case models.Daily:
+		msg.Text = "Select time for daily reminders:"
+		*markup = keyboards.GetHourRangeMarkup()
+	case models.Weekly:
+		msg.Text = "Select time for weekly reminders:"
+		*markup = keyboards.GetHourRangeMarkup()
+	case models.Monthly:
+		msg.Text = "Select time for monthly reminders:"
+		*markup = keyboards.GetHourRangeMarkup()
+	case models.Interval:
+		msg.Text = "Select time for interval reminders:"
+		*markup = keyboards.GetHourRangeMarkup()
+	case models.Custom:
+		msg.Text = "Please type your custom time in HH:MM format (e.g., 14:05):"
+		*markup = keyboards.GetHourRangeMarkup()
+	}
+}
+
 func handleTimeSelection(update tgbotapi.Update, msg *tgbotapi.EditMessageTextConfig, markup *tgbotapi.InlineKeyboardMarkup) {
 	callbackData := update.CallbackQuery.Data
 

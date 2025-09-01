@@ -1,4 +1,4 @@
-module github.com/ivanenkomaksym/offerforyou_bot
+module github.com/ivanenkomaksym/remindme_bot
 
 go 1.24.4
 
