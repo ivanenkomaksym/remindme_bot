@@ -1,8 +1,14 @@
 package repositories
 
-import "github.com/ivanenkomaksym/remindme_bot/internal/models"
+import (
+	"time"
+
+	"github.com/ivanenkomaksym/remindme_bot/internal/models"
+)
 
 type ReminderRepository interface {
-	CreateDailyReminder(time string, user models.User) *models.Reminder
+	CreateDailyReminder(time string, user models.User, message string) *models.Reminder
+	CreateWeeklyReminder(days_of_week []time.Weekday, time string, user models.User, message string) *models.Reminder
+	CreateMonthlyReminder(days_of_month []int, time string, user models.User, message string) *models.Reminder
 	GetReminders() []models.Reminder
 }
