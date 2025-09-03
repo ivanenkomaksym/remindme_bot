@@ -9,7 +9,7 @@ type KeyboardType int64
 const (
 	Reccurence KeyboardType = iota
 	Time
-	DaysOfWeek
+	Week
 )
 
 func (k KeyboardType) String() string {
@@ -18,8 +18,8 @@ func (k KeyboardType) String() string {
 		return "reccurence"
 	case Time:
 		return "time"
-	case DaysOfWeek:
-		return "days_of_week"
+	case Week:
+		return "week"
 	default:
 		return "unknown"
 	}
@@ -28,6 +28,9 @@ func (k KeyboardType) String() string {
 func GetKeyboardType(callbackData string) KeyboardType {
 	if IsTimeSelectionCallback(callbackData) {
 		return Time
+	}
+	if IsWeekSelectionCallback(callbackData) {
+		return Week
 	}
 	_, err := models.ToRecurrenceType(callbackData)
 	if err == nil {
