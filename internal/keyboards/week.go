@@ -34,16 +34,18 @@ func IsWeekSelectionCallback(callbackData string) bool {
 }
 
 func GetWeekRangeMarkup(currentOptions [7]bool) *tgbotapi.InlineKeyboardMarkup {
-	var inlineKeyboard []tgbotapi.InlineKeyboardButton
+	var inlineKeyboard [][]tgbotapi.InlineKeyboardButton
 
 	for idx, day := range LongDayNames {
-		inlineKeyboard = append(inlineKeyboard, tgbotapi.NewInlineKeyboardButtonData(buttonText(day, currentOptions[idx]), day))
+		inlineKeyboard = append(inlineKeyboard, tgbotapi.NewInlineKeyboardRow(
+			tgbotapi.NewInlineKeyboardButtonData(buttonText(day, currentOptions[idx]), day)))
 	}
-	inlineKeyboard = append(inlineKeyboard, tgbotapi.NewInlineKeyboardButtonData("Select", CallbackWeekSelect))
+	inlineKeyboard = append(inlineKeyboard, tgbotapi.NewInlineKeyboardRow(
+		tgbotapi.NewInlineKeyboardButtonData("Select", CallbackWeekSelect)))
+	inlineKeyboard = append(inlineKeyboard, tgbotapi.NewInlineKeyboardRow(
+		tgbotapi.NewInlineKeyboardButtonData("← Back", MainMenu)))
 
-	return &tgbotapi.InlineKeyboardMarkup{
-		InlineKeyboard: [][]tgbotapi.InlineKeyboardButton{inlineKeyboard},
-	}
+	return &tgbotapi.InlineKeyboardMarkup{InlineKeyboard: inlineKeyboard}
 }
 
 func HandleWeekSelection(callbackData string, msg *tgbotapi.EditMessageTextConfig, currentOptions *[7]bool) *tgbotapi.InlineKeyboardMarkup {
@@ -55,8 +57,8 @@ func HandleWeekSelection(callbackData string, msg *tgbotapi.EditMessageTextConfi
 	msg.Text = "Select weekdays"
 
 	if callbackData == CallbackWeekSelect {
-		msg.Text = fmt.Sprintf("Selected options: %v", *currentOptions)
-		return nil
+		msg.Text = fmt.Sprintf("Select time for daily reminders:")
+		return GetHourRangeMarkup()
 	}
 
 	return GetWeekRangeMarkup(*currentOptions)

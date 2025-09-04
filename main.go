@@ -29,26 +29,6 @@ var (
 	weekSelectionsByUser = map[int64]*[7]bool{}
 )
 
-func buildMainMenu() tgbotapi.InlineKeyboardMarkup {
-	return tgbotapi.NewInlineKeyboardMarkup(
-		tgbotapi.NewInlineKeyboardRow(
-			tgbotapi.NewInlineKeyboardButtonData(models.Daily.String(), models.Daily.String()),
-		),
-		tgbotapi.NewInlineKeyboardRow(
-			tgbotapi.NewInlineKeyboardButtonData(models.Weekly.String(), models.Weekly.String()),
-		),
-		tgbotapi.NewInlineKeyboardRow(
-			tgbotapi.NewInlineKeyboardButtonData(models.Monthly.String(), models.Monthly.String()),
-		),
-		tgbotapi.NewInlineKeyboardRow(
-			tgbotapi.NewInlineKeyboardButtonData(models.Interval.String(), models.Interval.String()),
-		),
-		tgbotapi.NewInlineKeyboardRow(
-			tgbotapi.NewInlineKeyboardButtonData(models.Custom.String(), models.Custom.String()),
-		),
-	)
-}
-
 func main() {
 	// Load environment variables
 	err := godotenv.Load()
@@ -172,6 +152,9 @@ func handleUpdate(update tgbotapi.Update) {
 		// Check if this is a time selection callback
 		keyboardType := keyboards.GetKeyboardType(update.CallbackQuery.Data)
 		switch keyboardType {
+		case keyboards.Main:
+			msg.Text = welcomeMessage
+			markup = keyboards.GetMainMenuMarkup()
 		case keyboards.Reccurence:
 			recurrenceType, err := models.ToRecurrenceType(update.CallbackQuery.Data)
 			if err != nil {
@@ -203,7 +186,7 @@ func handleUpdate(update tgbotapi.Update) {
 			if update.Message.Command() == "start" {
 				msg := tgbotapi.NewMessage(update.Message.Chat.ID, welcomeMessage)
 				msg.ParseMode = "HTML"
-				msg.ReplyMarkup = buildMainMenu()
+				msg.ReplyMarkup = keyboards.GetMainMenuMarkup()
 				bot.Send(msg)
 			}
 		} else if update.Message.Text != "" {
@@ -224,23 +207,19 @@ func handleRecurrenceTypeSelection(recurrenceType models.RecurrenceType,
 	switch recurrenceType {
 	case models.Daily:
 		msg.Text = "Select time for daily reminders:"
-		menu := keyboards.GetHourRangeMarkup()
-		return &menu
+		return keyboards.GetHourRangeMarkup()
 	case models.Weekly:
 		msg.Text = "Select time for weekly reminders:"
 		return keyboards.GetWeekRangeMarkup(currentWeekOptions)
 	case models.Monthly:
 		msg.Text = "Select time for monthly reminders:"
-		menu := keyboards.GetHourRangeMarkup()
-		return &menu
+		return keyboards.GetHourRangeMarkup()
 	case models.Interval:
 		msg.Text = "Select time for interval reminders:"
-		menu := keyboards.GetHourRangeMarkup()
-		return &menu
+		return keyboards.GetHourRangeMarkup()
 	case models.Custom:
 		msg.Text = "Please type your custom time in HH:MM format (e.g., 14:05):"
-		menu := keyboards.GetHourRangeMarkup()
-		return &menu
+		return keyboards.GetHourRangeMarkup()
 	}
 
 	return nil
@@ -253,30 +232,26 @@ func handleTimeSelection(update tgbotapi.Update, msg *tgbotapi.EditMessageTextCo
 	case callbackData == "back_to_main":
 		// User wants to go back to main menu
 		msg.Text = "Select reminder frequency:"
-		menu := buildMainMenu()
-		return &menu
+		return keyboards.GetMainMenuMarkup()
 
 	case callbackData == "back_to_hour_range":
 		// User wants to go back to hour range selection
 		msg.Text = "Select time for your reminders:"
-		menu := keyboards.GetHourRangeMarkup()
-		return &menu
+		return keyboards.GetHourRangeMarkup()
 
 	case strings.Contains(callbackData, keyboards.CallbackPrefixHourRange):
 		// User selected a 4-hour range, show 1-hour ranges
 		startHour := 0
 		fmt.Sscanf(callbackData[len(keyboards.CallbackPrefixHourRange):], "%d", &startHour)
 		msg.Text = fmt.Sprintf("Select hour within %02d:00-%02d:00:", startHour, (startHour+4)%24)
-		menu := keyboards.GetMinuteRangeMarkup(startHour)
-		return &menu
+		return keyboards.GetMinuteRangeMarkup(startHour)
 
 	case strings.Contains(callbackData, keyboards.CallbackPrefixMinuteRange):
 		// User selected a 1-hour range, show 15-minute intervals
 		startHour := 0
 		fmt.Sscanf(callbackData[len(keyboards.CallbackPrefixMinuteRange):], "%d", &startHour)
 		msg.Text = fmt.Sprintf("Select time within %02d:00-%02d:00:", startHour, (startHour+1)%24)
-		menu := keyboards.GetSpecificTimeMarkup(startHour)
-		return &menu
+		return keyboards.GetSpecificTimeMarkup(startHour)
 
 	case strings.Contains(callbackData, keyboards.CallbackPrefixSpecificTime):
 		// User selected a specific time, show confirmation
