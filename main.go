@@ -12,6 +12,7 @@ import (
 
 	"github.com/ivanenkomaksym/remindme_bot/internal/keyboards"
 	"github.com/ivanenkomaksym/remindme_bot/internal/models"
+	"github.com/ivanenkomaksym/remindme_bot/internal/types"
 	"github.com/joho/godotenv"
 
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
@@ -23,10 +24,10 @@ var (
 	welcomeMessage = "Welcome to the Reminder Bot!"
 )
 
-// in-memory, per-user selection state for week options
+// in-memory, per-user selection state
 var (
-	weekSelectionsMu     sync.RWMutex
-	weekSelectionsByUser = map[int64]*[7]bool{}
+	userSelectionsMu     sync.RWMutex
+	userSelectionsByUser = map[int64]*types.UserSelectionState{}
 )
 
 func main() {
@@ -138,16 +139,17 @@ func handleUpdate(update tgbotapi.Update) {
 		)
 		var markup *tgbotapi.InlineKeyboardMarkup
 
-		// load or init per-user week selection state
+		// load or init per-user selection state
 		userID := update.CallbackQuery.From.ID
-		weekSelectionsMu.Lock()
-		currentWeekOptions, ok := weekSelectionsByUser[userID]
+		userSelectionsMu.Lock()
+		userState, ok := userSelectionsByUser[userID]
 		if !ok {
-			defaultOpts := &[7]bool{false, false, false, false, false, false, false}
-			weekSelectionsByUser[userID] = defaultOpts
-			currentWeekOptions = defaultOpts
+			userState = &types.UserSelectionState{
+				WeekOptions: [7]bool{false, false, false, false, false, false, false},
+			}
+			userSelectionsByUser[userID] = userState
 		}
-		weekSelectionsMu.Unlock()
+		userSelectionsMu.Unlock()
 
 		// Check if this is a time selection callback
 		keyboardType := keyboards.GetKeyboardType(update.CallbackQuery.Data)
@@ -161,13 +163,19 @@ func handleUpdate(update tgbotapi.Update) {
 				log.Printf("Failed to resolve selected recurrence type: %v", err)
 				return
 			}
-			markup = handleRecurrenceTypeSelection(recurrenceType, &msg, *currentWeekOptions)
+			userState.RecurrenceType = recurrenceType
+			userState.IsWeekly = (recurrenceType == models.Weekly)
+			markup = handleRecurrenceTypeSelection(recurrenceType, &msg, userState.WeekOptions)
 		case keyboards.Time:
-			markup = handleTimeSelection(update, &msg)
+			markup = handleTimeSelection(update, &msg, userState)
 		case keyboards.Week:
-			weekSelectionsMu.Lock()
-			markup = keyboards.HandleWeekSelection(update.CallbackQuery.Data, &msg, currentWeekOptions)
-			weekSelectionsMu.Unlock()
+			userSelectionsMu.Lock()
+			markup = keyboards.HandleWeekSelection(update.CallbackQuery.Data, &msg, &userState.WeekOptions)
+			userSelectionsMu.Unlock()
+		case keyboards.Message:
+			userSelectionsMu.Lock()
+			markup = keyboards.HandleMessageSelection(update.CallbackQuery.Data, &msg, userState)
+			userSelectionsMu.Unlock()
 		}
 		if markup != nil {
 			msg.ReplyMarkup = markup
@@ -190,11 +198,25 @@ func handleUpdate(update tgbotapi.Update) {
 				bot.Send(msg)
 			}
 		} else if update.Message.Text != "" {
-			// Handle custom time input (e.g., "14:30")
-			if isValidTimeFormat(update.Message.Text) {
-				msg := tgbotapi.NewMessage(update.Message.Chat.ID, fmt.Sprintf("Custom time '%s' accepted! You will receive daily reminders at this time.", update.Message.Text))
+			// Handle custom time input or custom message input
+			userID := update.Message.From.ID
+			userSelectionsMu.Lock()
+			userState, ok := userSelectionsByUser[userID]
+			userSelectionsMu.Unlock()
+
+			if ok && userState.SelectedTime == "" && isValidTimeFormat(update.Message.Text) {
+				// Custom time input
+				userState.SelectedTime = update.Message.Text
+				msg := tgbotapi.NewMessage(update.Message.Chat.ID, "Select your reminder message:")
 				msg.ParseMode = "HTML"
-				// Clear markup for confirmation
+				msg.ReplyMarkup = keyboards.GetMessageSelectionMarkup()
+				bot.Send(msg)
+			} else if ok && userState.SelectedTime != "" && userState.ReminderMessage == "" {
+				// Custom message input
+				userState.ReminderMessage = update.Message.Text
+				confirmation := keyboards.FormatReminderConfirmation(userState)
+				msg := tgbotapi.NewMessage(update.Message.Chat.ID, confirmation)
+				msg.ParseMode = "HTML"
 				bot.Send(msg)
 			}
 		}
@@ -225,7 +247,7 @@ func handleRecurrenceTypeSelection(recurrenceType models.RecurrenceType,
 	return nil
 }
 
-func handleTimeSelection(update tgbotapi.Update, msg *tgbotapi.EditMessageTextConfig) *tgbotapi.InlineKeyboardMarkup {
+func handleTimeSelection(update tgbotapi.Update, msg *tgbotapi.EditMessageTextConfig, userState *types.UserSelectionState) *tgbotapi.InlineKeyboardMarkup {
 	callbackData := update.CallbackQuery.Data
 
 	switch {
@@ -236,6 +258,11 @@ func handleTimeSelection(update tgbotapi.Update, msg *tgbotapi.EditMessageTextCo
 
 	case callbackData == "back_to_hour_range":
 		// User wants to go back to hour range selection
+		msg.Text = "Select time for your reminders:"
+		return keyboards.GetHourRangeMarkup()
+
+	case callbackData == "back_to_time":
+		// User wants to go back to time selection
 		msg.Text = "Select time for your reminders:"
 		return keyboards.GetHourRangeMarkup()
 
@@ -254,10 +281,11 @@ func handleTimeSelection(update tgbotapi.Update, msg *tgbotapi.EditMessageTextCo
 		return keyboards.GetSpecificTimeMarkup(startHour)
 
 	case strings.Contains(callbackData, keyboards.CallbackPrefixSpecificTime):
-		// User selected a specific time, show confirmation
+		// User selected a specific time, go to message selection
 		timeStr := callbackData[len(keyboards.CallbackPrefixSpecificTime):]
-		msg.Text = fmt.Sprintf("Reminder set for %s! You will receive daily reminders at this time.", timeStr)
-		return nil
+		userState.SelectedTime = timeStr
+		msg.Text = "Select your reminder message:"
+		return keyboards.GetMessageSelectionMarkup()
 
 	case strings.Contains(callbackData, keyboards.CallbackPrefixCustom):
 		// User wants custom time input

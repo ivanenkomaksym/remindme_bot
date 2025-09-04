@@ -1,7 +1,6 @@
 package keyboards
 
 import (
-	"fmt"
 	"slices"
 	"time"
 
@@ -57,7 +56,7 @@ func HandleWeekSelection(callbackData string, msg *tgbotapi.EditMessageTextConfi
 	msg.Text = "Select weekdays"
 
 	if callbackData == CallbackWeekSelect {
-		msg.Text = fmt.Sprintf("Select time for daily reminders:")
+		msg.Text = "Select time for weekly reminders:"
 		return GetHourRangeMarkup()
 	}
 

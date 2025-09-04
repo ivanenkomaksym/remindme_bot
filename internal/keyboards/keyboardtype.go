@@ -11,6 +11,7 @@ const (
 	Reccurence
 	Time
 	Week
+	Message
 )
 
 func (k KeyboardType) String() string {
@@ -23,6 +24,8 @@ func (k KeyboardType) String() string {
 		return "time"
 	case Week:
 		return "week"
+	case Message:
+		return "message"
 	default:
 		return "unknown"
 	}
@@ -38,6 +41,9 @@ func GetKeyboardType(callbackData string) KeyboardType {
 	}
 	if IsWeekSelectionCallback(callbackData) {
 		return Week
+	}
+	if IsMessageSelectionCallback(callbackData) {
+		return Message
 	}
 	_, err := models.ToRecurrenceType(callbackData)
 	if err == nil {
