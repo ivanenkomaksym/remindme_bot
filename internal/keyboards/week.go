@@ -1,6 +1,7 @@
 package keyboards
 
 import (
+	"fmt"
 	"slices"
 	"time"
 
@@ -32,21 +33,33 @@ func IsWeekSelectionCallback(callbackData string) bool {
 	return false
 }
 
-func GetWeekRangeMarkup(currentOptions [7]bool) tgbotapi.InlineKeyboardMarkup {
+func GetWeekRangeMarkup(currentOptions [7]bool) *tgbotapi.InlineKeyboardMarkup {
 	var inlineKeyboard []tgbotapi.InlineKeyboardButton
 
-	for _, day := range LongDayNames {
-		inlineKeyboard = append(inlineKeyboard, tgbotapi.NewInlineKeyboardButtonData(buttonText(day, currentOptions[0]), day))
+	for idx, day := range LongDayNames {
+		inlineKeyboard = append(inlineKeyboard, tgbotapi.NewInlineKeyboardButtonData(buttonText(day, currentOptions[idx]), day))
 	}
 	inlineKeyboard = append(inlineKeyboard, tgbotapi.NewInlineKeyboardButtonData("Select", CallbackWeekSelect))
 
-	return tgbotapi.InlineKeyboardMarkup{
+	return &tgbotapi.InlineKeyboardMarkup{
 		InlineKeyboard: [][]tgbotapi.InlineKeyboardButton{inlineKeyboard},
 	}
 }
 
-func ProcessWeekSelection(callbackQueryData string) {
+func HandleWeekSelection(callbackData string, msg *tgbotapi.EditMessageTextConfig, currentOptions *[7]bool) *tgbotapi.InlineKeyboardMarkup {
+	for idx, day := range LongDayNames {
+		if callbackData == day {
+			currentOptions[idx] = !currentOptions[idx]
+		}
+	}
+	msg.Text = "Select weekdays"
 
+	if callbackData == CallbackWeekSelect {
+		msg.Text = fmt.Sprintf("Selected options: %v", *currentOptions)
+		return nil
+	}
+
+	return GetWeekRangeMarkup(*currentOptions)
 }
 
 func buttonText(text string, opt bool) string {
@@ -54,5 +67,5 @@ func buttonText(text string, opt bool) string {
 		return "✅ " + text
 	}
 
-	return "❌ " + text
+	return text
 }

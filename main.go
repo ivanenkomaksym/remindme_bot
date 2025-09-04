@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"os"
 	"strings"
+	"sync"
 
 	"github.com/ivanenkomaksym/remindme_bot/internal/keyboards"
 	"github.com/ivanenkomaksym/remindme_bot/internal/models"
@@ -20,6 +21,12 @@ var (
 	bot *tgbotapi.BotAPI
 
 	welcomeMessage = "Welcome to the Reminder Bot!"
+)
+
+// in-memory, per-user selection state for week options
+var (
+	weekSelectionsMu     sync.RWMutex
+	weekSelectionsByUser = map[int64]*[7]bool{}
 )
 
 func buildMainMenu() tgbotapi.InlineKeyboardMarkup {
@@ -151,6 +158,17 @@ func handleUpdate(update tgbotapi.Update) {
 		)
 		var markup *tgbotapi.InlineKeyboardMarkup
 
+		// load or init per-user week selection state
+		userID := update.CallbackQuery.From.ID
+		weekSelectionsMu.Lock()
+		currentWeekOptions, ok := weekSelectionsByUser[userID]
+		if !ok {
+			defaultOpts := &[7]bool{false, false, false, false, false, false, false}
+			weekSelectionsByUser[userID] = defaultOpts
+			currentWeekOptions = defaultOpts
+		}
+		weekSelectionsMu.Unlock()
+
 		// Check if this is a time selection callback
 		keyboardType := keyboards.GetKeyboardType(update.CallbackQuery.Data)
 		switch keyboardType {
@@ -160,9 +178,13 @@ func handleUpdate(update tgbotapi.Update) {
 				log.Printf("Failed to resolve selected recurrence type: %v", err)
 				return
 			}
-			markup = handleRecurrenceTypeSelection(recurrenceType, &msg)
+			markup = handleRecurrenceTypeSelection(recurrenceType, &msg, *currentWeekOptions)
 		case keyboards.Time:
 			markup = handleTimeSelection(update, &msg)
+		case keyboards.Week:
+			weekSelectionsMu.Lock()
+			markup = keyboards.HandleWeekSelection(update.CallbackQuery.Data, &msg, currentWeekOptions)
+			weekSelectionsMu.Unlock()
 		}
 		if markup != nil {
 			msg.ReplyMarkup = markup
@@ -196,7 +218,9 @@ func handleUpdate(update tgbotapi.Update) {
 	}
 }
 
-func handleRecurrenceTypeSelection(recurrenceType models.RecurrenceType, msg *tgbotapi.EditMessageTextConfig) *tgbotapi.InlineKeyboardMarkup {
+func handleRecurrenceTypeSelection(recurrenceType models.RecurrenceType,
+	msg *tgbotapi.EditMessageTextConfig,
+	currentWeekOptions [7]bool) *tgbotapi.InlineKeyboardMarkup {
 	switch recurrenceType {
 	case models.Daily:
 		msg.Text = "Select time for daily reminders:"
@@ -204,8 +228,7 @@ func handleRecurrenceTypeSelection(recurrenceType models.RecurrenceType, msg *tg
 		return &menu
 	case models.Weekly:
 		msg.Text = "Select time for weekly reminders:"
-		menu := keyboards.GetHourRangeMarkup()
-		return &menu
+		return keyboards.GetWeekRangeMarkup(currentWeekOptions)
 	case models.Monthly:
 		msg.Text = "Select time for monthly reminders:"
 		menu := keyboards.GetHourRangeMarkup()
