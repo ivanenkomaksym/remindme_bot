@@ -5,6 +5,7 @@ import (
 	"strings"
 
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
+	"github.com/ivanenkomaksym/remindme_bot/internal/types"
 )
 
 // The callback data prefixes help to parse the user's selection.
@@ -21,6 +22,55 @@ const (
 
 func IsTimeSelectionCallback(callbackData string) bool {
 	return strings.HasPrefix(callbackData, "time_")
+}
+
+func HandleTimeSelection(callbackData string,
+	msg *tgbotapi.EditMessageTextConfig,
+	userState *types.UserSelectionState) *tgbotapi.InlineKeyboardMarkup {
+	switch {
+	case callbackData == MainMenu:
+		// User wants to go back to main menu
+		msg.Text = "Select reminder frequency:"
+		return GetMainMenuMarkup()
+
+	case callbackData == "back_to_hour_range":
+		// User wants to go back to hour range selection
+		msg.Text = "Select time for your reminders:"
+		return GetHourRangeMarkup()
+
+	case callbackData == "back_to_time":
+		// User wants to go back to time selection
+		msg.Text = "Select time for your reminders:"
+		return GetHourRangeMarkup()
+
+	case strings.Contains(callbackData, CallbackPrefixHourRange):
+		// User selected a 4-hour range, show 1-hour ranges
+		startHour := 0
+		fmt.Sscanf(callbackData[len(CallbackPrefixHourRange):], "%d", &startHour)
+		msg.Text = fmt.Sprintf("Select hour within %02d:00-%02d:00:", startHour, (startHour+4)%24)
+		return GetMinuteRangeMarkup(startHour)
+
+	case strings.Contains(callbackData, CallbackPrefixMinuteRange):
+		// User selected a 1-hour range, show 15-minute intervals
+		startHour := 0
+		fmt.Sscanf(callbackData[len(CallbackPrefixMinuteRange):], "%d", &startHour)
+		msg.Text = fmt.Sprintf("Select time within %02d:00-%02d:00:", startHour, (startHour+1)%24)
+		return GetSpecificTimeMarkup(startHour)
+
+	case strings.Contains(callbackData, CallbackPrefixSpecificTime):
+		// User selected a specific time, go to message selection
+		timeStr := callbackData[len(CallbackPrefixSpecificTime):]
+		userState.SelectedTime = timeStr
+		msg.Text = "Select your reminder message:"
+		return GetMessageSelectionMarkup()
+
+	case strings.Contains(callbackData, CallbackPrefixCustom):
+		// User wants custom time input
+		msg.Text = "Please type your custom time in HH:MM format (e.g., 14:30):"
+		return nil
+	}
+
+	return nil
 }
 
 // getHourRangeMarkup generates the first level of the menu (4-hour ranges).

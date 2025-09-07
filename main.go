@@ -3,15 +3,12 @@ package main
 
 import (
 	"encoding/json"
-	"fmt"
 	"log"
 	"net/http"
 	"os"
-	"strings"
 	"sync"
 
 	"github.com/ivanenkomaksym/remindme_bot/internal/keyboards"
-	"github.com/ivanenkomaksym/remindme_bot/internal/models"
 	"github.com/ivanenkomaksym/remindme_bot/internal/types"
 	"github.com/joho/godotenv"
 
@@ -127,174 +124,112 @@ func main() {
 
 func handleUpdate(update tgbotapi.Update) {
 	if update.CallbackQuery != nil {
-		user := update.CallbackQuery.From
-		text := update.CallbackQuery.Data
+		processKeyboardSelection(update.CallbackQuery)
+		return
+	}
 
-		log.Printf("'[%s] %s %s' selected '%s'", user.UserName, user.FirstName, user.LastName, text)
+	if update.Message != nil {
+		processUserInput(update.Message)
+		return
+	}
+}
 
-		msg := tgbotapi.NewEditMessageText(
-			update.CallbackQuery.Message.Chat.ID,
-			update.CallbackQuery.Message.MessageID,
+func processKeyboardSelection(callbackQuery *tgbotapi.CallbackQuery) bool {
+	user := callbackQuery.From
+	text := callbackQuery.Data
+
+	log.Printf("'[%s] %s %s' selected '%s'", user.UserName, user.FirstName, user.LastName, text)
+
+	msg := tgbotapi.NewEditMessageText(
+		callbackQuery.Message.Chat.ID,
+		callbackQuery.Message.MessageID,
+		"", // Text will be set later
+	)
+	var markup *tgbotapi.InlineKeyboardMarkup
+
+	// load or init per-user selection state
+	userState := getUserState(callbackQuery.From.ID)
+
+	// Check if this is a time selection callback
+	keyboardType := keyboards.GetKeyboardType(callbackQuery.Data)
+	switch keyboardType {
+	case keyboards.Main:
+		msg.Text = welcomeMessage
+		markup = keyboards.GetMainMenuMarkup()
+	case keyboards.Reccurence:
+		m, err := keyboards.HandleRecurrenceTypeSelection(callbackQuery.Data, &msg, userState)
+		if err != nil {
+			log.Printf("Failed to resolve selected recurrence type: %v", err)
+			return false
+		}
+		markup = m
+	case keyboards.Time:
+		markup = keyboards.HandleTimeSelection(callbackQuery.Data, &msg, userState)
+	case keyboards.Week:
+		userSelectionsMu.Lock()
+		markup = keyboards.HandleWeekSelection(callbackQuery.Data, &msg, &userState.WeekOptions)
+		userSelectionsMu.Unlock()
+	case keyboards.Message:
+		userSelectionsMu.Lock()
+		markup = keyboards.HandleMessageSelection(callbackQuery.Data, &msg, userState)
+		userSelectionsMu.Unlock()
+	}
+	if markup != nil {
+		msg.ReplyMarkup = markup
+	}
+
+	msg.ParseMode = "HTML"
+	bot.Send(msg)
+	return true
+}
+
+func processUserInput(message *tgbotapi.Message) {
+	user := message.From
+	text := message.Text
+
+	if message.IsCommand() {
+		log.Printf("'[%s] %s %s' started chat", user.UserName, user.FirstName, user.LastName)
+
+		if message.Command() == "start" {
+			msg := tgbotapi.NewMessage(message.Chat.ID, welcomeMessage)
+			msg.ParseMode = "HTML"
+			msg.ReplyMarkup = keyboards.GetMainMenuMarkup()
+			bot.Send(msg)
+		}
+	} else if text != "" {
+		// Handle custom time input or custom message input
+		userState := getUserState(message.From.ID)
+
+		msg := tgbotapi.NewMessage(
+			message.Chat.ID,
 			"", // Text will be set later
 		)
-		var markup *tgbotapi.InlineKeyboardMarkup
 
-		// load or init per-user selection state
-		userID := update.CallbackQuery.From.ID
-		userSelectionsMu.Lock()
-		userState, ok := userSelectionsByUser[userID]
-		if !ok {
-			userState = &types.UserSelectionState{
-				WeekOptions: [7]bool{false, false, false, false, false, false, false},
-			}
-			userSelectionsByUser[userID] = userState
-		}
-		userSelectionsMu.Unlock()
-
-		// Check if this is a time selection callback
-		keyboardType := keyboards.GetKeyboardType(update.CallbackQuery.Data)
-		switch keyboardType {
-		case keyboards.Main:
-			msg.Text = welcomeMessage
-			markup = keyboards.GetMainMenuMarkup()
-		case keyboards.Reccurence:
-			recurrenceType, err := models.ToRecurrenceType(update.CallbackQuery.Data)
-			if err != nil {
-				log.Printf("Failed to resolve selected recurrence type: %v", err)
-				return
-			}
-			userState.RecurrenceType = recurrenceType
-			userState.IsWeekly = (recurrenceType == models.Weekly)
-			markup = handleRecurrenceTypeSelection(recurrenceType, &msg, userState.WeekOptions)
-		case keyboards.Time:
-			markup = handleTimeSelection(update, &msg, userState)
-		case keyboards.Week:
-			userSelectionsMu.Lock()
-			markup = keyboards.HandleWeekSelection(update.CallbackQuery.Data, &msg, &userState.WeekOptions)
-			userSelectionsMu.Unlock()
-		case keyboards.Message:
-			userSelectionsMu.Lock()
-			markup = keyboards.HandleMessageSelection(update.CallbackQuery.Data, &msg, userState)
-			userSelectionsMu.Unlock()
-		}
-		if markup != nil {
-			msg.ReplyMarkup = markup
+		if userState.SelectedTime == "" && isValidTimeFormat(text) {
+			// Custom time input
+			userState.SelectedTime = text
+			msg.Text = "Select your reminder message:"
+		} else if userState.CustomText {
+			userState.ReminderMessage = text
+			msg.Text = keyboards.FormatReminderConfirmation(userState)
 		}
 
 		msg.ParseMode = "HTML"
 		bot.Send(msg)
 	}
+}
 
-	if update.Message != nil {
-		user := update.Message.From
-
-		if update.Message.IsCommand() {
-			log.Printf("'[%s] %s %s' started chat", user.UserName, user.FirstName, user.LastName)
-
-			if update.Message.Command() == "start" {
-				msg := tgbotapi.NewMessage(update.Message.Chat.ID, welcomeMessage)
-				msg.ParseMode = "HTML"
-				msg.ReplyMarkup = keyboards.GetMainMenuMarkup()
-				bot.Send(msg)
-			}
-		} else if update.Message.Text != "" {
-			// Handle custom time input or custom message input
-			userID := update.Message.From.ID
-			userSelectionsMu.Lock()
-			userState, ok := userSelectionsByUser[userID]
-			userSelectionsMu.Unlock()
-
-			msg := tgbotapi.NewMessage(
-				update.Message.Chat.ID,
-				"", // Text will be set later
-			)
-
-			if ok && userState.SelectedTime == "" && isValidTimeFormat(update.Message.Text) {
-				// Custom time input
-				userState.SelectedTime = update.Message.Text
-				msg.Text = "Select your reminder message:"
-			} else if ok && userState.CustomText {
-				userState.ReminderMessage = update.Message.Text
-				msg.Text = keyboards.FormatReminderConfirmation(userState)
-			}
-
-			msg.ParseMode = "HTML"
-			bot.Send(msg)
+func getUserState(userID int64) *types.UserSelectionState {
+	userSelectionsMu.Lock()
+	userState, ok := userSelectionsByUser[userID]
+	if !ok {
+		userState = &types.UserSelectionState{
+			WeekOptions: [7]bool{false, false, false, false, false, false, false},
 		}
+		userSelectionsByUser[userID] = userState
 	}
-}
-
-func handleRecurrenceTypeSelection(recurrenceType models.RecurrenceType,
-	msg *tgbotapi.EditMessageTextConfig,
-	currentWeekOptions [7]bool) *tgbotapi.InlineKeyboardMarkup {
-	switch recurrenceType {
-	case models.Daily:
-		msg.Text = "Select time for daily reminders:"
-		return keyboards.GetHourRangeMarkup()
-	case models.Weekly:
-		msg.Text = "Select time for weekly reminders:"
-		return keyboards.GetWeekRangeMarkup(currentWeekOptions)
-	case models.Monthly:
-		msg.Text = "Select time for monthly reminders:"
-		return keyboards.GetHourRangeMarkup()
-	case models.Interval:
-		msg.Text = "Select time for interval reminders:"
-		return keyboards.GetHourRangeMarkup()
-	case models.Custom:
-		msg.Text = "Please type your custom time in HH:MM format (e.g., 14:05):"
-		return keyboards.GetHourRangeMarkup()
-	}
-
-	return nil
-}
-
-func handleTimeSelection(update tgbotapi.Update, msg *tgbotapi.EditMessageTextConfig, userState *types.UserSelectionState) *tgbotapi.InlineKeyboardMarkup {
-	callbackData := update.CallbackQuery.Data
-
-	switch {
-	case callbackData == "back_to_main":
-		// User wants to go back to main menu
-		msg.Text = "Select reminder frequency:"
-		return keyboards.GetMainMenuMarkup()
-
-	case callbackData == "back_to_hour_range":
-		// User wants to go back to hour range selection
-		msg.Text = "Select time for your reminders:"
-		return keyboards.GetHourRangeMarkup()
-
-	case callbackData == "back_to_time":
-		// User wants to go back to time selection
-		msg.Text = "Select time for your reminders:"
-		return keyboards.GetHourRangeMarkup()
-
-	case strings.Contains(callbackData, keyboards.CallbackPrefixHourRange):
-		// User selected a 4-hour range, show 1-hour ranges
-		startHour := 0
-		fmt.Sscanf(callbackData[len(keyboards.CallbackPrefixHourRange):], "%d", &startHour)
-		msg.Text = fmt.Sprintf("Select hour within %02d:00-%02d:00:", startHour, (startHour+4)%24)
-		return keyboards.GetMinuteRangeMarkup(startHour)
-
-	case strings.Contains(callbackData, keyboards.CallbackPrefixMinuteRange):
-		// User selected a 1-hour range, show 15-minute intervals
-		startHour := 0
-		fmt.Sscanf(callbackData[len(keyboards.CallbackPrefixMinuteRange):], "%d", &startHour)
-		msg.Text = fmt.Sprintf("Select time within %02d:00-%02d:00:", startHour, (startHour+1)%24)
-		return keyboards.GetSpecificTimeMarkup(startHour)
-
-	case strings.Contains(callbackData, keyboards.CallbackPrefixSpecificTime):
-		// User selected a specific time, go to message selection
-		timeStr := callbackData[len(keyboards.CallbackPrefixSpecificTime):]
-		userState.SelectedTime = timeStr
-		msg.Text = "Select your reminder message:"
-		return keyboards.GetMessageSelectionMarkup()
-
-	case strings.Contains(callbackData, keyboards.CallbackPrefixCustom):
-		// User wants custom time input
-		msg.Text = "Please type your custom time in HH:MM format (e.g., 14:30):"
-		return nil
-	}
-
-	return nil
+	userSelectionsMu.Unlock()
+	return userState
 }
 
 // isValidTimeFormat checks if the input string is a valid time format (HH:MM)
