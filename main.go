@@ -9,6 +9,8 @@ import (
 	"sync"
 
 	"github.com/ivanenkomaksym/remindme_bot/internal/keyboards"
+	"github.com/ivanenkomaksym/remindme_bot/internal/models"
+	"github.com/ivanenkomaksym/remindme_bot/internal/repositories"
 	"github.com/ivanenkomaksym/remindme_bot/internal/types"
 	"github.com/joho/godotenv"
 
@@ -19,6 +21,9 @@ var (
 	bot *tgbotapi.BotAPI
 
 	welcomeMessage = "Welcome to the Reminder Bot!"
+
+	// Global repository instance
+	reminderRepo repositories.ReminderRepository
 )
 
 // in-memory, per-user selection state
@@ -45,6 +50,21 @@ func main() {
 	}
 
 	bot.Debug = true
+
+	// Initialize repository based on STORAGE environment variable
+	storageTypeStr := os.Getenv("STORAGE")
+	if storageTypeStr == "" {
+		storageTypeStr = "inmemory" // Default to in-memory storage
+	}
+
+	storageType, err := repositories.ToStorageType(storageTypeStr)
+	if err != nil {
+		log.Fatalf("Invalid storage type '%s': %v", storageTypeStr, err)
+	}
+
+	factory := repositories.NewReminderRepositoryFactory()
+	reminderRepo = factory.CreateRepository(storageType)
+	log.Printf("Initialized %s storage repository", storageType.String())
 
 	// Get the WEBHOOK_URL from environment variables
 	// This will be the URL of your deployed Cloud Run service + the webhook path
@@ -148,7 +168,7 @@ func processKeyboardSelection(callbackQuery *tgbotapi.CallbackQuery) bool {
 	var markup *tgbotapi.InlineKeyboardMarkup
 
 	// load or init per-user selection state
-	userState := getUserState(callbackQuery.From.ID)
+	userState := getUserStateWithUser(callbackQuery.From)
 
 	// Check if this is a time selection callback
 	keyboardType := keyboards.GetKeyboardType(callbackQuery.Data)
@@ -171,7 +191,7 @@ func processKeyboardSelection(callbackQuery *tgbotapi.CallbackQuery) bool {
 		userSelectionsMu.Unlock()
 	case keyboards.Message:
 		userSelectionsMu.Lock()
-		markup = keyboards.HandleMessageSelection(callbackQuery.Data, &msg, userState)
+		markup = keyboards.HandleMessageSelection(callbackQuery.Data, &msg, userState, reminderRepo)
 		userSelectionsMu.Unlock()
 	}
 	if markup != nil {
@@ -198,7 +218,7 @@ func processUserInput(message *tgbotapi.Message) {
 		}
 	} else if text != "" {
 		// Handle custom time input or custom message input
-		userState := getUserState(message.From.ID)
+		userState := getUserStateWithUser(message.From)
 
 		msg := tgbotapi.NewMessage(
 			message.Chat.ID,
@@ -208,7 +228,7 @@ func processUserInput(message *tgbotapi.Message) {
 		if userState.CustomTime && userState.SelectedTime == "" {
 			msg.ReplyMarkup = keyboards.HadleCustomTimeSelection(text, &msg, userState)
 		} else if userState.CustomText {
-			msg.ReplyMarkup = keyboards.HadleCustomText(text, &msg, userState)
+			msg.ReplyMarkup = keyboards.HadleCustomText(text, &msg, userState, reminderRepo)
 		}
 
 		msg.ParseMode = "HTML"
@@ -216,14 +236,28 @@ func processUserInput(message *tgbotapi.Message) {
 	}
 }
 
-func getUserState(userID int64) *types.UserSelectionState {
+func getUserStateWithUser(user *tgbotapi.User) *types.UserSelectionState {
 	userSelectionsMu.Lock()
-	userState, ok := userSelectionsByUser[userID]
+	userState, ok := userSelectionsByUser[user.ID]
 	if !ok {
 		userState = &types.UserSelectionState{
+			User: models.User{
+				Id:        user.ID,
+				UserName:  user.UserName,
+				FirstName: user.FirstName,
+				LastName:  user.LastName,
+			},
 			WeekOptions: [7]bool{false, false, false, false, false, false, false},
 		}
-		userSelectionsByUser[userID] = userState
+		userSelectionsByUser[user.ID] = userState
+	} else {
+		// Update user info in case it changed
+		userState.User = models.User{
+			Id:        user.ID,
+			UserName:  user.UserName,
+			FirstName: user.FirstName,
+			LastName:  user.LastName,
+		}
 	}
 	userSelectionsMu.Unlock()
 	return userState
