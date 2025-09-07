@@ -51,7 +51,21 @@ func GetMessageSelectionMarkup() *tgbotapi.InlineKeyboardMarkup {
 	return &tgbotapi.InlineKeyboardMarkup{InlineKeyboard: rows}
 }
 
-func HandleMessageSelection(callbackData string, msg *tgbotapi.EditMessageTextConfig, userState *types.UserSelectionState) *tgbotapi.InlineKeyboardMarkup {
+func HandleMessageSelection(callbackData string,
+	msg *tgbotapi.EditMessageTextConfig,
+	userState *types.UserSelectionState) *tgbotapi.InlineKeyboardMarkup {
+
+	if callbackData == CallbackMessageCustom {
+		userState.CustomText = true
+		msg.Text = "Please type your custom reminder message:"
+		return nil
+	}
+
+	if callbackData == CallbackMessageConfirm {
+		msg.Text = FormatReminderConfirmation(userState)
+		return nil
+	}
+
 	if strings.HasPrefix(callbackData, CallbackPrefixMessage) {
 		// Extract message index
 		msgIndex := int(callbackData[len(CallbackPrefixMessage)])
@@ -60,16 +74,6 @@ func HandleMessageSelection(callbackData string, msg *tgbotapi.EditMessageTextCo
 		}
 		msg.Text = "Select your reminder message:"
 		return GetMessageSelectionMarkup()
-	}
-
-	if callbackData == CallbackMessageCustom {
-		msg.Text = "Please type your custom reminder message:"
-		return nil
-	}
-
-	if callbackData == CallbackMessageConfirm {
-		msg.Text = FormatReminderConfirmation(userState)
-		return nil
 	}
 
 	return GetMessageSelectionMarkup()

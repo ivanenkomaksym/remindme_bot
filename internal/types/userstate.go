@@ -9,4 +9,5 @@ type UserSelectionState struct {
 	WeekOptions     [7]bool
 	SelectedTime    string
 	ReminderMessage string
+	CustomText      bool
 }

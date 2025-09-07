@@ -135,7 +135,7 @@ func handleUpdate(update tgbotapi.Update) {
 		msg := tgbotapi.NewEditMessageText(
 			update.CallbackQuery.Message.Chat.ID,
 			update.CallbackQuery.Message.MessageID,
-			"", // Текст буде встановлено нижче
+			"", // Text will be set later
 		)
 		var markup *tgbotapi.InlineKeyboardMarkup
 
@@ -204,21 +204,22 @@ func handleUpdate(update tgbotapi.Update) {
 			userState, ok := userSelectionsByUser[userID]
 			userSelectionsMu.Unlock()
 
+			msg := tgbotapi.NewMessage(
+				update.Message.Chat.ID,
+				"", // Text will be set later
+			)
+
 			if ok && userState.SelectedTime == "" && isValidTimeFormat(update.Message.Text) {
 				// Custom time input
 				userState.SelectedTime = update.Message.Text
-				msg := tgbotapi.NewMessage(update.Message.Chat.ID, "Select your reminder message:")
-				msg.ParseMode = "HTML"
-				msg.ReplyMarkup = keyboards.GetMessageSelectionMarkup()
-				bot.Send(msg)
-			} else if ok && userState.SelectedTime != "" && userState.ReminderMessage == "" {
-				// Custom message input
+				msg.Text = "Select your reminder message:"
+			} else if ok && userState.CustomText {
 				userState.ReminderMessage = update.Message.Text
-				confirmation := keyboards.FormatReminderConfirmation(userState)
-				msg := tgbotapi.NewMessage(update.Message.Chat.ID, confirmation)
-				msg.ParseMode = "HTML"
-				bot.Send(msg)
+				msg.Text = keyboards.FormatReminderConfirmation(userState)
 			}
+
+			msg.ParseMode = "HTML"
+			bot.Send(msg)
 		}
 	}
 }
