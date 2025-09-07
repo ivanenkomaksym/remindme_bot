@@ -79,6 +79,14 @@ func HandleMessageSelection(callbackData string,
 	return GetMessageSelectionMarkup()
 }
 
+func HadleCustomText(text string,
+	msg *tgbotapi.MessageConfig,
+	userState *types.UserSelectionState) *tgbotapi.InlineKeyboardMarkup {
+	userState.ReminderMessage = text
+	msg.Text = FormatReminderConfirmation(userState)
+	return nil
+}
+
 func FormatReminderConfirmation(userState *types.UserSelectionState) string {
 	confirmation := "✅ Reminder Set!\n\n"
 	confirmation += "📅 Frequency: " + userState.RecurrenceType.String() + "\n"

@@ -205,13 +205,10 @@ func processUserInput(message *tgbotapi.Message) {
 			"", // Text will be set later
 		)
 
-		if userState.SelectedTime == "" && isValidTimeFormat(text) {
-			// Custom time input
-			userState.SelectedTime = text
-			msg.Text = "Select your reminder message:"
+		if userState.CustomTime && userState.SelectedTime == "" {
+			msg.ReplyMarkup = keyboards.HadleCustomTimeSelection(text, &msg, userState)
 		} else if userState.CustomText {
-			userState.ReminderMessage = text
-			msg.Text = keyboards.FormatReminderConfirmation(userState)
+			msg.ReplyMarkup = keyboards.HadleCustomText(text, &msg, userState)
 		}
 
 		msg.ParseMode = "HTML"
@@ -230,21 +227,4 @@ func getUserState(userID int64) *types.UserSelectionState {
 	}
 	userSelectionsMu.Unlock()
 	return userState
-}
-
-// isValidTimeFormat checks if the input string is a valid time format (HH:MM)
-func isValidTimeFormat(timeStr string) bool {
-	if len(timeStr) != 5 || timeStr[2] != ':' {
-		return false
-	}
-
-	hour := timeStr[:2]
-	minute := timeStr[3:]
-
-	// Check if hour and minute are valid numbers
-	if hour < "00" || hour > "23" || minute < "00" || minute > "59" {
-		return false
-	}
-
-	return true
 }

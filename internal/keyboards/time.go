@@ -18,6 +18,8 @@ const (
 	CallbackPrefixSpecificTime = "time_specific:"
 	// Represents the custom time selection option.
 	CallbackPrefixCustom = "time_custom:"
+
+	CustomTimeMessage = "Please type your custom time in HH:MM format (e.g., 14:30):"
 )
 
 func IsTimeSelectionCallback(callbackData string) bool {
@@ -66,7 +68,8 @@ func HandleTimeSelection(callbackData string,
 
 	case strings.Contains(callbackData, CallbackPrefixCustom):
 		// User wants custom time input
-		msg.Text = "Please type your custom time in HH:MM format (e.g., 14:30):"
+		userState.CustomTime = true
+		msg.Text = CustomTimeMessage
 		return nil
 	}
 
@@ -146,4 +149,34 @@ func GetSpecificTimeMarkup(startHour int) *tgbotapi.InlineKeyboardMarkup {
 
 	menu := tgbotapi.NewInlineKeyboardMarkup(rows...)
 	return &menu
+}
+
+func HadleCustomTimeSelection(text string,
+	msg *tgbotapi.MessageConfig,
+	userState *types.UserSelectionState) *tgbotapi.InlineKeyboardMarkup {
+	if !isValidTimeFormat(text) {
+		msg.Text = fmt.Sprintf("Invalid format user. %s", CustomTimeMessage)
+		return GetHourRangeMarkup()
+	} else {
+		userState.SelectedTime = text
+		msg.Text = "Select your reminder message:"
+		return GetMessageSelectionMarkup()
+	}
+}
+
+// isValidTimeFormat checks if the input string is a valid time format (HH:MM)
+func isValidTimeFormat(timeStr string) bool {
+	if len(timeStr) != 5 || timeStr[2] != ':' {
+		return false
+	}
+
+	hour := timeStr[:2]
+	minute := timeStr[3:]
+
+	// Check if hour and minute are valid numbers
+	if hour < "00" || hour > "23" || minute < "00" || minute > "59" {
+		return false
+	}
+
+	return true
 }
