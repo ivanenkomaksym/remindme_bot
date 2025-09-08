@@ -9,9 +9,8 @@ import (
 
 // The callback data prefixes help to parse the user's message selection.
 const (
-	CallbackPrefixMessage  = "msg_"
-	CallbackMessageCustom  = "msg_custom"
-	CallbackMessageConfirm = "msg_confirm"
+	CallbackPrefixMessage = "msg_"
+	CallbackMessageCustom = "msg_custom"
 )
 
 var DefaultMessages = []string{
@@ -40,7 +39,6 @@ func GetMessageSelectionMarkup() *tgbotapi.InlineKeyboardMarkup {
 	// Add custom message and confirm options
 	rows = append(rows, tgbotapi.NewInlineKeyboardRow(
 		tgbotapi.NewInlineKeyboardButtonData("✏️ Custom Message", CallbackMessageCustom),
-		tgbotapi.NewInlineKeyboardButtonData("✅ Confirm", CallbackMessageConfirm),
 	))
 
 	// Add back button
@@ -61,24 +59,13 @@ func HandleMessageSelection(callbackData string,
 		return nil, false
 	}
 
-	if callbackData == CallbackMessageConfirm {
-		// Check if all required fields are set
-		if userState.ReminderMessage == "" {
-			msg.Text = "Please select a message first"
-			return GetMessageSelectionMarkup(), false
-		}
-
-		return nil, true
-	}
-
 	if strings.HasPrefix(callbackData, CallbackPrefixMessage) {
 		// Extract message index
 		msgIndex := int(callbackData[len(CallbackPrefixMessage)])
 		if msgIndex >= 0 && msgIndex < len(DefaultMessages) {
 			userState.ReminderMessage = DefaultMessages[msgIndex]
 		}
-		msg.Text = "Select your reminder message:"
-		return GetMessageSelectionMarkup(), false
+		return nil, true
 	}
 
 	return GetMessageSelectionMarkup(), false
