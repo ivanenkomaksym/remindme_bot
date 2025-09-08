@@ -53,17 +53,22 @@ func GetMessageSelectionMarkup() *tgbotapi.InlineKeyboardMarkup {
 
 func HandleMessageSelection(callbackData string,
 	msg *tgbotapi.EditMessageTextConfig,
-	userState *types.UserSelectionState) *tgbotapi.InlineKeyboardMarkup {
+	userState *types.UserSelectionState) (*tgbotapi.InlineKeyboardMarkup, bool) {
 
 	if callbackData == CallbackMessageCustom {
 		userState.CustomText = true
 		msg.Text = "Please type your custom reminder message:"
-		return nil
+		return nil, false
 	}
 
 	if callbackData == CallbackMessageConfirm {
-		msg.Text = FormatReminderConfirmation(userState)
-		return nil
+		// Check if all required fields are set
+		if userState.ReminderMessage == "" {
+			msg.Text = "Please select a message first"
+			return GetMessageSelectionMarkup(), false
+		}
+
+		return nil, true
 	}
 
 	if strings.HasPrefix(callbackData, CallbackPrefixMessage) {
@@ -73,18 +78,17 @@ func HandleMessageSelection(callbackData string,
 			userState.ReminderMessage = DefaultMessages[msgIndex]
 		}
 		msg.Text = "Select your reminder message:"
-		return GetMessageSelectionMarkup()
+		return GetMessageSelectionMarkup(), false
 	}
 
-	return GetMessageSelectionMarkup()
+	return GetMessageSelectionMarkup(), false
 }
 
 func HadleCustomText(text string,
 	msg *tgbotapi.MessageConfig,
-	userState *types.UserSelectionState) *tgbotapi.InlineKeyboardMarkup {
+	userState *types.UserSelectionState) (*tgbotapi.InlineKeyboardMarkup, bool) {
 	userState.ReminderMessage = text
-	msg.Text = FormatReminderConfirmation(userState)
-	return nil
+	return nil, true
 }
 
 func FormatReminderConfirmation(userState *types.UserSelectionState) string {

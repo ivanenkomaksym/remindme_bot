@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"os"
 	"sync"
+	"time"
 
 	"github.com/ivanenkomaksym/remindme_bot/internal/keyboards"
 	"github.com/ivanenkomaksym/remindme_bot/internal/models"
@@ -191,8 +192,17 @@ func processKeyboardSelection(callbackQuery *tgbotapi.CallbackQuery) bool {
 		userSelectionsMu.Unlock()
 	case keyboards.Message:
 		userSelectionsMu.Lock()
-		markup = keyboards.HandleMessageSelection(callbackQuery.Data, &msg, userState, reminderRepo)
+		messageMarkup, completed := keyboards.HandleMessageSelection(callbackQuery.Data, &msg, userState)
 		userSelectionsMu.Unlock()
+
+		// If message selection was successful, create the reminder
+		if completed {
+			if !handleReminderCreation(userState, &msg) {
+				return false
+			}
+		}
+
+		markup = messageMarkup
 	}
 	if markup != nil {
 		msg.ReplyMarkup = markup
@@ -203,7 +213,7 @@ func processKeyboardSelection(callbackQuery *tgbotapi.CallbackQuery) bool {
 	return true
 }
 
-func processUserInput(message *tgbotapi.Message) {
+func processUserInput(message *tgbotapi.Message) bool {
 	user := message.From
 	text := message.Text
 
@@ -228,12 +238,22 @@ func processUserInput(message *tgbotapi.Message) {
 		if userState.CustomTime && userState.SelectedTime == "" {
 			msg.ReplyMarkup = keyboards.HadleCustomTimeSelection(text, &msg, userState)
 		} else if userState.CustomText {
-			msg.ReplyMarkup = keyboards.HadleCustomText(text, &msg, userState, reminderRepo)
+			markup, completed := keyboards.HadleCustomText(text, &msg, userState)
+			msg.ReplyMarkup = markup
+
+			// If custom text was successful, create the reminder
+			if completed {
+				if !handleReminderCreation(userState, &msg) {
+					return false
+				}
+			}
 		}
 
 		msg.ParseMode = "HTML"
 		bot.Send(msg)
 	}
+
+	return true
 }
 
 func getUserStateWithUser(user *tgbotapi.User) *types.UserSelectionState {
@@ -261,4 +281,59 @@ func getUserStateWithUser(user *tgbotapi.User) *types.UserSelectionState {
 	}
 	userSelectionsMu.Unlock()
 	return userState
+}
+
+func handleReminderCreation(userState *types.UserSelectionState, msg any) bool {
+	err := createReminder(userState)
+	if err != nil {
+		log.Printf("Could not create reminder due to error: %s", err)
+		return false
+	}
+
+	clearState(userState.User.Id)
+
+	// Set the confirmation message text based on the message type
+	switch m := msg.(type) {
+	case *tgbotapi.EditMessageTextConfig:
+		m.Text = keyboards.FormatReminderConfirmation(userState)
+	case *tgbotapi.MessageConfig:
+		m.Text = keyboards.FormatReminderConfirmation(userState)
+	}
+
+	return true
+}
+
+func clearState(userID int64) {
+	userSelectionsMu.Lock()
+	delete(userSelectionsByUser, userID)
+	userSelectionsMu.Unlock()
+}
+
+func createReminder(userState *types.UserSelectionState) error {
+	switch userState.RecurrenceType {
+	case models.Daily:
+		reminderRepo.CreateDailyReminder(userState.SelectedTime, userState.User, userState.ReminderMessage)
+	case models.Weekly:
+		// Convert week options to time.Weekday slice
+		var daysOfWeek []time.Weekday
+		for i, selected := range userState.WeekOptions {
+			if selected {
+				daysOfWeek = append(daysOfWeek, time.Weekday(i))
+			}
+		}
+		reminderRepo.CreateWeeklyReminder(daysOfWeek, userState.SelectedTime, userState.User, userState.ReminderMessage)
+	case models.Monthly:
+		// For monthly, we'll use the 1st of each month for now
+		// This could be enhanced to allow user to select specific days
+		daysOfMonth := []int{1}
+		reminderRepo.CreateMonthlyReminder(daysOfMonth, userState.SelectedTime, userState.User, userState.ReminderMessage)
+	case models.Interval:
+		// For interval, treat as daily for now
+		reminderRepo.CreateDailyReminder(userState.SelectedTime, userState.User, userState.ReminderMessage)
+	case models.Custom:
+		// For custom, treat as daily for now
+		reminderRepo.CreateDailyReminder(userState.SelectedTime, userState.User, userState.ReminderMessage)
+	}
+
+	return nil
 }
