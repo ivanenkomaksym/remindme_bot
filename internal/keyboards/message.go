@@ -45,7 +45,7 @@ func GetMessageSelectionMarkup() *tgbotapi.InlineKeyboardMarkup {
 
 	// Add back button
 	rows = append(rows, tgbotapi.NewInlineKeyboardRow(
-		tgbotapi.NewInlineKeyboardButtonData("← Back", "back_to_time"),
+		tgbotapi.NewInlineKeyboardButtonData("← Back", CallbackTimeStart),
 	))
 
 	return &tgbotapi.InlineKeyboardMarkup{InlineKeyboard: rows}

@@ -10,6 +10,7 @@ import (
 
 // The callback data prefixes help to parse the user's selection.
 const (
+	CallbackTimeStart = "time_start"
 	// Represents the start of a 4-hour range selection.
 	CallbackPrefixHourRange = "time_hour_range:"
 	// Represents the start of a 1-hour range selection.
@@ -30,19 +31,8 @@ func HandleTimeSelection(callbackData string,
 	msg *tgbotapi.EditMessageTextConfig,
 	userState *types.UserSelectionState) *tgbotapi.InlineKeyboardMarkup {
 	switch {
-	case callbackData == MainMenu:
-		// User wants to go back to main menu
-		msg.Text = "Select reminder frequency:"
-		return GetMainMenuMarkup()
-
-	case callbackData == "back_to_hour_range":
-		// User wants to go back to hour range selection
-		msg.Text = "Select time for your reminders:"
-		return GetHourRangeMarkup()
-
-	case callbackData == "back_to_time":
-		// User wants to go back to time selection
-		msg.Text = "Select time for your reminders:"
+	case strings.Contains(callbackData, CallbackTimeStart):
+		msg.Text = "Select time for daily reminders:"
 		return GetHourRangeMarkup()
 
 	case strings.Contains(callbackData, CallbackPrefixHourRange):
@@ -79,7 +69,6 @@ func HandleTimeSelection(callbackData string,
 // getHourRangeMarkup generates the first level of the menu (4-hour ranges).
 func GetHourRangeMarkup() *tgbotapi.InlineKeyboardMarkup {
 	var rows [][]tgbotapi.InlineKeyboardButton
-	var buttons []tgbotapi.InlineKeyboardButton
 
 	// Create buttons for 4-hour blocks: 0:00-4:00, 4:00-8:00, etc.
 	for i := 0; i < 24; i += 4 {
@@ -87,10 +76,10 @@ func GetHourRangeMarkup() *tgbotapi.InlineKeyboardMarkup {
 		end := fmt.Sprintf("%02d:00", (i+4)%24)
 		text := fmt.Sprintf("%s-%s", start, end)
 		callbackData := fmt.Sprintf("%s%d", CallbackPrefixHourRange, i)
-		buttons = append(buttons, tgbotapi.NewInlineKeyboardButtonData(text, callbackData))
+		rows = append(rows, tgbotapi.NewInlineKeyboardRow(
+			tgbotapi.NewInlineKeyboardButtonData(text, callbackData)))
 	}
 
-	rows = append(rows, buttons)
 	rows = append(rows, tgbotapi.NewInlineKeyboardRow(
 		tgbotapi.NewInlineKeyboardButtonData("Custom", CallbackPrefixCustom),
 		tgbotapi.NewInlineKeyboardButtonData("← Back", MainMenu),
@@ -103,7 +92,6 @@ func GetHourRangeMarkup() *tgbotapi.InlineKeyboardMarkup {
 // getMinuteRangeMarkup generates the second level of the menu (1-hour ranges).
 func GetMinuteRangeMarkup(startHour int) *tgbotapi.InlineKeyboardMarkup {
 	var rows [][]tgbotapi.InlineKeyboardButton
-	var buttons []tgbotapi.InlineKeyboardButton
 
 	// The loop should create 4 buttons for the next 4 hours
 	for i := 0; i < 4; i++ {
@@ -111,13 +99,13 @@ func GetMinuteRangeMarkup(startHour int) *tgbotapi.InlineKeyboardMarkup {
 		nextHour := (currentHour + 1) % 24
 		text := fmt.Sprintf("%02d:00-%02d:00", currentHour, nextHour)
 		callbackData := fmt.Sprintf("%s%d", CallbackPrefixMinuteRange, currentHour)
-		buttons = append(buttons, tgbotapi.NewInlineKeyboardButtonData(text, callbackData))
+		rows = append(rows, tgbotapi.NewInlineKeyboardRow(
+			tgbotapi.NewInlineKeyboardButtonData(text, callbackData)))
 	}
 
-	rows = append(rows, buttons)
 	rows = append(rows, tgbotapi.NewInlineKeyboardRow(
 		tgbotapi.NewInlineKeyboardButtonData("Custom", CallbackPrefixCustom),
-		tgbotapi.NewInlineKeyboardButtonData("← Back", MainMenu),
+		tgbotapi.NewInlineKeyboardButtonData("← Back", CallbackTimeStart),
 	))
 
 	menu := tgbotapi.NewInlineKeyboardMarkup(rows...)
@@ -141,10 +129,12 @@ func GetSpecificTimeMarkup(startHour int) *tgbotapi.InlineKeyboardMarkup {
 	nextHourCallbackData := fmt.Sprintf("%s%02d:00", CallbackPrefixSpecificTime, (startHour+1)%24)
 	buttons = append(buttons, tgbotapi.NewInlineKeyboardButtonData(nextHourText, nextHourCallbackData))
 
+	backData := fmt.Sprintf("%s%d", CallbackPrefixHourRange, 4*(startHour/4))
+
 	rows = append(rows, buttons)
 	rows = append(rows, tgbotapi.NewInlineKeyboardRow(
 		tgbotapi.NewInlineKeyboardButtonData("Custom", CallbackPrefixCustom),
-		tgbotapi.NewInlineKeyboardButtonData("← Back", MainMenu),
+		tgbotapi.NewInlineKeyboardButtonData("← Back", backData),
 	))
 
 	menu := tgbotapi.NewInlineKeyboardMarkup(rows...)
