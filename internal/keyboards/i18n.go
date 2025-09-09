@@ -19,6 +19,14 @@ type Strings struct {
 	NoReminders           string
 	YourReminders         string
 	BtnDelete             string
+	DefaultMessages       []string
+	ReminderSet           string
+	Frequency             string
+	Days                  string
+	NoneSelected          string
+	Time                  string
+	Message               string
+	ReminderScheduled     string
 }
 
 var stringsByLang = map[string]Strings{
@@ -41,6 +49,19 @@ var stringsByLang = map[string]Strings{
 		NoReminders:           "You have no reminders yet.",
 		YourReminders:         "Your reminders:\n\n",
 		BtnDelete:             "Delete",
+		DefaultMessages: []string{"Time to take a break!",
+			"Don't forget your medication",
+			"Check your email",
+			"Drink some water",
+			"Stand up and stretch",
+			"Review your tasks"},
+		ReminderSet:       "Reminder Set",
+		Frequency:         "Frequency",
+		Days:              "Days",
+		NoneSelected:      "None selected",
+		Time:              "Time",
+		Message:           "Message",
+		ReminderScheduled: "Your reminder has been scheduled!",
 	},
 	LangUK: {
 		Welcome:               "Ласкаво просимо до бота-нагадувача!",
@@ -48,7 +69,7 @@ var stringsByLang = map[string]Strings{
 		BtnWeekly:             "Щотижня",
 		BtnMonthly:            "Щомісяця",
 		BtnInterval:           "Інтервал",
-		BtnCustom:             "власний",
+		BtnCustom:             "Власний",
 		BtnBack:               "← Назад",
 		BtnCustomTime:         "Свій час",
 		MsgSelectTime:         "Оберіть час для щоденних нагадувань:",
@@ -61,6 +82,19 @@ var stringsByLang = map[string]Strings{
 		NoReminders:           "У вас ще немає нагадувань.",
 		YourReminders:         "Ваші нагадування:\n\n",
 		BtnDelete:             "Видалити",
+		DefaultMessages: []string{"Час зробити перерву!",
+			"Не забудьте прийняти ліки",
+			"Перевірте свою електронну пошту",
+			"Випийте трохи води",
+			"Встаньте і розімніться",
+			"Перегляньте свої завдання"},
+		ReminderSet:       "Нагадування встановлено",
+		Frequency:         "Частота",
+		Days:              "Дні",
+		NoneSelected:      "Нічого не вибрано",
+		Time:              "Час",
+		Message:           "Повідомлення",
+		ReminderScheduled: "Ваше нагадування заплановано!",
 	},
 }
 

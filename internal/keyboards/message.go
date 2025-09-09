@@ -13,15 +13,6 @@ const (
 	CallbackMessageCustom = "msg_custom"
 )
 
-var DefaultMessages = []string{
-	"Time to take a break!",
-	"Don't forget your medication",
-	"Check your email",
-	"Drink some water",
-	"Stand up and stretch",
-	"Review your tasks",
-}
-
 func IsMessageSelectionCallback(callbackData string) bool {
 	return strings.HasPrefix(callbackData, CallbackPrefixMessage)
 }
@@ -30,7 +21,7 @@ func GetMessageSelectionMarkup(lang string) *tgbotapi.InlineKeyboardMarkup {
 	var rows [][]tgbotapi.InlineKeyboardButton
 	s := T(lang)
 	// Add default message options
-	for i, msg := range DefaultMessages {
+	for i, msg := range s.DefaultMessages {
 		callbackData := CallbackPrefixMessage + string(rune(i))
 		rows = append(rows, tgbotapi.NewInlineKeyboardRow(
 			tgbotapi.NewInlineKeyboardButtonData(msg, callbackData)))
@@ -60,11 +51,12 @@ func HandleMessageSelection(callbackData string,
 		return nil, false
 	}
 
+	s := T(userState.Language)
 	if strings.HasPrefix(callbackData, CallbackPrefixMessage) {
 		// Extract message index
 		msgIndex := int(callbackData[len(CallbackPrefixMessage)])
-		if msgIndex >= 0 && msgIndex < len(DefaultMessages) {
-			userState.ReminderMessage = DefaultMessages[msgIndex]
+		if msgIndex >= 0 && msgIndex < len(s.DefaultMessages) {
+			userState.ReminderMessage = s.DefaultMessages[msgIndex]
 		}
 		return nil, true
 	}
@@ -80,11 +72,13 @@ func HadleCustomText(text string,
 }
 
 func FormatReminderConfirmation(userState *types.UserSelectionState) string {
-	confirmation := "✅ Reminder Set!\n\n"
-	confirmation += "📅 Frequency: " + userState.RecurrenceType.String() + "\n"
+	s := T(userState.Language)
+
+	confirmation := "✅ " + s.ReminderSet + "!\n\n"
+	confirmation += "📅 " + s.Frequency + ": " + userState.RecurrenceType.String() + "\n"
 
 	if userState.IsWeekly {
-		confirmation += "📆 Days: "
+		confirmation += "📆 " + s.Days + ": "
 		days := []string{}
 		for i, selected := range userState.WeekOptions {
 			if selected {
@@ -94,14 +88,14 @@ func FormatReminderConfirmation(userState *types.UserSelectionState) string {
 		if len(days) > 0 {
 			confirmation += strings.Join(days, ", ")
 		} else {
-			confirmation += "None selected"
+			confirmation += s.NoneSelected
 		}
 		confirmation += "\n"
 	}
 
-	confirmation += "⏰ Time: " + userState.SelectedTime + "\n"
-	confirmation += "💬 Message: " + userState.ReminderMessage + "\n\n"
-	confirmation += "Your reminder has been scheduled!"
+	confirmation += "⏰ " + s.Time + ": " + userState.SelectedTime + "\n"
+	confirmation += "💬 " + s.Message + ": " + userState.ReminderMessage + "\n\n"
+	confirmation += s.ReminderScheduled
 
 	return confirmation
 }

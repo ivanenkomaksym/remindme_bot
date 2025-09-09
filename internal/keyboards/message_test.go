@@ -18,8 +18,9 @@ func TestIsMessageSelectionCallback(t *testing.T) {
 
 func TestGetMessageSelectionMarkup(t *testing.T) {
 	m := GetMessageSelectionMarkup(LangEN)
+	s := T(LangEN)
 	// Default messages (6) + custom row + back row => 8 rows
-	if len(m.InlineKeyboard) != len(DefaultMessages)+2 {
+	if len(m.InlineKeyboard) != len(s.DefaultMessages)+2 {
 		t.Fatalf("unexpected rows: %d", len(m.InlineKeyboard))
 	}
 }
@@ -27,6 +28,7 @@ func TestGetMessageSelectionMarkup(t *testing.T) {
 func TestHandleMessageSelection_DefaultAndCustom(t *testing.T) {
 	var msg tgbotapi.EditMessageTextConfig
 	state := &types.UserSelectionState{}
+	s := T(LangEN)
 
 	// Custom path
 	mk, done := HandleMessageSelection(CallbackMessageCustom, &msg, state)
@@ -42,7 +44,7 @@ func TestHandleMessageSelection_DefaultAndCustom(t *testing.T) {
 	if mk != nil || !done {
 		t.Fatalf("default select should return nil, true")
 	}
-	if state.ReminderMessage != DefaultMessages[1] {
+	if state.ReminderMessage != s.DefaultMessages[1] {
 		t.Fatalf("unexpected message: %s", state.ReminderMessage)
 	}
 }
