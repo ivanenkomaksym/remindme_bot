@@ -26,9 +26,9 @@ func IsMessageSelectionCallback(callbackData string) bool {
 	return strings.HasPrefix(callbackData, CallbackPrefixMessage)
 }
 
-func GetMessageSelectionMarkup() *tgbotapi.InlineKeyboardMarkup {
+func GetMessageSelectionMarkup(lang string) *tgbotapi.InlineKeyboardMarkup {
 	var rows [][]tgbotapi.InlineKeyboardButton
-
+	s := T(lang)
 	// Add default message options
 	for i, msg := range DefaultMessages {
 		callbackData := CallbackPrefixMessage + string(rune(i))
@@ -38,12 +38,12 @@ func GetMessageSelectionMarkup() *tgbotapi.InlineKeyboardMarkup {
 
 	// Add custom message and confirm options
 	rows = append(rows, tgbotapi.NewInlineKeyboardRow(
-		tgbotapi.NewInlineKeyboardButtonData("✏️ Custom Message", CallbackMessageCustom),
+		tgbotapi.NewInlineKeyboardButtonData("✏️ "+s.MsgEnterCustomMessage, CallbackMessageCustom),
 	))
 
 	// Add back button
 	rows = append(rows, tgbotapi.NewInlineKeyboardRow(
-		tgbotapi.NewInlineKeyboardButtonData("← Back", CallbackTimeStart),
+		tgbotapi.NewInlineKeyboardButtonData(s.BtnBack, CallbackTimeStart),
 	))
 
 	return &tgbotapi.InlineKeyboardMarkup{InlineKeyboard: rows}
@@ -55,7 +55,8 @@ func HandleMessageSelection(callbackData string,
 
 	if callbackData == CallbackMessageCustom {
 		userState.CustomText = true
-		msg.Text = "Please type your custom reminder message:"
+		s := T(userState.Language)
+		msg.Text = s.MsgEnterCustomMessage
 		return nil, false
 	}
 
@@ -68,7 +69,7 @@ func HandleMessageSelection(callbackData string,
 		return nil, true
 	}
 
-	return GetMessageSelectionMarkup(), false
+	return GetMessageSelectionMarkup(userState.Language), false
 }
 
 func HadleCustomText(text string,

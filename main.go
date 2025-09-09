@@ -171,12 +171,24 @@ func processKeyboardSelection(callbackQuery *tgbotapi.CallbackQuery) bool {
 	// load or init per-user selection state
 	userState := getUserStateWithUser(callbackQuery.From)
 
+	// Language selection
+	if keyboards.IsLanguageSelectionCallback(callbackQuery.Data) {
+		lang := keyboards.ParseLanguageFromCallback(callbackQuery.Data)
+		userState.Language = lang
+		msg.Text = keyboards.T(lang).Welcome
+		markup = keyboards.GetMainMenuMarkup(userState.Language)
+		msg.ParseMode = "HTML"
+		msg.ReplyMarkup = markup
+		bot.Send(msg)
+		return true
+	}
+
 	// Check if this is a time selection callback
 	keyboardType := keyboards.GetKeyboardType(callbackQuery.Data)
 	switch keyboardType {
 	case keyboards.Main:
-		msg.Text = welcomeMessage
-		markup = keyboards.GetMainMenuMarkup()
+		msg.Text = keyboards.T(userState.Language).Welcome
+		markup = keyboards.GetMainMenuMarkup(userState.Language)
 	case keyboards.Reccurence:
 		m, err := keyboards.HandleRecurrenceTypeSelection(callbackQuery.Data, &msg, userState)
 		if err != nil {
@@ -209,8 +221,8 @@ func processKeyboardSelection(callbackQuery *tgbotapi.CallbackQuery) bool {
 			_ = reminderRepo.DeleteReminder(id, userState.User.Id)
 		}
 		userRems := reminderRepo.GetRemindersByUser(userState.User.Id)
-		msg.Text = keyboards.FormatRemindersListText(userRems)
-		markup = keyboards.GetRemindersListMarkup(userRems)
+		msg.Text = keyboards.FormatRemindersListText(userRems, userState.Language)
+		markup = keyboards.GetRemindersListMarkup(userRems, userState.Language)
 	}
 	if markup != nil {
 		msg.ReplyMarkup = markup
@@ -229,9 +241,11 @@ func processUserInput(message *tgbotapi.Message) bool {
 		log.Printf("'[%s] %s %s' started chat", user.UserName, user.FirstName, user.LastName)
 
 		if message.Command() == "start" {
-			msg := tgbotapi.NewMessage(message.Chat.ID, welcomeMessage)
+			msg := tgbotapi.NewMessage(message.Chat.ID, "")
+			// First, ask for language
+			msg.Text = "Select language / Оберіть мову"
 			msg.ParseMode = "HTML"
-			msg.ReplyMarkup = keyboards.GetMainMenuMarkup()
+			msg.ReplyMarkup = keyboards.GetLanguageSelectionMarkup()
 			bot.Send(msg)
 		}
 	} else if text != "" {
@@ -276,6 +290,7 @@ func getUserStateWithUser(user *tgbotapi.User) *types.UserSelectionState {
 				LastName:  user.LastName,
 			},
 			WeekOptions: [7]bool{false, false, false, false, false, false, false},
+			Language:    keyboards.LangEN,
 		}
 		userSelectionsByUser[user.ID] = userState
 	} else {

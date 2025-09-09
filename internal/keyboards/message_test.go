@@ -17,7 +17,7 @@ func TestIsMessageSelectionCallback(t *testing.T) {
 }
 
 func TestGetMessageSelectionMarkup(t *testing.T) {
-	m := GetMessageSelectionMarkup()
+	m := GetMessageSelectionMarkup(LangEN)
 	// Default messages (6) + custom row + back row => 8 rows
 	if len(m.InlineKeyboard) != len(DefaultMessages)+2 {
 		t.Fatalf("unexpected rows: %d", len(m.InlineKeyboard))

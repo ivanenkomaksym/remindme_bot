@@ -13,25 +13,26 @@ func IsMainMenuSelection(callbackData string) bool {
 	return callbackData == MainMenu
 }
 
-func GetMainMenuMarkup() *tgbotapi.InlineKeyboardMarkup {
+func GetMainMenuMarkup(lang string) *tgbotapi.InlineKeyboardMarkup {
+	s := T(lang)
 	mainMenu := tgbotapi.NewInlineKeyboardMarkup(
 		tgbotapi.NewInlineKeyboardRow(
-			tgbotapi.NewInlineKeyboardButtonData(models.Daily.String(), models.Daily.String()),
+			tgbotapi.NewInlineKeyboardButtonData(s.BtnDaily, models.Daily.String()),
 		),
 		tgbotapi.NewInlineKeyboardRow(
-			tgbotapi.NewInlineKeyboardButtonData(models.Weekly.String(), models.Weekly.String()),
+			tgbotapi.NewInlineKeyboardButtonData(s.BtnWeekly, models.Weekly.String()),
 		),
 		tgbotapi.NewInlineKeyboardRow(
-			tgbotapi.NewInlineKeyboardButtonData(models.Monthly.String(), models.Monthly.String()),
+			tgbotapi.NewInlineKeyboardButtonData(s.BtnMonthly, models.Monthly.String()),
 		),
 		tgbotapi.NewInlineKeyboardRow(
-			tgbotapi.NewInlineKeyboardButtonData(models.Interval.String(), models.Interval.String()),
+			tgbotapi.NewInlineKeyboardButtonData(s.BtnInterval, models.Interval.String()),
 		),
 		tgbotapi.NewInlineKeyboardRow(
-			tgbotapi.NewInlineKeyboardButtonData(models.Custom.String(), models.Custom.String()),
+			tgbotapi.NewInlineKeyboardButtonData(s.BtnCustom, models.Custom.String()),
 		),
 		tgbotapi.NewInlineKeyboardRow(
-			tgbotapi.NewInlineKeyboardButtonData("My reminders", CallbackRemindersList),
+			tgbotapi.NewInlineKeyboardButtonData(s.BtnMyReminders, CallbackRemindersList),
 		),
 	)
 

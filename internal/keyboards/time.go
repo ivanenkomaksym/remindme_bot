@@ -30,36 +30,37 @@ func IsTimeSelectionCallback(callbackData string) bool {
 func HandleTimeSelection(callbackData string,
 	msg *tgbotapi.EditMessageTextConfig,
 	userState *types.UserSelectionState) *tgbotapi.InlineKeyboardMarkup {
+	s := T(userState.Language)
 	switch {
 	case strings.Contains(callbackData, CallbackTimeStart):
-		msg.Text = "Select time for daily reminders:"
-		return GetHourRangeMarkup()
+		msg.Text = s.MsgSelectTime
+		return GetHourRangeMarkup(userState.Language)
 
 	case strings.Contains(callbackData, CallbackPrefixHourRange):
 		// User selected a 4-hour range, show 1-hour ranges
 		startHour := 0
 		fmt.Sscanf(callbackData[len(CallbackPrefixHourRange):], "%d", &startHour)
-		msg.Text = fmt.Sprintf("Select hour within %02d:00-%02d:00:", startHour, (startHour+4)%24)
-		return GetMinuteRangeMarkup(startHour)
+		msg.Text = fmt.Sprintf(s.MsgSelectWithinHour, startHour, (startHour+4)%24)
+		return GetMinuteRangeMarkup(startHour, userState.Language)
 
 	case strings.Contains(callbackData, CallbackPrefixMinuteRange):
 		// User selected a 1-hour range, show 15-minute intervals
 		startHour := 0
 		fmt.Sscanf(callbackData[len(CallbackPrefixMinuteRange):], "%d", &startHour)
 		msg.Text = fmt.Sprintf("Select time within %02d:00-%02d:00:", startHour, (startHour+1)%24)
-		return GetSpecificTimeMarkup(startHour)
+		return GetSpecificTimeMarkup(startHour, userState.Language)
 
 	case strings.Contains(callbackData, CallbackPrefixSpecificTime):
 		// User selected a specific time, go to message selection
 		timeStr := callbackData[len(CallbackPrefixSpecificTime):]
 		userState.SelectedTime = timeStr
-		msg.Text = "Select your reminder message:"
-		return GetMessageSelectionMarkup()
+		msg.Text = s.MsgSelectMessage
+		return GetMessageSelectionMarkup(userState.Language)
 
 	case strings.Contains(callbackData, CallbackPrefixCustom):
 		// User wants custom time input
 		userState.CustomTime = true
-		msg.Text = CustomTimeMessage
+		msg.Text = s.MsgEnterCustomTime
 		return nil
 	}
 
@@ -67,9 +68,9 @@ func HandleTimeSelection(callbackData string,
 }
 
 // getHourRangeMarkup generates the first level of the menu (4-hour ranges).
-func GetHourRangeMarkup() *tgbotapi.InlineKeyboardMarkup {
+func GetHourRangeMarkup(lang string) *tgbotapi.InlineKeyboardMarkup {
 	var rows [][]tgbotapi.InlineKeyboardButton
-
+	s := T(lang)
 	// Create buttons for 4-hour blocks: 0:00-4:00, 4:00-8:00, etc.
 	for i := 0; i < 24; i += 4 {
 		start := fmt.Sprintf("%02d:00", i)
@@ -81,8 +82,8 @@ func GetHourRangeMarkup() *tgbotapi.InlineKeyboardMarkup {
 	}
 
 	rows = append(rows, tgbotapi.NewInlineKeyboardRow(
-		tgbotapi.NewInlineKeyboardButtonData("Custom", CallbackPrefixCustom),
-		tgbotapi.NewInlineKeyboardButtonData("← Back", MainMenu),
+		tgbotapi.NewInlineKeyboardButtonData(s.BtnCustomTime, CallbackPrefixCustom),
+		tgbotapi.NewInlineKeyboardButtonData(s.BtnBack, MainMenu),
 	))
 
 	menu := tgbotapi.NewInlineKeyboardMarkup(rows...)
@@ -90,9 +91,9 @@ func GetHourRangeMarkup() *tgbotapi.InlineKeyboardMarkup {
 }
 
 // getMinuteRangeMarkup generates the second level of the menu (1-hour ranges).
-func GetMinuteRangeMarkup(startHour int) *tgbotapi.InlineKeyboardMarkup {
+func GetMinuteRangeMarkup(startHour int, lang string) *tgbotapi.InlineKeyboardMarkup {
 	var rows [][]tgbotapi.InlineKeyboardButton
-
+	s := T(lang)
 	// The loop should create 4 buttons for the next 4 hours
 	for i := 0; i < 4; i++ {
 		currentHour := (startHour + i) % 24
@@ -104,8 +105,8 @@ func GetMinuteRangeMarkup(startHour int) *tgbotapi.InlineKeyboardMarkup {
 	}
 
 	rows = append(rows, tgbotapi.NewInlineKeyboardRow(
-		tgbotapi.NewInlineKeyboardButtonData("Custom", CallbackPrefixCustom),
-		tgbotapi.NewInlineKeyboardButtonData("← Back", CallbackTimeStart),
+		tgbotapi.NewInlineKeyboardButtonData(s.BtnCustomTime, CallbackPrefixCustom),
+		tgbotapi.NewInlineKeyboardButtonData(s.BtnBack, CallbackTimeStart),
 	))
 
 	menu := tgbotapi.NewInlineKeyboardMarkup(rows...)
@@ -113,10 +114,10 @@ func GetMinuteRangeMarkup(startHour int) *tgbotapi.InlineKeyboardMarkup {
 }
 
 // getSpecificTimeMarkup generates the third and final level of the menu (15-minute intervals).
-func GetSpecificTimeMarkup(startHour int) *tgbotapi.InlineKeyboardMarkup {
+func GetSpecificTimeMarkup(startHour int, lang string) *tgbotapi.InlineKeyboardMarkup {
 	var rows [][]tgbotapi.InlineKeyboardButton
 	var buttons []tgbotapi.InlineKeyboardButton
-
+	s := T(lang)
 	// Create buttons for 15-minute intervals within the selected hour.
 	for i := 0; i < 60; i += 15 {
 		text := fmt.Sprintf("%02d:%02d", startHour, i)
@@ -133,8 +134,8 @@ func GetSpecificTimeMarkup(startHour int) *tgbotapi.InlineKeyboardMarkup {
 
 	rows = append(rows, buttons)
 	rows = append(rows, tgbotapi.NewInlineKeyboardRow(
-		tgbotapi.NewInlineKeyboardButtonData("Custom", CallbackPrefixCustom),
-		tgbotapi.NewInlineKeyboardButtonData("← Back", backData),
+		tgbotapi.NewInlineKeyboardButtonData(s.BtnCustomTime, CallbackPrefixCustom),
+		tgbotapi.NewInlineKeyboardButtonData(s.BtnBack, backData),
 	))
 
 	menu := tgbotapi.NewInlineKeyboardMarkup(rows...)
@@ -145,12 +146,14 @@ func HadleCustomTimeSelection(text string,
 	msg *tgbotapi.MessageConfig,
 	userState *types.UserSelectionState) *tgbotapi.InlineKeyboardMarkup {
 	if !isValidTimeFormat(text) {
-		msg.Text = fmt.Sprintf("Invalid format user. %s", CustomTimeMessage)
-		return GetHourRangeMarkup()
+		s := T(userState.Language)
+		msg.Text = fmt.Sprintf("Invalid format user. %s", s.MsgEnterCustomTime)
+		return GetHourRangeMarkup(userState.Language)
 	} else {
 		userState.SelectedTime = text
-		msg.Text = "Select your reminder message:"
-		return GetMessageSelectionMarkup()
+		s := T(userState.Language)
+		msg.Text = s.MsgSelectMessage
+		return GetMessageSelectionMarkup(userState.Language)
 	}
 }
 

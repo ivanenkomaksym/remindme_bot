@@ -7,7 +7,7 @@ import (
 
 // TestGetHourRangeMarkup verifies the first level of the keyboard.
 func TestGetHourRangeMarkup(t *testing.T) {
-	markup := GetHourRangeMarkup()
+	markup := GetHourRangeMarkup(LangEN)
 
 	// Check the callback data of a specific button.
 	button := markup.InlineKeyboard[2][0] // The "8:00-12:00" button.
@@ -20,7 +20,7 @@ func TestGetHourRangeMarkup(t *testing.T) {
 // TestGetMinuteRangeMarkup verifies the second level of the keyboard.
 func TestGetMinuteRangeMarkup(t *testing.T) {
 	startHour := 8 // Simulating a user selecting "8:00-12:00"
-	markup := GetMinuteRangeMarkup(startHour)
+	markup := GetMinuteRangeMarkup(startHour, LangEN)
 
 	// Check the text of a specific button.
 	button := markup.InlineKeyboard[1][0] // The "9:00-10:00" button.
@@ -39,7 +39,7 @@ func TestGetMinuteRangeMarkup(t *testing.T) {
 // TestGetSpecificTimeMarkup verifies the third level of the keyboard.
 func TestGetSpecificTimeMarkup(t *testing.T) {
 	startHour := 9 // Simulating a user selecting "9:00-10:00"
-	markup := GetSpecificTimeMarkup(startHour)
+	markup := GetSpecificTimeMarkup(startHour, LangEN)
 
 	// There should be two rows: one for times, one for controls.
 	if len(markup.InlineKeyboard) != 2 {

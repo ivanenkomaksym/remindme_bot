@@ -17,22 +17,23 @@ func HandleRecurrenceTypeSelection(callbackData string,
 	userState.RecurrenceType = recurrenceType
 	userState.IsWeekly = (recurrenceType == models.Weekly)
 
+	s := T(userState.Language)
 	switch recurrenceType {
 	case models.Daily:
-		msg.Text = "Select time for daily reminders:"
-		return GetHourRangeMarkup(), nil
+		msg.Text = s.MsgSelectTime
+		return GetHourRangeMarkup(userState.Language), nil
 	case models.Weekly:
-		msg.Text = "Select time for weekly reminders:"
+		msg.Text = s.MsgSelectTime
 		return GetWeekRangeMarkup(userState.WeekOptions), nil
 	case models.Monthly:
-		msg.Text = "Select time for monthly reminders:"
-		return GetHourRangeMarkup(), nil
+		msg.Text = s.MsgSelectTime
+		return GetHourRangeMarkup(userState.Language), nil
 	case models.Interval:
-		msg.Text = "Select time for interval reminders:"
-		return GetHourRangeMarkup(), nil
+		msg.Text = s.MsgSelectTime
+		return GetHourRangeMarkup(userState.Language), nil
 	case models.Custom:
-		msg.Text = "Please type your custom time in HH:MM format (e.g., 14:05):"
-		return GetHourRangeMarkup(), nil
+		msg.Text = s.MsgEnterCustomTime
+		return GetHourRangeMarkup(userState.Language), nil
 	}
 
 	return nil, nil

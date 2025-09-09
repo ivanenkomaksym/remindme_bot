@@ -12,7 +12,7 @@ func TestIsMainMenuSelection(t *testing.T) {
 }
 
 func TestGetMainMenuMarkup(t *testing.T) {
-	m := GetMainMenuMarkup()
+	m := GetMainMenuMarkup(LangEN)
 	if len(m.InlineKeyboard) != 6 {
 		t.Fatalf("expected 6 rows, got %d", len(m.InlineKeyboard))
 	}

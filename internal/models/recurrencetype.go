@@ -23,15 +23,15 @@ var RecurrenceTypeValues = []RecurrenceType{
 func (r RecurrenceType) String() string {
 	switch r {
 	case Daily:
-		return "daily"
+		return "Daily"
 	case Weekly:
-		return "weekly"
+		return "Weekly"
 	case Monthly:
-		return "monthly"
+		return "Monthly"
 	case Interval:
-		return "interval"
+		return "Interval"
 	case Custom:
-		return "custom"
+		return "Custom"
 	default:
 		return "unknown"
 	}
@@ -39,15 +39,15 @@ func (r RecurrenceType) String() string {
 
 func ToRecurrenceType(s string) (RecurrenceType, error) {
 	switch s {
-	case "daily":
+	case "Daily":
 		return Daily, nil
-	case "weekly":
+	case "Weekly":
 		return Weekly, nil
-	case "monthly":
+	case "Monthly":
 		return Monthly, nil
-	case "interval":
+	case "Interval":
 		return Interval, nil
-	case "custom":
+	case "Custom":
 		return Custom, nil
 	default:
 		return -1, errors.New("unknown recurrence")

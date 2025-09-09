@@ -12,4 +12,5 @@ type UserSelectionState struct {
 	ReminderMessage string
 	CustomTime      bool
 	CustomText      bool
+	Language        string
 }

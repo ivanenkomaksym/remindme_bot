@@ -57,7 +57,7 @@ func HandleWeekSelection(callbackData string, msg *tgbotapi.EditMessageTextConfi
 
 	if callbackData == CallbackWeekSelect {
 		msg.Text = "Select time for weekly reminders:"
-		return GetHourRangeMarkup()
+		return GetHourRangeMarkup(LangEN)
 	}
 
 	return GetWeekRangeMarkup(*currentOptions)

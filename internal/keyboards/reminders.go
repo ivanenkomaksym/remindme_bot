@@ -18,11 +18,12 @@ func IsRemindersCallback(callbackData string) bool {
 	return callbackData == CallbackRemindersList || strings.HasPrefix(callbackData, CallbackReminderDeletePrefix)
 }
 
-func GetRemindersListMarkup(reminders []models.Reminder) *tgbotapi.InlineKeyboardMarkup {
+func GetRemindersListMarkup(reminders []models.Reminder, lang string) *tgbotapi.InlineKeyboardMarkup {
 	var rows [][]tgbotapi.InlineKeyboardButton
+	s := T(lang)
 	if len(reminders) == 0 {
 		rows = append(rows, tgbotapi.NewInlineKeyboardRow(
-			tgbotapi.NewInlineKeyboardButtonData("← Back", MainMenu),
+			tgbotapi.NewInlineKeyboardButtonData(s.BtnBack, MainMenu),
 		))
 		menu := tgbotapi.NewInlineKeyboardMarkup(rows...)
 		return &menu
@@ -31,7 +32,7 @@ func GetRemindersListMarkup(reminders []models.Reminder) *tgbotapi.InlineKeyboar
 	for _, r := range reminders {
 		label := fmt.Sprintf("%s • %s", r.Recurrence.Type.String(), r.Recurrence.TimeOfDay)
 		btn := tgbotapi.NewInlineKeyboardButtonData(
-			"🗑 Delete",
+			s.BtnDelete,
 			fmt.Sprintf("%s%d", CallbackReminderDeletePrefix, r.ID),
 		)
 		rows = append(rows,
@@ -43,19 +44,20 @@ func GetRemindersListMarkup(reminders []models.Reminder) *tgbotapi.InlineKeyboar
 	}
 
 	rows = append(rows, tgbotapi.NewInlineKeyboardRow(
-		tgbotapi.NewInlineKeyboardButtonData("← Back", MainMenu),
+		tgbotapi.NewInlineKeyboardButtonData(s.BtnBack, MainMenu),
 	))
 
 	menu := tgbotapi.NewInlineKeyboardMarkup(rows...)
 	return &menu
 }
 
-func FormatRemindersListText(reminders []models.Reminder) string {
+func FormatRemindersListText(reminders []models.Reminder, lang string) string {
+	s := T(lang)
 	if len(reminders) == 0 {
-		return "You have no reminders yet."
+		return s.NoReminders
 	}
 	var b strings.Builder
-	b.WriteString("Your reminders:\n\n")
+	b.WriteString(s.YourReminders)
 	for _, r := range reminders {
 		b.WriteString(fmt.Sprintf("• %s at %s — %s (ID %d)\n", r.Recurrence.Type.String(), r.Recurrence.TimeOfDay, r.Message, r.ID))
 	}
