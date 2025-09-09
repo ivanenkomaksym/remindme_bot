@@ -203,6 +203,14 @@ func processKeyboardSelection(callbackQuery *tgbotapi.CallbackQuery) bool {
 		}
 
 		markup = messageMarkup
+	case keyboards.Reminders:
+		// Show or update the reminders list, and handle deletions
+		if id, ok := keyboards.ParseDeleteReminderID(callbackQuery.Data); ok {
+			_ = reminderRepo.DeleteReminder(id, userState.User.Id)
+		}
+		userRems := reminderRepo.GetRemindersByUser(userState.User.Id)
+		msg.Text = keyboards.FormatRemindersListText(userRems)
+		markup = keyboards.GetRemindersListMarkup(userRems)
 	}
 	if markup != nil {
 		msg.ReplyMarkup = markup

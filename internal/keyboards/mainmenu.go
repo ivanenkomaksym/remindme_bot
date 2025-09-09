@@ -30,6 +30,9 @@ func GetMainMenuMarkup() *tgbotapi.InlineKeyboardMarkup {
 		tgbotapi.NewInlineKeyboardRow(
 			tgbotapi.NewInlineKeyboardButtonData(models.Custom.String(), models.Custom.String()),
 		),
+		tgbotapi.NewInlineKeyboardRow(
+			tgbotapi.NewInlineKeyboardButtonData("My reminders", CallbackRemindersList),
+		),
 	)
 
 	return &mainMenu

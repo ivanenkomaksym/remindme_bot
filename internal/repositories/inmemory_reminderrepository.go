@@ -100,6 +100,32 @@ func (r *InMemoryReminderRepository) GetReminders() []models.Reminder {
 	return out
 }
 
+func (r *InMemoryReminderRepository) GetRemindersByUser(userID int64) []models.Reminder {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+	result := make([]models.Reminder, 0)
+	for _, rem := range r.reminders {
+		if rem.User.Id == userID {
+			result = append(result, rem)
+		}
+	}
+	return result
+}
+
+func (r *InMemoryReminderRepository) DeleteReminder(reminderID int64, userID int64) bool {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+	for i, rem := range r.reminders {
+		if rem.ID == reminderID && rem.User.Id == userID {
+			// delete without preserving order
+			r.reminders[i] = r.reminders[len(r.reminders)-1]
+			r.reminders = r.reminders[:len(r.reminders)-1]
+			return true
+		}
+	}
+	return false
+}
+
 // helpers
 
 func parseHourMinute(timeStr string) (int, int, bool) {
