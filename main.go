@@ -245,11 +245,19 @@ func processUserInput(message *tgbotapi.Message) bool {
 		log.Printf("'[%s] %s %s' started chat", user.UserName, user.FirstName, user.LastName)
 
 		if message.Command() == "start" {
+			userState := getUserStateWithUser(message.From)
 			msg := tgbotapi.NewMessage(message.Chat.ID, "")
-			// First, ask for language
-			msg.Text = "Select language / Оберіть мову"
-			msg.ParseMode = "HTML"
-			msg.ReplyMarkup = keyboards.GetLanguageSelectionMarkup()
+			if userState.Language == "" {
+				// Ask for language if not set
+				msg.Text = "Select language / Оберіть мову"
+				msg.ParseMode = "HTML"
+				msg.ReplyMarkup = keyboards.GetLanguageSelectionMarkup()
+			} else {
+				// Use cached language and show welcome
+				msg.Text = keyboards.T(userState.Language).Welcome
+				msg.ParseMode = "HTML"
+				msg.ReplyMarkup = keyboards.GetMainMenuMarkup(userState.Language)
+			}
 			bot.Send(msg)
 		}
 	} else if text != "" {
@@ -294,7 +302,6 @@ func getUserStateWithUser(user *tgbotapi.User) *types.UserSelectionState {
 				LastName:  user.LastName,
 			},
 			WeekOptions: [7]bool{false, false, false, false, false, false, false},
-			Language:    keyboards.LangEN,
 		}
 		userSelectionsByUser[user.ID] = userState
 	} else {
