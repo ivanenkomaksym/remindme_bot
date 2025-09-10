@@ -240,3 +240,15 @@ func nextMonthlyTrigger(from time.Time, daysOfMonth []int, timeStr string) time.
 	}
 	return best
 }
+
+func (r *InMemoryReminderRepository) UpdateReminder(reminder *models.Reminder) bool {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+	for i := range r.reminders {
+		if r.reminders[i].ID == reminder.ID {
+			r.reminders[i] = *reminder
+			return true
+		}
+	}
+	return false
+}

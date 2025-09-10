@@ -34,7 +34,7 @@ func StartReminderNotifier(reminderRepo repositories.ReminderRepository, bot *tg
 				} else {
 					rem.IsActive = false // deactivate one-time reminders
 				}
-				// TODO: persist the updated reminder (if using persistent storage)
+				reminderRepo.UpdateReminder(rem)
 			}
 		}
 		time.Sleep(time.Second * 10) // Check every 10 seconds

@@ -13,4 +13,5 @@ type ReminderRepository interface {
 	GetReminders() []models.Reminder
 	GetRemindersByUser(userID int64) []models.Reminder
 	DeleteReminder(reminderID int64, userID int64) bool
+	UpdateReminder(reminder *models.Reminder) bool
 }

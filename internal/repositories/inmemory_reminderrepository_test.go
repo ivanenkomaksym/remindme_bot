@@ -148,3 +148,32 @@ func TestGetReminders_ReturnsCopy(t *testing.T) {
 		t.Errorf("expected internal data unchanged, got %q", list2[0].Message)
 	}
 }
+
+func TestUpdateReminder_Happy(t *testing.T) {
+	repo := NewInMemoryReminderRepository()
+	user := models.User{Id: 8}
+	rem := repo.CreateDailyReminder("12:00", user, "original message")
+	rem.Message = "updated message"
+	rem.IsActive = false
+	ok := repo.UpdateReminder(rem)
+	if !ok {
+		t.Fatalf("expected update to succeed")
+	}
+	updated := repo.GetReminders()[0]
+	if updated.Message != "updated message" {
+		t.Errorf("expected message 'updated message', got %q", updated.Message)
+	}
+	if updated.IsActive != false {
+		t.Errorf("expected IsActive false, got %v", updated.IsActive)
+	}
+}
+
+func TestUpdateReminder_NotFound(t *testing.T) {
+	repo := NewInMemoryReminderRepository()
+	user := models.User{Id: 9}
+	rem := &models.Reminder{ID: 999, User: user, Message: "does not exist"}
+	ok := repo.UpdateReminder(rem)
+	if ok {
+		t.Fatalf("expected update to fail for non-existent reminder")
+	}
+}
