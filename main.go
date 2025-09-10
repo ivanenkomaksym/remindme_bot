@@ -11,6 +11,7 @@ import (
 
 	"github.com/ivanenkomaksym/remindme_bot/internal/keyboards"
 	"github.com/ivanenkomaksym/remindme_bot/internal/models"
+	"github.com/ivanenkomaksym/remindme_bot/internal/notifier"
 	"github.com/ivanenkomaksym/remindme_bot/internal/repositories"
 	"github.com/ivanenkomaksym/remindme_bot/internal/types"
 	"github.com/joho/godotenv"
@@ -66,6 +67,9 @@ func main() {
 	factory := repositories.NewReminderRepositoryFactory()
 	reminderRepo = factory.CreateRepository(storageType)
 	log.Printf("Initialized %s storage repository", storageType.String())
+
+	// Start the reminder notification loop
+	go notifier.StartReminderNotifier(reminderRepo, bot)
 
 	// Get the WEBHOOK_URL from environment variables
 	// This will be the URL of your deployed Cloud Run service + the webhook path
