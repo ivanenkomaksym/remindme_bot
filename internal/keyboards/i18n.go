@@ -15,6 +15,7 @@ type Strings struct {
 	MsgSelectMessage      string
 	MsgEnterCustomTime    string
 	MsgEnterCustomMessage string
+	MsgInvalidTimeFormat  string
 	BtnMyReminders        string
 	NoReminders           string
 	YourReminders         string
@@ -45,6 +46,7 @@ var stringsByLang = map[string]Strings{
 		MsgSelectMessage:      "Select your reminder message:",
 		MsgEnterCustomTime:    "Please type your custom time in HH:MM format (e.g., 14:30):",
 		MsgEnterCustomMessage: "Please type your custom reminder message:",
+		MsgInvalidTimeFormat:  "Invalid time format.",
 		BtnMyReminders:        "My reminders",
 		NoReminders:           "You have no reminders yet.",
 		YourReminders:         "Your reminders:\n\n",
@@ -78,6 +80,7 @@ var stringsByLang = map[string]Strings{
 		MsgSelectMessage:      "Оберіть текст нагадування:",
 		MsgEnterCustomTime:    "Введіть час у форматі HH:MM (напр., 14:30):",
 		MsgEnterCustomMessage: "Введіть власний текст нагадування:",
+		MsgInvalidTimeFormat:  "Неправильний формат часу.",
 		BtnMyReminders:        "Мої нагадування",
 		NoReminders:           "У вас ще немає нагадувань.",
 		YourReminders:         "Ваші нагадування:\n\n",

@@ -2,6 +2,7 @@ package keyboards
 
 import (
 	"fmt"
+	"strconv"
 	"strings"
 
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
@@ -19,8 +20,6 @@ const (
 	CallbackPrefixSpecificTime = "time_specific:"
 	// Represents the custom time selection option.
 	CallbackPrefixCustom = "time_custom:"
-
-	CustomTimeMessage = "Please type your custom time in HH:MM format (e.g., 14:30):"
 )
 
 func IsTimeSelectionCallback(callbackData string) bool {
@@ -47,7 +46,7 @@ func HandleTimeSelection(callbackData string,
 		// User selected a 1-hour range, show 15-minute intervals
 		startHour := 0
 		fmt.Sscanf(callbackData[len(CallbackPrefixMinuteRange):], "%d", &startHour)
-		msg.Text = fmt.Sprintf("Select time within %02d:00-%02d:00:", startHour, (startHour+1)%24)
+		msg.Text = fmt.Sprintf(s.MsgSelectWithinHour, startHour, (startHour+1)%24)
 		return GetSpecificTimeMarkup(startHour, userState.Language)
 
 	case strings.Contains(callbackData, CallbackPrefixSpecificTime):
@@ -147,7 +146,7 @@ func HadleCustomTimeSelection(text string,
 	userState *types.UserSelectionState) *tgbotapi.InlineKeyboardMarkup {
 	if !isValidTimeFormat(text) {
 		s := T(userState.Language)
-		msg.Text = fmt.Sprintf("Invalid format user. %s", s.MsgEnterCustomTime)
+		msg.Text = fmt.Sprintf("%s. %s", s.MsgInvalidTimeFormat, s.MsgEnterCustomTime)
 		return GetHourRangeMarkup(userState.Language)
 	} else {
 		userState.SelectedTime = text
@@ -159,17 +158,25 @@ func HadleCustomTimeSelection(text string,
 
 // isValidTimeFormat checks if the input string is a valid time format (HH:MM)
 func isValidTimeFormat(timeStr string) bool {
-	if len(timeStr) != 5 || timeStr[2] != ':' {
+	// Accepts H:MM or HH:MM
+	parts := strings.Split(timeStr, ":")
+	if len(parts) != 2 {
 		return false
 	}
-
-	hour := timeStr[:2]
-	minute := timeStr[3:]
-
-	// Check if hour and minute are valid numbers
-	if hour < "00" || hour > "23" || minute < "00" || minute > "59" {
+	hourStr, minStr := parts[0], parts[1]
+	if len(hourStr) < 1 || len(hourStr) > 2 || len(minStr) != 2 {
 		return false
 	}
-
+	hour := 0
+	minute := 0
+	var err error
+	hour, err = strconv.Atoi(hourStr)
+	if err != nil || hour < 0 || hour > 23 {
+		return false
+	}
+	minute, err = strconv.Atoi(minStr)
+	if err != nil || minute < 0 || minute > 59 {
+		return false
+	}
 	return true
 }
