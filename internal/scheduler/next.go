@@ -57,7 +57,7 @@ func NextWeeklyTrigger(from time.Time, days []time.Weekday, timeStr string) time
 	}
 
 	best := time.Time{}
-	for i := 0; i < 7; i++ {
+	for i := range 7 {
 		day := from.Add(time.Duration(i) * 24 * time.Hour)
 		for _, d := range uniqueDays {
 			if day.Weekday() == d {
