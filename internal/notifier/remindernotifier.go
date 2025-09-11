@@ -5,8 +5,8 @@ import (
 	"time"
 
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
-	"github.com/ivanenkomaksym/remindme_bot/internal/models"
 	"github.com/ivanenkomaksym/remindme_bot/internal/repositories"
+	"github.com/ivanenkomaksym/remindme_bot/internal/scheduler"
 )
 
 // BotSender is a minimal interface of the bot used for sending messages.
@@ -43,22 +43,11 @@ func ProcessDueReminders(now time.Time, reminderRepo repositories.ReminderReposi
 
 		// Update NextTrigger for recurring reminders
 		if rem.Recurrence != nil {
-			next := getNextRecurrence(rem.NextTrigger, rem.Recurrence)
+			next := scheduler.NextForRecurrence(rem.NextTrigger, rem.Recurrence)
 			rem.NextTrigger = next
 		} else {
 			rem.IsActive = false // deactivate one-time reminders
 		}
 		reminderRepo.UpdateReminder(rem)
-	}
-}
-
-// getNextRecurrence calculates the next trigger time for a recurring reminder
-func getNextRecurrence(last time.Time, rec *models.Recurrence) time.Time {
-	switch rec.Type {
-	case models.Daily:
-		return last.Add(24 * time.Hour)
-	// TODO: Implement Weekly, Monthly, Interval and Custom types
-	default:
-		return last.Add(24 * time.Hour)
 	}
 }

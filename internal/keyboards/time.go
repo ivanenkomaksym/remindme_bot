@@ -2,10 +2,10 @@ package keyboards
 
 import (
 	"fmt"
-	"strconv"
 	"strings"
 
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
+	"github.com/ivanenkomaksym/remindme_bot/internal/scheduler"
 	"github.com/ivanenkomaksym/remindme_bot/internal/types"
 )
 
@@ -144,7 +144,9 @@ func GetSpecificTimeMarkup(startHour int, lang string) *tgbotapi.InlineKeyboardM
 func HadleCustomTimeSelection(text string,
 	msg *tgbotapi.MessageConfig,
 	userState *types.UserSelectionState) *tgbotapi.InlineKeyboardMarkup {
-	if !isValidTimeFormat(text) {
+	_, _, ok := scheduler.ParseHourMinute(text)
+
+	if !ok {
 		s := T(userState.Language)
 		msg.Text = fmt.Sprintf("%s. %s", s.MsgInvalidTimeFormat, s.MsgEnterCustomTime)
 		return GetHourRangeMarkup(userState.Language)
@@ -154,29 +156,4 @@ func HadleCustomTimeSelection(text string,
 		msg.Text = s.MsgSelectMessage
 		return GetMessageSelectionMarkup(userState.Language)
 	}
-}
-
-// isValidTimeFormat checks if the input string is a valid time format (HH:MM)
-func isValidTimeFormat(timeStr string) bool {
-	// Accepts H:MM or HH:MM
-	parts := strings.Split(timeStr, ":")
-	if len(parts) != 2 {
-		return false
-	}
-	hourStr, minStr := parts[0], parts[1]
-	if len(hourStr) < 1 || len(hourStr) > 2 || len(minStr) != 2 {
-		return false
-	}
-	hour := 0
-	minute := 0
-	var err error
-	hour, err = strconv.Atoi(hourStr)
-	if err != nil || hour < 0 || hour > 23 {
-		return false
-	}
-	minute, err = strconv.Atoi(minStr)
-	if err != nil || minute < 0 || minute > 59 {
-		return false
-	}
-	return true
 }
