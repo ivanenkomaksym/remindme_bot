@@ -1,6 +1,8 @@
 package keyboards
 
 import (
+	"strings"
+
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 )
 
@@ -32,4 +34,20 @@ func ParseLanguageFromCallback(data string) string {
 		return ""
 	}
 	return data[len(CallbackLangPrefix):]
+}
+
+// MapTelegramLanguageCodeToSupported maps Telegram's User.LanguageCode (e.g. "en", "en-US", "uk-UA")
+// to a supported language code. Returns (code, true) if supported; otherwise ("", false).
+func MapTelegramLanguageCodeToSupported(code string) (string, bool) {
+	if code == "" {
+		return "", false
+	}
+	lower := strings.ToLower(code)
+	if strings.HasPrefix(lower, "uk") {
+		return LangUK, true
+	}
+	if strings.HasPrefix(lower, "en") {
+		return LangEN, true
+	}
+	return "", false
 }

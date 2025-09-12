@@ -246,14 +246,20 @@ func processUserInput(message *tgbotapi.Message) bool {
 
 		if message.Command() == "start" {
 			userState := getUserStateWithUser(message.From)
+			// Try to auto-detect language if not set yet
+			if userState.Language == "" {
+				if lang, ok := keyboards.MapTelegramLanguageCodeToSupported(message.From.LanguageCode); ok {
+					userState.Language = lang
+				}
+			}
 			msg := tgbotapi.NewMessage(message.Chat.ID, "")
 			if userState.Language == "" {
-				// Ask for language if not set
+				// Ask for language if still not set
 				msg.Text = "Select language / Оберіть мову"
 				msg.ParseMode = "HTML"
 				msg.ReplyMarkup = keyboards.GetLanguageSelectionMarkup()
 			} else {
-				// Use cached language and show welcome
+				// Use language and show welcome
 				msg.Text = keyboards.T(userState.Language).Welcome
 				msg.ParseMode = "HTML"
 				msg.ReplyMarkup = keyboards.GetMainMenuMarkup(userState.Language)
@@ -303,6 +309,10 @@ func getUserStateWithUser(user *tgbotapi.User) *types.UserSelectionState {
 			},
 			WeekOptions: [7]bool{false, false, false, false, false, false, false},
 		}
+		// Auto-detect language on first creation if possible
+		if lang, supported := keyboards.MapTelegramLanguageCodeToSupported(user.LanguageCode); supported {
+			userState.Language = lang
+		}
 		userSelectionsByUser[user.ID] = userState
 	} else {
 		// Update user info in case it changed
@@ -311,6 +321,12 @@ func getUserStateWithUser(user *tgbotapi.User) *types.UserSelectionState {
 			UserName:  user.UserName,
 			FirstName: user.FirstName,
 			LastName:  user.LastName,
+		}
+		// If language not set yet, try detect
+		if userState.Language == "" {
+			if lang, supported := keyboards.MapTelegramLanguageCodeToSupported(user.LanguageCode); supported {
+				userState.Language = lang
+			}
 		}
 	}
 	userSelectionsMu.Unlock()
@@ -339,8 +355,16 @@ func handleReminderCreation(userState *types.UserSelectionState, msg any) bool {
 
 func clearState(userID int64) {
 	userSelectionsMu.Lock()
-	delete(userSelectionsByUser, userID)
-	userSelectionsMu.Unlock()
+	defer userSelectionsMu.Unlock()
+	if state, ok := userSelectionsByUser[userID]; ok {
+		preservedUser := state.User
+		preservedLang := state.Language
+		// Reset all fields except User and Language
+		*state = types.UserSelectionState{}
+		state.User = preservedUser
+		state.Language = preservedLang
+		state.WeekOptions = [7]bool{false, false, false, false, false, false, false}
+	}
 }
 
 func createReminder(userState *types.UserSelectionState) error {
