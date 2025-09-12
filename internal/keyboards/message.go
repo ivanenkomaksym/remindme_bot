@@ -71,7 +71,7 @@ func HadleCustomText(text string,
 	return nil, true
 }
 
-func FormatReminderConfirmation(userState *types.UserSelectionState) string {
+func FormatReminderConfirmation(userState *types.UserSelectionState) (string, *tgbotapi.InlineKeyboardMarkup) {
 	s := T(userState.Language)
 
 	confirmation := "✅ " + s.ReminderSet + "!\n\n"
@@ -97,5 +97,11 @@ func FormatReminderConfirmation(userState *types.UserSelectionState) string {
 	confirmation += "💬 " + s.Message + ": " + userState.ReminderMessage + "\n\n"
 	confirmation += s.ReminderScheduled
 
-	return confirmation
+	myRemindersMenu := tgbotapi.NewInlineKeyboardMarkup(
+		tgbotapi.NewInlineKeyboardRow(
+			tgbotapi.NewInlineKeyboardButtonData(s.BtnMyReminders, CallbackRemindersList),
+		),
+	)
+
+	return confirmation, &myRemindersMenu
 }

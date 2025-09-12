@@ -343,11 +343,14 @@ func handleReminderCreation(userState *types.UserSelectionState, msg any) bool {
 	clearState(userState.User.Id)
 
 	// Set the confirmation message text based on the message type
+	text, keyboard := keyboards.FormatReminderConfirmation(userState)
 	switch m := msg.(type) {
 	case *tgbotapi.EditMessageTextConfig:
-		m.Text = keyboards.FormatReminderConfirmation(userState)
+		m.Text = text
+		m.ReplyMarkup = keyboard
 	case *tgbotapi.MessageConfig:
-		m.Text = keyboards.FormatReminderConfirmation(userState)
+		m.Text = text
+		m.ReplyMarkup = keyboard
 	}
 
 	return true
