@@ -17,19 +17,19 @@ func GetMainMenuMarkup(lang string) *tgbotapi.InlineKeyboardMarkup {
 	s := T(lang)
 	mainMenu := tgbotapi.NewInlineKeyboardMarkup(
 		tgbotapi.NewInlineKeyboardRow(
-			tgbotapi.NewInlineKeyboardButtonData(s.BtnDaily, models.Daily.String()),
+			tgbotapi.NewInlineKeyboardButtonData(RecurrenceTypeLabel(lang, models.Daily), models.Daily.String()),
 		),
 		tgbotapi.NewInlineKeyboardRow(
-			tgbotapi.NewInlineKeyboardButtonData(s.BtnWeekly, models.Weekly.String()),
+			tgbotapi.NewInlineKeyboardButtonData(RecurrenceTypeLabel(lang, models.Weekly), models.Weekly.String()),
 		),
 		tgbotapi.NewInlineKeyboardRow(
-			tgbotapi.NewInlineKeyboardButtonData(s.BtnMonthly, models.Monthly.String()),
+			tgbotapi.NewInlineKeyboardButtonData(RecurrenceTypeLabel(lang, models.Monthly), models.Monthly.String()),
 		),
 		tgbotapi.NewInlineKeyboardRow(
-			tgbotapi.NewInlineKeyboardButtonData(s.BtnInterval, models.Interval.String()),
+			tgbotapi.NewInlineKeyboardButtonData(RecurrenceTypeLabel(lang, models.Interval), models.Interval.String()),
 		),
 		tgbotapi.NewInlineKeyboardRow(
-			tgbotapi.NewInlineKeyboardButtonData(s.BtnCustom, models.Custom.String()),
+			tgbotapi.NewInlineKeyboardButtonData(RecurrenceTypeLabel(lang, models.Custom), models.Custom.String()),
 		),
 		tgbotapi.NewInlineKeyboardRow(
 			tgbotapi.NewInlineKeyboardButtonData(s.BtnMyReminders, CallbackRemindersList),

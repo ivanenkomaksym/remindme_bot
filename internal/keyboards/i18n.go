@@ -1,12 +1,10 @@
 package keyboards
 
+import "github.com/ivanenkomaksym/remindme_bot/internal/models"
+
 type Strings struct {
 	Welcome               string
-	BtnDaily              string
-	BtnWeekly             string
-	BtnMonthly            string
-	BtnInterval           string
-	BtnCustom             string
+	RecurrenceTypes       map[models.RecurrenceType]string
 	BtnBack               string
 	BtnCustomTime         string
 	MsgSelectTime         string
@@ -28,16 +26,19 @@ type Strings struct {
 	Time                  string
 	Message               string
 	ReminderScheduled     string
+	At                    string
 }
 
 var stringsByLang = map[string]Strings{
 	LangEN: {
-		Welcome:               "Welcome to the Reminder Bot!",
-		BtnDaily:              "daily",
-		BtnWeekly:             "weekly",
-		BtnMonthly:            "monthly",
-		BtnInterval:           "interval",
-		BtnCustom:             "custom",
+		Welcome: "Welcome to the Reminder Bot!",
+		RecurrenceTypes: map[models.RecurrenceType]string{
+			models.Daily:    "Daily",
+			models.Weekly:   "Weekly",
+			models.Monthly:  "Monthly",
+			models.Interval: "Interval",
+			models.Custom:   "Custom",
+		},
 		BtnBack:               "← Back",
 		BtnCustomTime:         "Custom",
 		MsgSelectTime:         "Select time for daily reminders:",
@@ -64,14 +65,17 @@ var stringsByLang = map[string]Strings{
 		Time:              "Time",
 		Message:           "Message",
 		ReminderScheduled: "Your reminder has been scheduled!",
+		At:                "at",
 	},
 	LangUK: {
-		Welcome:               "Ласкаво просимо до бота-нагадувача!",
-		BtnDaily:              "Щодня",
-		BtnWeekly:             "Щотижня",
-		BtnMonthly:            "Щомісяця",
-		BtnInterval:           "Інтервал",
-		BtnCustom:             "Власний",
+		Welcome: "Ласкаво просимо до бота-нагадувача!",
+		RecurrenceTypes: map[models.RecurrenceType]string{
+			models.Daily:    "Щодня",
+			models.Weekly:   "Щотижня",
+			models.Monthly:  "Щомісяця",
+			models.Interval: "Інтервал",
+			models.Custom:   "Власний",
+		},
 		BtnBack:               "← Назад",
 		BtnCustomTime:         "Свій час",
 		MsgSelectTime:         "Оберіть час для щоденних нагадувань:",
@@ -98,6 +102,7 @@ var stringsByLang = map[string]Strings{
 		Time:              "Час",
 		Message:           "Повідомлення",
 		ReminderScheduled: "Ваше нагадування заплановано!",
+		At:                "в",
 	},
 }
 
@@ -106,4 +111,16 @@ func T(lang string) Strings {
 		return s
 	}
 	return stringsByLang[LangEN]
+}
+
+// RecurrenceTypeLabel returns a localized string for a given recurrence type.
+// Falls back to the enum String() if translation is missing.
+func RecurrenceTypeLabel(lang string, rt models.RecurrenceType) string {
+	s := T(lang)
+	if s.RecurrenceTypes != nil {
+		if v, ok := s.RecurrenceTypes[rt]; ok {
+			return v
+		}
+	}
+	return rt.String()
 }
