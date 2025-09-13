@@ -5,8 +5,8 @@ import (
 	"time"
 
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
-	"github.com/ivanenkomaksym/remindme_bot/internal/models"
-	"github.com/ivanenkomaksym/remindme_bot/internal/repositories"
+	"github.com/ivanenkomaksym/remindme_bot/models"
+	"github.com/ivanenkomaksym/remindme_bot/repositories"
 )
 
 type fakeSender struct{ sent int }

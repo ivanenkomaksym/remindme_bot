@@ -6,7 +6,7 @@ import (
 	"strings"
 
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
-	"github.com/ivanenkomaksym/remindme_bot/internal/models"
+	"github.com/ivanenkomaksym/remindme_bot/models"
 )
 
 const (

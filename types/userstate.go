@@ -1,6 +1,6 @@
 package types
 
-import "github.com/ivanenkomaksym/remindme_bot/internal/models"
+import "github.com/ivanenkomaksym/remindme_bot/models"
 
 // UserSelectionState holds the complete state of a user's reminder setup
 type UserSelectionState struct {

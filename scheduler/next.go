@@ -6,7 +6,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/ivanenkomaksym/remindme_bot/internal/models"
+	"github.com/ivanenkomaksym/remindme_bot/models"
 )
 
 func ParseHourMinute(timeStr string) (int, int, bool) {

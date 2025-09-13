@@ -1,106 +1,22 @@
-// bootstrap telegram bot
-package main
+package route
 
 import (
 	"encoding/json"
 	"log"
 	"net/http"
-	"os"
 	"time"
 
-	"github.com/ivanenkomaksym/remindme_bot/internal/keyboards"
-	"github.com/ivanenkomaksym/remindme_bot/internal/models"
-	"github.com/ivanenkomaksym/remindme_bot/internal/notifier"
-	"github.com/ivanenkomaksym/remindme_bot/internal/repositories"
-	"github.com/ivanenkomaksym/remindme_bot/internal/types"
-	"github.com/joho/godotenv"
+	"github.com/ivanenkomaksym/remindme_bot/bootstrap"
+	"github.com/ivanenkomaksym/remindme_bot/keyboards"
+	"github.com/ivanenkomaksym/remindme_bot/models"
+	"github.com/ivanenkomaksym/remindme_bot/repositories"
+	"github.com/ivanenkomaksym/remindme_bot/types"
 
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 )
 
-var (
-	bot *tgbotapi.BotAPI
-
-	welcomeMessage = "Welcome to the Reminder Bot!"
-	reminderRepo   repositories.ReminderRepository
-	userRepo       repositories.UserRepository
-)
-
-func main() {
-	// Load environment variables
-	err := godotenv.Load()
-	if err != nil {
-		log.Fatal("Error loading .env file")
-	}
-
-	// Initialize the bot
-	token := os.Getenv("BOT_TOKEN")
-	if token == "" {
-		log.Fatal("BOT_TOKEN is not set in .env file")
-	}
-	bot, err = tgbotapi.NewBotAPI(token)
-	if err != nil {
-		log.Fatalf("Failed to create bot: %v", err)
-	}
-
-	bot.Debug = true
-
-	// Initialize repository based on STORAGE environment variable
-	storageTypeStr := os.Getenv("STORAGE")
-	if storageTypeStr == "" {
-		storageTypeStr = "inmemory" // Default to in-memory storage
-	}
-
-	storageType, err := repositories.ToStorageType(storageTypeStr)
-	if err != nil {
-		log.Fatalf("Invalid storage type '%s': %v", storageTypeStr, err)
-	}
-
-	factory := repositories.NewReminderRepositoryFactory()
-	reminderRepo = factory.CreateRepository(storageType)
-	log.Printf("Initialized %s storage repository", storageType.String())
-
-	// Initialize user repository
-	userFactory := repositories.NewUserRepositoryFactory()
-	userRepo = userFactory.CreateRepository(storageType)
-	log.Printf("Initialized %s user repository", storageType.String())
-
-	// Start the reminder notification loop
-	go notifier.StartReminderNotifier(reminderRepo, bot)
-
-	// Get the WEBHOOK_URL from environment variables
-	// This will be the URL of your deployed Cloud Run service + the webhook path
-	webhookURL := os.Getenv("WEBHOOK_URL")
-	if webhookURL == "" {
-		log.Fatal("WEBHOOK_URL environment variable not set. This should be your Cloud Run service URL including the path (e.g., https://<service-url>/telegram-webhook).")
-	}
-
-	wh, err := tgbotapi.NewWebhook(webhookURL)
-	if err != nil {
-		log.Fatalf("Failed to create webhook config: %v", err)
-	}
-	// Use bot.Request to send the WebhookConfig to Telegram
-	_, err = bot.Request(wh)
-	if err != nil {
-		log.Fatalf("Failed to set webhook: %v", err)
-	}
-
-	// Get webhook info to confirm it's set and check for any errors from Telegram's side
-	info, err := bot.GetWebhookInfo()
-	if err != nil {
-		log.Fatalf("Failed to get webhook info: %v", err)
-	}
-	if info.LastErrorDate != 0 {
-		log.Printf("Telegram last webhook error: %s", info.LastErrorMessage)
-	}
-	log.Printf("Webhook set to: %s (pending: %t)", info.URL, info.PendingUpdateCount > 0)
-
-	// Get the port from environment variables, default to 8080 for Cloud Run
-	port := os.Getenv("PORT")
-	if port == "" {
-		port = "8080"
-	}
-	addr := ":" + port
+func Setup(app *bootstrap.Application) {
+	addr := app.Env.ServerAddress
 
 	// Create a new HTTP multiplexer
 	mux := http.NewServeMux()
@@ -123,7 +39,7 @@ func main() {
 
 		// Process the update in a non-blocking way if possible,
 		// but for simple bots, direct handling is fine.
-		handleUpdate(update)
+		handleUpdate(app, update)
 
 		// Respond with 200 OK to Telegram immediately
 		// This acknowledges receipt of the update and prevents Telegram from retrying.
@@ -144,19 +60,19 @@ func main() {
 	}
 }
 
-func handleUpdate(update tgbotapi.Update) {
+func handleUpdate(app *bootstrap.Application, update tgbotapi.Update) {
 	if update.CallbackQuery != nil {
-		processKeyboardSelection(update.CallbackQuery)
+		processKeyboardSelection(app, update.CallbackQuery)
 		return
 	}
 
 	if update.Message != nil {
-		processUserInput(update.Message)
+		processUserInput(app, update.Message)
 		return
 	}
 }
 
-func processKeyboardSelection(callbackQuery *tgbotapi.CallbackQuery) bool {
+func processKeyboardSelection(app *bootstrap.Application, callbackQuery *tgbotapi.CallbackQuery) bool {
 	user := callbackQuery.From
 	text := callbackQuery.Data
 
@@ -170,7 +86,7 @@ func processKeyboardSelection(callbackQuery *tgbotapi.CallbackQuery) bool {
 	var markup *tgbotapi.InlineKeyboardMarkup
 
 	// load or init per-user selection state
-	userModel, userState := userRepo.CreateOrUpdateUserWithState(user.ID,
+	userModel, userState := app.UserRepo.CreateOrUpdateUserWithState(user.ID,
 		user.UserName,
 		user.FirstName,
 		user.LastName,
@@ -179,7 +95,7 @@ func processKeyboardSelection(callbackQuery *tgbotapi.CallbackQuery) bool {
 	if userModel.Language == "" {
 		if lang, supported := keyboards.MapTelegramLanguageCodeToSupported(user.LanguageCode); supported {
 			userModel.Language = lang
-			userRepo.UpdateUserLanguage(userModel.Id, lang)
+			app.UserRepo.UpdateUserLanguage(userModel.Id, lang)
 		}
 	}
 
@@ -187,12 +103,12 @@ func processKeyboardSelection(callbackQuery *tgbotapi.CallbackQuery) bool {
 	if keyboards.IsLanguageSelectionCallback(text) {
 		lang := keyboards.ParseLanguageFromCallback(text)
 		userModel.Language = lang
-		userRepo.UpdateUserLanguage(userModel.Id, lang)
+		app.UserRepo.UpdateUserLanguage(userModel.Id, lang)
 		msg.Text = keyboards.T(lang).Welcome
 		markup = keyboards.GetMainMenuMarkup(userModel.Language)
 		msg.ParseMode = "HTML"
 		msg.ReplyMarkup = markup
-		bot.Send(msg)
+		app.Bot.Send(msg)
 		return true
 	}
 
@@ -209,20 +125,16 @@ func processKeyboardSelection(callbackQuery *tgbotapi.CallbackQuery) bool {
 			return false
 		}
 		markup = m
-		userRepo.UpdateUserState(userModel.Id, userState)
 	case keyboards.Time:
 		markup = keyboards.HandleTimeSelection(text, &msg, userModel, userState)
-		userRepo.UpdateUserState(userModel.Id, userState)
 	case keyboards.Week:
 		markup = keyboards.HandleWeekSelection(text, &msg, &userState.WeekOptions, userModel.Language)
-		userRepo.UpdateUserState(userModel.Id, userState)
 	case keyboards.Message:
 		messageMarkup, completed := keyboards.HandleMessageSelection(text, &msg, userModel, userState)
-		userRepo.UpdateUserState(userModel.Id, userState)
 
 		// If message selection was successful, create the reminder
 		if completed {
-			if !handleReminderCreation(userModel, userState, &msg) {
+			if !handleReminderCreation(app.ReminderRepo, userModel, userState, &msg) {
 				return false
 			}
 		}
@@ -231,9 +143,9 @@ func processKeyboardSelection(callbackQuery *tgbotapi.CallbackQuery) bool {
 	case keyboards.Reminders:
 		// Show or update the reminders list, and handle deletions
 		if id, ok := keyboards.ParseDeleteReminderID(text); ok {
-			_ = reminderRepo.DeleteReminder(id, userModel.Id)
+			_ = app.ReminderRepo.DeleteReminder(id, userModel.Id)
 		}
-		userRems := reminderRepo.GetRemindersByUser(userModel.Id)
+		userRems := app.ReminderRepo.GetRemindersByUser(userModel.Id)
 		msg.Text = keyboards.FormatRemindersListText(userRems, userModel.Language)
 		markup = keyboards.GetRemindersListMarkup(userRems, userModel.Language)
 	}
@@ -241,12 +153,14 @@ func processKeyboardSelection(callbackQuery *tgbotapi.CallbackQuery) bool {
 		msg.ReplyMarkup = markup
 	}
 
+	app.UserRepo.UpdateUserState(userModel.Id, userState)
+
 	msg.ParseMode = "HTML"
-	bot.Send(msg)
+	app.Bot.Send(msg)
 	return true
 }
 
-func processUserInput(message *tgbotapi.Message) bool {
+func processUserInput(app *bootstrap.Application, message *tgbotapi.Message) bool {
 	user := message.From
 	text := message.Text
 
@@ -254,12 +168,12 @@ func processUserInput(message *tgbotapi.Message) bool {
 		log.Printf("'[%s] %s %s' started chat", user.UserName, user.FirstName, user.LastName)
 
 		if message.Command() == "start" {
-			userModel, _ := userRepo.CreateOrUpdateUserWithState(user.ID, user.UserName, user.FirstName, user.LastName, "")
+			userModel, _ := app.UserRepo.CreateOrUpdateUserWithState(user.ID, user.UserName, user.FirstName, user.LastName, "")
 			// Try to auto-detect language if not set yet
 			if userModel.Language == "" {
 				if lang, ok := keyboards.MapTelegramLanguageCodeToSupported(user.LanguageCode); ok {
 					userModel.Language = lang
-					userRepo.UpdateUserLanguage(userModel.Id, lang)
+					app.UserRepo.UpdateUserLanguage(userModel.Id, lang)
 				}
 			}
 			msg := tgbotapi.NewMessage(message.Chat.ID, "")
@@ -274,17 +188,17 @@ func processUserInput(message *tgbotapi.Message) bool {
 				msg.ParseMode = "HTML"
 				msg.ReplyMarkup = keyboards.GetMainMenuMarkup(userModel.Language)
 			}
-			bot.Send(msg)
+			app.Bot.Send(msg)
 		}
 	} else if text != "" {
 		// Handle custom time input or custom message input
-		userModel, userState := userRepo.CreateOrUpdateUserWithState(user.ID, user.UserName, user.FirstName, user.LastName, "")
+		userModel, userState := app.UserRepo.CreateOrUpdateUserWithState(user.ID, user.UserName, user.FirstName, user.LastName, "")
 
 		// Handle language detection externally
 		if userModel.Language == "" {
 			if lang, supported := keyboards.MapTelegramLanguageCodeToSupported(user.LanguageCode); supported {
 				userModel.Language = lang
-				userRepo.UpdateUserLanguage(userModel.Id, lang)
+				app.UserRepo.UpdateUserLanguage(userModel.Id, lang)
 			}
 		}
 
@@ -295,29 +209,30 @@ func processUserInput(message *tgbotapi.Message) bool {
 
 		if userState.CustomTime && userState.SelectedTime == "" {
 			msg.ReplyMarkup = keyboards.HadleCustomTimeSelection(text, &msg, userModel, userState)
-			userRepo.UpdateUserState(userModel.Id, userState)
+			app.UserRepo.UpdateUserState(userModel.Id, userState)
 		} else if userState.CustomText {
 			markup, completed := keyboards.HadleCustomText(text, &msg, userModel, userState)
 			msg.ReplyMarkup = markup
-			userRepo.UpdateUserState(userModel.Id, userState)
+			app.UserRepo.UpdateUserState(userModel.Id, userState)
 
 			// If custom text was successful, create the reminder
 			if completed {
-				if !handleReminderCreation(userModel, userState, &msg) {
+				if !handleReminderCreation(app.ReminderRepo, userModel, userState, &msg) {
 					return false
 				}
+				app.UserRepo.ClearUserState(user.ID)
 			}
 		}
 
 		msg.ParseMode = "HTML"
-		bot.Send(msg)
+		app.Bot.Send(msg)
 	}
 
 	return true
 }
 
-func handleReminderCreation(user *models.User, userState *types.UserSelectionState, msg any) bool {
-	err := createReminder(user, userState)
+func handleReminderCreation(reminderRepo repositories.ReminderRepository, user *models.User, userState *types.UserSelectionState, msg any) bool {
+	err := createReminder(reminderRepo, user, userState)
 	if err != nil {
 		log.Printf("Could not create reminder due to error: %s", err)
 		return false
@@ -334,12 +249,10 @@ func handleReminderCreation(user *models.User, userState *types.UserSelectionSta
 		m.ReplyMarkup = keyboard
 	}
 
-	userRepo.ClearUserState(user.Id)
-
 	return true
 }
 
-func createReminder(user *models.User, userState *types.UserSelectionState) error {
+func createReminder(reminderRepo repositories.ReminderRepository, user *models.User, userState *types.UserSelectionState) error {
 	switch userState.RecurrenceType {
 	case models.Daily:
 		reminderRepo.CreateDailyReminder(userState.SelectedTime, *user, userState.ReminderMessage)

@@ -3,6 +3,7 @@ package bootstrap
 import (
 	"log"
 
+	"github.com/ivanenkomaksym/remindme_bot/repositories"
 	"github.com/spf13/viper"
 )
 
@@ -12,6 +13,7 @@ type Env struct {
 	BotToken      string `mapstructure:"BOT_TOKEN"`
 	WebhookUrl    string `mapstructure:"WEBHOOK_URL"`
 	Storage       string `mapstructure:"STORAGE"`
+	StorageType   repositories.StorageType
 }
 
 func NewEnv() *Env {
@@ -27,6 +29,17 @@ func NewEnv() *Env {
 	if err != nil {
 		log.Fatal("Environment can't be loaded: ", err)
 	}
+
+	// Convert storage string to StorageType
+	if env.Storage == "" {
+		env.Storage = "inmemory" // Default to in-memory storage
+	}
+
+	storageType, err := repositories.ToStorageType(env.Storage)
+	if err != nil {
+		log.Fatalf("Invalid storage type '%s': %v", env.Storage, err)
+	}
+	env.StorageType = storageType
 
 	if env.AppEnv == "development" {
 		log.Println("The App is running in development env")

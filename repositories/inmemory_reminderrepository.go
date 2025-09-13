@@ -4,8 +4,8 @@ import (
 	"sync"
 	"time"
 
-	"github.com/ivanenkomaksym/remindme_bot/internal/models"
-	"github.com/ivanenkomaksym/remindme_bot/internal/scheduler"
+	"github.com/ivanenkomaksym/remindme_bot/models"
+	"github.com/ivanenkomaksym/remindme_bot/scheduler"
 )
 
 type InMemoryReminderRepository struct {

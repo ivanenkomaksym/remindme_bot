@@ -1,6 +1,6 @@
 package keyboards
 
-import "github.com/ivanenkomaksym/remindme_bot/internal/models"
+import "github.com/ivanenkomaksym/remindme_bot/models"
 
 type Strings struct {
 	Welcome               string

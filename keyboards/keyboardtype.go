@@ -1,7 +1,7 @@
 package keyboards
 
 import (
-	"github.com/ivanenkomaksym/remindme_bot/internal/models"
+	"github.com/ivanenkomaksym/remindme_bot/models"
 )
 
 type KeyboardType int64

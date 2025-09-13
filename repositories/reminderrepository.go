@@ -3,7 +3,7 @@ package repositories
 import (
 	"time"
 
-	"github.com/ivanenkomaksym/remindme_bot/internal/models"
+	"github.com/ivanenkomaksym/remindme_bot/models"
 )
 
 type ReminderRepository interface {

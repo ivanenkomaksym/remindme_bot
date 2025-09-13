@@ -5,8 +5,8 @@ import (
 	"time"
 
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
-	"github.com/ivanenkomaksym/remindme_bot/internal/repositories"
-	"github.com/ivanenkomaksym/remindme_bot/internal/scheduler"
+	"github.com/ivanenkomaksym/remindme_bot/repositories"
+	"github.com/ivanenkomaksym/remindme_bot/scheduler"
 )
 
 // BotSender is a minimal interface of the bot used for sending messages.

@@ -4,7 +4,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/ivanenkomaksym/remindme_bot/internal/models"
+	"github.com/ivanenkomaksym/remindme_bot/models"
 )
 
 func mustTime(t *testing.T, layout, value string) time.Time {

@@ -3,8 +3,8 @@ package repositories
 import (
 	"sync"
 
-	"github.com/ivanenkomaksym/remindme_bot/internal/models"
-	"github.com/ivanenkomaksym/remindme_bot/internal/types"
+	"github.com/ivanenkomaksym/remindme_bot/models"
+	"github.com/ivanenkomaksym/remindme_bot/types"
 )
 
 type InMemoryUserRepository struct {
