@@ -4,6 +4,7 @@ import (
 	"strings"
 
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
+	"github.com/ivanenkomaksym/remindme_bot/internal/models"
 	"github.com/ivanenkomaksym/remindme_bot/internal/types"
 )
 
@@ -42,16 +43,17 @@ func GetMessageSelectionMarkup(lang string) *tgbotapi.InlineKeyboardMarkup {
 
 func HandleMessageSelection(callbackData string,
 	msg *tgbotapi.EditMessageTextConfig,
+	user *models.User,
 	userState *types.UserSelectionState) (*tgbotapi.InlineKeyboardMarkup, bool) {
 
 	if callbackData == CallbackMessageCustom {
 		userState.CustomText = true
-		s := T(userState.Language)
+		s := T(user.Language)
 		msg.Text = s.MsgEnterCustomMessage
 		return nil, false
 	}
 
-	s := T(userState.Language)
+	s := T(user.Language)
 	if strings.HasPrefix(callbackData, CallbackPrefixMessage) {
 		// Extract message index
 		msgIndex := int(callbackData[len(CallbackPrefixMessage)])
@@ -61,18 +63,19 @@ func HandleMessageSelection(callbackData string,
 		return nil, true
 	}
 
-	return GetMessageSelectionMarkup(userState.Language), false
+	return GetMessageSelectionMarkup(user.Language), false
 }
 
 func HadleCustomText(text string,
 	msg *tgbotapi.MessageConfig,
+	user *models.User,
 	userState *types.UserSelectionState) (*tgbotapi.InlineKeyboardMarkup, bool) {
 	userState.ReminderMessage = text
 	return nil, true
 }
 
-func FormatReminderConfirmation(userState *types.UserSelectionState) (string, *tgbotapi.InlineKeyboardMarkup) {
-	s := T(userState.Language)
+func FormatReminderConfirmation(user *models.User, userState *types.UserSelectionState) (string, *tgbotapi.InlineKeyboardMarkup) {
+	s := T(user.Language)
 
 	confirmation := "✅ " + s.ReminderSet + "!\n\n"
 	confirmation += "📅 " + s.Frequency + ": " + userState.RecurrenceType.String() + "\n"

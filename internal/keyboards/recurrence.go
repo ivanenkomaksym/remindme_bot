@@ -8,6 +8,7 @@ import (
 
 func HandleRecurrenceTypeSelection(callbackData string,
 	msg *tgbotapi.EditMessageTextConfig,
+	user *models.User,
 	userState *types.UserSelectionState) (*tgbotapi.InlineKeyboardMarkup, error) {
 	recurrenceType, err := models.ToRecurrenceType(callbackData)
 	if err != nil {
@@ -17,23 +18,23 @@ func HandleRecurrenceTypeSelection(callbackData string,
 	userState.RecurrenceType = recurrenceType
 	userState.IsWeekly = (recurrenceType == models.Weekly)
 
-	s := T(userState.Language)
+	s := T(user.Language)
 	switch recurrenceType {
 	case models.Daily:
 		msg.Text = s.MsgSelectTime
-		return GetHourRangeMarkup(userState.Language), nil
+		return GetHourRangeMarkup(user.Language), nil
 	case models.Weekly:
 		msg.Text = s.MsgSelectWeekdays
-		return GetWeekRangeMarkup(userState.WeekOptions, userState.Language), nil
+		return GetWeekRangeMarkup(userState.WeekOptions, user.Language), nil
 	case models.Monthly:
 		msg.Text = s.MsgSelectTime
-		return GetHourRangeMarkup(userState.Language), nil
+		return GetHourRangeMarkup(user.Language), nil
 	case models.Interval:
 		msg.Text = s.MsgSelectTime
-		return GetHourRangeMarkup(userState.Language), nil
+		return GetHourRangeMarkup(user.Language), nil
 	case models.Custom:
 		msg.Text = s.MsgEnterCustomTime
-		return GetHourRangeMarkup(userState.Language), nil
+		return GetHourRangeMarkup(user.Language), nil
 	}
 
 	return nil, nil

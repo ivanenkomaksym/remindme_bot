@@ -6,7 +6,6 @@ import (
 	"log"
 	"net/http"
 	"os"
-	"sync"
 	"time"
 
 	"github.com/ivanenkomaksym/remindme_bot/internal/keyboards"
@@ -23,15 +22,8 @@ var (
 	bot *tgbotapi.BotAPI
 
 	welcomeMessage = "Welcome to the Reminder Bot!"
-
-	// Global repository instance
-	reminderRepo repositories.ReminderRepository
-)
-
-// in-memory, per-user selection state
-var (
-	userSelectionsMu     sync.RWMutex
-	userSelectionsByUser = map[int64]*types.UserSelectionState{}
+	reminderRepo   repositories.ReminderRepository
+	userRepo       repositories.UserRepository
 )
 
 func main() {
@@ -67,6 +59,11 @@ func main() {
 	factory := repositories.NewReminderRepositoryFactory()
 	reminderRepo = factory.CreateRepository(storageType)
 	log.Printf("Initialized %s storage repository", storageType.String())
+
+	// Initialize user repository
+	userFactory := repositories.NewUserRepositoryFactory()
+	userRepo = userFactory.CreateRepository(storageType)
+	log.Printf("Initialized %s user repository", storageType.String())
 
 	// Start the reminder notification loop
 	go notifier.StartReminderNotifier(reminderRepo, bot)
@@ -173,14 +170,26 @@ func processKeyboardSelection(callbackQuery *tgbotapi.CallbackQuery) bool {
 	var markup *tgbotapi.InlineKeyboardMarkup
 
 	// load or init per-user selection state
-	userState := getUserStateWithUser(callbackQuery.From)
+	userModel, userState := userRepo.CreateOrUpdateUserWithState(user.ID,
+		user.UserName,
+		user.FirstName,
+		user.LastName,
+		"")
+
+	if userModel.Language == "" {
+		if lang, supported := keyboards.MapTelegramLanguageCodeToSupported(user.LanguageCode); supported {
+			userModel.Language = lang
+			userRepo.UpdateUserLanguage(userModel.Id, lang)
+		}
+	}
 
 	// Language selection
-	if keyboards.IsLanguageSelectionCallback(callbackQuery.Data) {
-		lang := keyboards.ParseLanguageFromCallback(callbackQuery.Data)
-		userState.Language = lang
+	if keyboards.IsLanguageSelectionCallback(text) {
+		lang := keyboards.ParseLanguageFromCallback(text)
+		userModel.Language = lang
+		userRepo.UpdateUserLanguage(userModel.Id, lang)
 		msg.Text = keyboards.T(lang).Welcome
-		markup = keyboards.GetMainMenuMarkup(userState.Language)
+		markup = keyboards.GetMainMenuMarkup(userModel.Language)
 		msg.ParseMode = "HTML"
 		msg.ReplyMarkup = markup
 		bot.Send(msg)
@@ -188,32 +197,32 @@ func processKeyboardSelection(callbackQuery *tgbotapi.CallbackQuery) bool {
 	}
 
 	// Check if this is a time selection callback
-	keyboardType := keyboards.GetKeyboardType(callbackQuery.Data)
+	keyboardType := keyboards.GetKeyboardType(text)
 	switch keyboardType {
 	case keyboards.Main:
-		msg.Text = keyboards.T(userState.Language).Welcome
-		markup = keyboards.GetMainMenuMarkup(userState.Language)
+		msg.Text = keyboards.T(userModel.Language).Welcome
+		markup = keyboards.GetMainMenuMarkup(userModel.Language)
 	case keyboards.Reccurence:
-		m, err := keyboards.HandleRecurrenceTypeSelection(callbackQuery.Data, &msg, userState)
+		m, err := keyboards.HandleRecurrenceTypeSelection(text, &msg, userModel, userState)
 		if err != nil {
 			log.Printf("Failed to resolve selected recurrence type: %v", err)
 			return false
 		}
 		markup = m
+		userRepo.UpdateUserState(userModel.Id, userState)
 	case keyboards.Time:
-		markup = keyboards.HandleTimeSelection(callbackQuery.Data, &msg, userState)
+		markup = keyboards.HandleTimeSelection(text, &msg, userModel, userState)
+		userRepo.UpdateUserState(userModel.Id, userState)
 	case keyboards.Week:
-		userSelectionsMu.Lock()
-		markup = keyboards.HandleWeekSelection(callbackQuery.Data, &msg, &userState.WeekOptions, userState.Language)
-		userSelectionsMu.Unlock()
+		markup = keyboards.HandleWeekSelection(text, &msg, &userState.WeekOptions, userModel.Language)
+		userRepo.UpdateUserState(userModel.Id, userState)
 	case keyboards.Message:
-		userSelectionsMu.Lock()
-		messageMarkup, completed := keyboards.HandleMessageSelection(callbackQuery.Data, &msg, userState)
-		userSelectionsMu.Unlock()
+		messageMarkup, completed := keyboards.HandleMessageSelection(text, &msg, userModel, userState)
+		userRepo.UpdateUserState(userModel.Id, userState)
 
 		// If message selection was successful, create the reminder
 		if completed {
-			if !handleReminderCreation(userState, &msg) {
+			if !handleReminderCreation(userModel, userState, &msg) {
 				return false
 			}
 		}
@@ -221,12 +230,12 @@ func processKeyboardSelection(callbackQuery *tgbotapi.CallbackQuery) bool {
 		markup = messageMarkup
 	case keyboards.Reminders:
 		// Show or update the reminders list, and handle deletions
-		if id, ok := keyboards.ParseDeleteReminderID(callbackQuery.Data); ok {
-			_ = reminderRepo.DeleteReminder(id, userState.User.Id)
+		if id, ok := keyboards.ParseDeleteReminderID(text); ok {
+			_ = reminderRepo.DeleteReminder(id, userModel.Id)
 		}
-		userRems := reminderRepo.GetRemindersByUser(userState.User.Id)
-		msg.Text = keyboards.FormatRemindersListText(userRems, userState.Language)
-		markup = keyboards.GetRemindersListMarkup(userRems, userState.Language)
+		userRems := reminderRepo.GetRemindersByUser(userModel.Id)
+		msg.Text = keyboards.FormatRemindersListText(userRems, userModel.Language)
+		markup = keyboards.GetRemindersListMarkup(userRems, userModel.Language)
 	}
 	if markup != nil {
 		msg.ReplyMarkup = markup
@@ -245,30 +254,39 @@ func processUserInput(message *tgbotapi.Message) bool {
 		log.Printf("'[%s] %s %s' started chat", user.UserName, user.FirstName, user.LastName)
 
 		if message.Command() == "start" {
-			userState := getUserStateWithUser(message.From)
+			userModel, _ := userRepo.CreateOrUpdateUserWithState(user.ID, user.UserName, user.FirstName, user.LastName, "")
 			// Try to auto-detect language if not set yet
-			if userState.Language == "" {
-				if lang, ok := keyboards.MapTelegramLanguageCodeToSupported(message.From.LanguageCode); ok {
-					userState.Language = lang
+			if userModel.Language == "" {
+				if lang, ok := keyboards.MapTelegramLanguageCodeToSupported(user.LanguageCode); ok {
+					userModel.Language = lang
+					userRepo.UpdateUserLanguage(userModel.Id, lang)
 				}
 			}
 			msg := tgbotapi.NewMessage(message.Chat.ID, "")
-			if userState.Language == "" {
+			if userModel.Language == "" {
 				// Ask for language if still not set
 				msg.Text = "Select language / Оберіть мову"
 				msg.ParseMode = "HTML"
 				msg.ReplyMarkup = keyboards.GetLanguageSelectionMarkup()
 			} else {
 				// Use language and show welcome
-				msg.Text = keyboards.T(userState.Language).Welcome
+				msg.Text = keyboards.T(userModel.Language).Welcome
 				msg.ParseMode = "HTML"
-				msg.ReplyMarkup = keyboards.GetMainMenuMarkup(userState.Language)
+				msg.ReplyMarkup = keyboards.GetMainMenuMarkup(userModel.Language)
 			}
 			bot.Send(msg)
 		}
 	} else if text != "" {
 		// Handle custom time input or custom message input
-		userState := getUserStateWithUser(message.From)
+		userModel, userState := userRepo.CreateOrUpdateUserWithState(user.ID, user.UserName, user.FirstName, user.LastName, "")
+
+		// Handle language detection externally
+		if userModel.Language == "" {
+			if lang, supported := keyboards.MapTelegramLanguageCodeToSupported(user.LanguageCode); supported {
+				userModel.Language = lang
+				userRepo.UpdateUserLanguage(userModel.Id, lang)
+			}
+		}
 
 		msg := tgbotapi.NewMessage(
 			message.Chat.ID,
@@ -276,14 +294,16 @@ func processUserInput(message *tgbotapi.Message) bool {
 		)
 
 		if userState.CustomTime && userState.SelectedTime == "" {
-			msg.ReplyMarkup = keyboards.HadleCustomTimeSelection(text, &msg, userState)
+			msg.ReplyMarkup = keyboards.HadleCustomTimeSelection(text, &msg, userModel, userState)
+			userRepo.UpdateUserState(userModel.Id, userState)
 		} else if userState.CustomText {
-			markup, completed := keyboards.HadleCustomText(text, &msg, userState)
+			markup, completed := keyboards.HadleCustomText(text, &msg, userModel, userState)
 			msg.ReplyMarkup = markup
+			userRepo.UpdateUserState(userModel.Id, userState)
 
 			// If custom text was successful, create the reminder
 			if completed {
-				if !handleReminderCreation(userState, &msg) {
+				if !handleReminderCreation(userModel, userState, &msg) {
 					return false
 				}
 			}
@@ -296,52 +316,15 @@ func processUserInput(message *tgbotapi.Message) bool {
 	return true
 }
 
-func getUserStateWithUser(user *tgbotapi.User) *types.UserSelectionState {
-	userSelectionsMu.Lock()
-	userState, ok := userSelectionsByUser[user.ID]
-	if !ok {
-		userState = &types.UserSelectionState{
-			User: models.User{
-				Id:        user.ID,
-				UserName:  user.UserName,
-				FirstName: user.FirstName,
-				LastName:  user.LastName,
-			},
-			WeekOptions: [7]bool{false, false, false, false, false, false, false},
-		}
-		// Auto-detect language on first creation if possible
-		if lang, supported := keyboards.MapTelegramLanguageCodeToSupported(user.LanguageCode); supported {
-			userState.Language = lang
-		}
-		userSelectionsByUser[user.ID] = userState
-	} else {
-		// Update user info in case it changed
-		userState.User = models.User{
-			Id:        user.ID,
-			UserName:  user.UserName,
-			FirstName: user.FirstName,
-			LastName:  user.LastName,
-		}
-		// If language not set yet, try detect
-		if userState.Language == "" {
-			if lang, supported := keyboards.MapTelegramLanguageCodeToSupported(user.LanguageCode); supported {
-				userState.Language = lang
-			}
-		}
-	}
-	userSelectionsMu.Unlock()
-	return userState
-}
-
-func handleReminderCreation(userState *types.UserSelectionState, msg any) bool {
-	err := createReminder(userState)
+func handleReminderCreation(user *models.User, userState *types.UserSelectionState, msg any) bool {
+	err := createReminder(user, userState)
 	if err != nil {
 		log.Printf("Could not create reminder due to error: %s", err)
 		return false
 	}
 
 	// Set the confirmation message text based on the message type
-	text, keyboard := keyboards.FormatReminderConfirmation(userState)
+	text, keyboard := keyboards.FormatReminderConfirmation(user, userState)
 	switch m := msg.(type) {
 	case *tgbotapi.EditMessageTextConfig:
 		m.Text = text
@@ -351,29 +334,15 @@ func handleReminderCreation(userState *types.UserSelectionState, msg any) bool {
 		m.ReplyMarkup = keyboard
 	}
 
-	clearState(userState.User.Id)
+	userRepo.ClearUserState(user.Id)
 
 	return true
 }
 
-func clearState(userID int64) {
-	userSelectionsMu.Lock()
-	defer userSelectionsMu.Unlock()
-	if state, ok := userSelectionsByUser[userID]; ok {
-		preservedUser := state.User
-		preservedLang := state.Language
-		// Reset all fields except User and Language
-		*state = types.UserSelectionState{}
-		state.User = preservedUser
-		state.Language = preservedLang
-		state.WeekOptions = [7]bool{false, false, false, false, false, false, false}
-	}
-}
-
-func createReminder(userState *types.UserSelectionState) error {
+func createReminder(user *models.User, userState *types.UserSelectionState) error {
 	switch userState.RecurrenceType {
 	case models.Daily:
-		reminderRepo.CreateDailyReminder(userState.SelectedTime, userState.User, userState.ReminderMessage)
+		reminderRepo.CreateDailyReminder(userState.SelectedTime, *user, userState.ReminderMessage)
 	case models.Weekly:
 		// Convert week options to time.Weekday slice
 		var daysOfWeek []time.Weekday
@@ -382,18 +351,18 @@ func createReminder(userState *types.UserSelectionState) error {
 				daysOfWeek = append(daysOfWeek, time.Weekday(i))
 			}
 		}
-		reminderRepo.CreateWeeklyReminder(daysOfWeek, userState.SelectedTime, userState.User, userState.ReminderMessage)
+		reminderRepo.CreateWeeklyReminder(daysOfWeek, userState.SelectedTime, *user, userState.ReminderMessage)
 	case models.Monthly:
 		// For monthly, we'll use the 1st of each month for now
 		// This could be enhanced to allow user to select specific days
 		daysOfMonth := []int{1}
-		reminderRepo.CreateMonthlyReminder(daysOfMonth, userState.SelectedTime, userState.User, userState.ReminderMessage)
+		reminderRepo.CreateMonthlyReminder(daysOfMonth, userState.SelectedTime, *user, userState.ReminderMessage)
 	case models.Interval:
 		// For interval, treat as daily for now
-		reminderRepo.CreateDailyReminder(userState.SelectedTime, userState.User, userState.ReminderMessage)
+		reminderRepo.CreateDailyReminder(userState.SelectedTime, *user, userState.ReminderMessage)
 	case models.Custom:
 		// For custom, treat as daily for now
-		reminderRepo.CreateDailyReminder(userState.SelectedTime, userState.User, userState.ReminderMessage)
+		reminderRepo.CreateDailyReminder(userState.SelectedTime, *user, userState.ReminderMessage)
 	}
 
 	return nil

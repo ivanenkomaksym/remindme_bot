@@ -32,7 +32,7 @@ func TestGetKeyboardType(t *testing.T) {
 	if got := GetKeyboardType(CallbackTimeStart); got != Time {
 		t.Fatalf("GetKeyboardType(time) = %v, want %v", got, Time)
 	}
-	if got := GetKeyboardType(s.WeekdayNames[0]); got != Week {
+	if got := GetKeyboardType(CallbackWeekDay + s.WeekdayNames[0]); got != Week {
 		t.Fatalf("GetKeyboardType(week day) = %v, want %v", got, Week)
 	}
 	if got := GetKeyboardType(CallbackPrefixMessage + "0"); got != Message {

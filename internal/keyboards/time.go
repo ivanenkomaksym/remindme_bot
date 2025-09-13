@@ -5,6 +5,7 @@ import (
 	"strings"
 
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
+	"github.com/ivanenkomaksym/remindme_bot/internal/models"
 	"github.com/ivanenkomaksym/remindme_bot/internal/scheduler"
 	"github.com/ivanenkomaksym/remindme_bot/internal/types"
 )
@@ -28,33 +29,34 @@ func IsTimeSelectionCallback(callbackData string) bool {
 
 func HandleTimeSelection(callbackData string,
 	msg *tgbotapi.EditMessageTextConfig,
+	user *models.User,
 	userState *types.UserSelectionState) *tgbotapi.InlineKeyboardMarkup {
-	s := T(userState.Language)
+	s := T(user.Language)
 	switch {
 	case strings.Contains(callbackData, CallbackTimeStart):
 		msg.Text = s.MsgSelectTime
-		return GetHourRangeMarkup(userState.Language)
+		return GetHourRangeMarkup(user.Language)
 
 	case strings.Contains(callbackData, CallbackPrefixHourRange):
 		// User selected a 4-hour range, show 1-hour ranges
 		startHour := 0
 		fmt.Sscanf(callbackData[len(CallbackPrefixHourRange):], "%d", &startHour)
 		msg.Text = fmt.Sprintf(s.MsgSelectWithinHour, startHour, (startHour+4)%24)
-		return GetMinuteRangeMarkup(startHour, userState.Language)
+		return GetMinuteRangeMarkup(startHour, user.Language)
 
 	case strings.Contains(callbackData, CallbackPrefixMinuteRange):
 		// User selected a 1-hour range, show 15-minute intervals
 		startHour := 0
 		fmt.Sscanf(callbackData[len(CallbackPrefixMinuteRange):], "%d", &startHour)
 		msg.Text = fmt.Sprintf(s.MsgSelectWithinHour, startHour, (startHour+1)%24)
-		return GetSpecificTimeMarkup(startHour, userState.Language)
+		return GetSpecificTimeMarkup(startHour, user.Language)
 
 	case strings.Contains(callbackData, CallbackPrefixSpecificTime):
 		// User selected a specific time, go to message selection
 		timeStr := callbackData[len(CallbackPrefixSpecificTime):]
 		userState.SelectedTime = timeStr
 		msg.Text = s.MsgSelectMessage
-		return GetMessageSelectionMarkup(userState.Language)
+		return GetMessageSelectionMarkup(user.Language)
 
 	case strings.Contains(callbackData, CallbackPrefixCustom):
 		// User wants custom time input
@@ -143,17 +145,18 @@ func GetSpecificTimeMarkup(startHour int, lang string) *tgbotapi.InlineKeyboardM
 
 func HadleCustomTimeSelection(text string,
 	msg *tgbotapi.MessageConfig,
+	user *models.User,
 	userState *types.UserSelectionState) *tgbotapi.InlineKeyboardMarkup {
 	_, _, ok := scheduler.ParseHourMinute(text)
 
 	if !ok {
-		s := T(userState.Language)
+		s := T(user.Language)
 		msg.Text = fmt.Sprintf("%s. %s", s.MsgInvalidTimeFormat, s.MsgEnterCustomTime)
-		return GetHourRangeMarkup(userState.Language)
+		return GetHourRangeMarkup(user.Language)
 	} else {
 		userState.SelectedTime = text
-		s := T(userState.Language)
+		s := T(user.Language)
 		msg.Text = s.MsgSelectMessage
-		return GetMessageSelectionMarkup(userState.Language)
+		return GetMessageSelectionMarkup(user.Language)
 	}
 }

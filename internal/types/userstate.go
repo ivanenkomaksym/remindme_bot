@@ -4,7 +4,6 @@ import "github.com/ivanenkomaksym/remindme_bot/internal/models"
 
 // UserSelectionState holds the complete state of a user's reminder setup
 type UserSelectionState struct {
-	User            models.User
 	RecurrenceType  models.RecurrenceType
 	IsWeekly        bool
 	WeekOptions     [7]bool
@@ -12,5 +11,10 @@ type UserSelectionState struct {
 	ReminderMessage string
 	CustomTime      bool
 	CustomText      bool
-	Language        string
+}
+
+func CreateUserState() UserSelectionState {
+	return UserSelectionState{
+		WeekOptions: [7]bool{false, false, false, false, false, false, false},
+	}
 }
