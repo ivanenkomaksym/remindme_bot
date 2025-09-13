@@ -27,6 +27,11 @@ type Strings struct {
 	Message               string
 	ReminderScheduled     string
 	At                    string
+	// Week-related i18n
+	WeekdayNames        []string
+	MsgSelectWeekdays   string
+	MsgSelectTimeWeekly string
+	BtnSelect           string
 }
 
 var stringsByLang = map[string]Strings{
@@ -58,14 +63,18 @@ var stringsByLang = map[string]Strings{
 			"Drink some water",
 			"Stand up and stretch",
 			"Review your tasks"},
-		ReminderSet:       "Reminder Set",
-		Frequency:         "Frequency",
-		Days:              "Days",
-		NoneSelected:      "None selected",
-		Time:              "Time",
-		Message:           "Message",
-		ReminderScheduled: "Your reminder has been scheduled!",
-		At:                "at",
+		ReminderSet:         "Reminder Set",
+		Frequency:           "Frequency",
+		Days:                "Days",
+		NoneSelected:        "None selected",
+		Time:                "Time",
+		Message:             "Message",
+		ReminderScheduled:   "Your reminder has been scheduled!",
+		At:                  "at",
+		WeekdayNames:        []string{"Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"},
+		MsgSelectWeekdays:   "Select weekdays:",
+		MsgSelectTimeWeekly: "Select time for weekly reminders:",
+		BtnSelect:           "Select",
 	},
 	LangUK: {
 		Welcome: "Ласкаво просимо до бота-нагадувача!",
@@ -95,14 +104,18 @@ var stringsByLang = map[string]Strings{
 			"Випийте трохи води",
 			"Встаньте і розімніться",
 			"Перегляньте свої завдання"},
-		ReminderSet:       "Нагадування встановлено",
-		Frequency:         "Частота",
-		Days:              "Дні",
-		NoneSelected:      "Нічого не вибрано",
-		Time:              "Час",
-		Message:           "Повідомлення",
-		ReminderScheduled: "Ваше нагадування заплановано!",
-		At:                "в",
+		ReminderSet:         "Нагадування встановлено",
+		Frequency:           "Частота",
+		Days:                "Дні",
+		NoneSelected:        "Нічого не вибрано",
+		Time:                "Час",
+		Message:             "Повідомлення",
+		ReminderScheduled:   "Ваше нагадування заплановано!",
+		At:                  "в",
+		WeekdayNames:        []string{"Понеділок", "Вівторок", "Середа", "Четвер", "П’ятниця", "Субота", "Неділя"},
+		MsgSelectWeekdays:   "Оберіть дні тижня:",
+		MsgSelectTimeWeekly: "Оберіть час для щотижневих нагадувань:",
+		BtnSelect:           "Обрати",
 	},
 }
 

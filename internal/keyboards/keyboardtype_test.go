@@ -24,13 +24,15 @@ func TestKeyboardTypeString(t *testing.T) {
 }
 
 func TestGetKeyboardType(t *testing.T) {
+	s := T(LangEN)
+
 	if got := GetKeyboardType(MainMenu); got != Main {
 		t.Fatalf("GetKeyboardType(MainMenu) = %v, want %v", got, Main)
 	}
 	if got := GetKeyboardType(CallbackTimeStart); got != Time {
 		t.Fatalf("GetKeyboardType(time) = %v, want %v", got, Time)
 	}
-	if got := GetKeyboardType(LongDayNames[0]); got != Week {
+	if got := GetKeyboardType(s.WeekdayNames[0]); got != Week {
 		t.Fatalf("GetKeyboardType(week day) = %v, want %v", got, Week)
 	}
 	if got := GetKeyboardType(CallbackPrefixMessage + "0"); got != Message {

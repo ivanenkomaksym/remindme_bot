@@ -204,7 +204,7 @@ func processKeyboardSelection(callbackQuery *tgbotapi.CallbackQuery) bool {
 		markup = keyboards.HandleTimeSelection(callbackQuery.Data, &msg, userState)
 	case keyboards.Week:
 		userSelectionsMu.Lock()
-		markup = keyboards.HandleWeekSelection(callbackQuery.Data, &msg, &userState.WeekOptions)
+		markup = keyboards.HandleWeekSelection(callbackQuery.Data, &msg, &userState.WeekOptions, userState.Language)
 		userSelectionsMu.Unlock()
 	case keyboards.Message:
 		userSelectionsMu.Lock()
@@ -340,8 +340,6 @@ func handleReminderCreation(userState *types.UserSelectionState, msg any) bool {
 		return false
 	}
 
-	clearState(userState.User.Id)
-
 	// Set the confirmation message text based on the message type
 	text, keyboard := keyboards.FormatReminderConfirmation(userState)
 	switch m := msg.(type) {
@@ -352,6 +350,8 @@ func handleReminderCreation(userState *types.UserSelectionState, msg any) bool {
 		m.Text = text
 		m.ReplyMarkup = keyboard
 	}
+
+	clearState(userState.User.Id)
 
 	return true
 }

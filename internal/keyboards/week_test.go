@@ -7,8 +7,8 @@ import (
 )
 
 func TestIsWeekSelectionCallback(t *testing.T) {
-	if !IsWeekSelectionCallback(LongDayNames[0]) {
-		t.Fatalf("day name should be recognized")
+	if !IsWeekSelectionCallback(CallbackWeekDay + "0") {
+		t.Fatalf("day callback should be recognized")
 	}
 	if !IsWeekSelectionCallback(CallbackWeekSelect) {
 		t.Fatalf("select should be recognized")
@@ -20,7 +20,7 @@ func TestIsWeekSelectionCallback(t *testing.T) {
 
 func TestGetWeekRangeMarkup(t *testing.T) {
 	var opts [7]bool
-	m := GetWeekRangeMarkup(opts)
+	m := GetWeekRangeMarkup(opts, LangEN)
 	// 7 day rows + select + back
 	if len(m.InlineKeyboard) != 9 {
 		t.Fatalf("expected 9 rows, got %d", len(m.InlineKeyboard))
@@ -36,8 +36,8 @@ func TestHandleWeekSelection_ToggleAndSelect(t *testing.T) {
 	var msg tgbotapi.EditMessageTextConfig
 	opts := [7]bool{}
 
-	// Toggle Monday
-	mk := HandleWeekSelection(LongDayNames[0], &msg, &opts)
+	// Toggle Monday (index 0)
+	mk := HandleWeekSelection(CallbackWeekDay+"0", &msg, &opts, LangEN)
 	if mk == nil || !opts[0] {
 		t.Fatalf("monday should be toggled on")
 	}
@@ -46,7 +46,7 @@ func TestHandleWeekSelection_ToggleAndSelect(t *testing.T) {
 	}
 
 	// Confirm selection
-	mk = HandleWeekSelection(CallbackWeekSelect, &msg, &opts)
+	mk = HandleWeekSelection(CallbackWeekSelect, &msg, &opts, LangEN)
 	if mk == nil {
 		t.Fatalf("expected markup on select")
 	}

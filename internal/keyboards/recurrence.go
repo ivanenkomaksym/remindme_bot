@@ -23,8 +23,8 @@ func HandleRecurrenceTypeSelection(callbackData string,
 		msg.Text = s.MsgSelectTime
 		return GetHourRangeMarkup(userState.Language), nil
 	case models.Weekly:
-		msg.Text = s.MsgSelectTime
-		return GetWeekRangeMarkup(userState.WeekOptions), nil
+		msg.Text = s.MsgSelectWeekdays
+		return GetWeekRangeMarkup(userState.WeekOptions, userState.Language), nil
 	case models.Monthly:
 		msg.Text = s.MsgSelectTime
 		return GetHourRangeMarkup(userState.Language), nil

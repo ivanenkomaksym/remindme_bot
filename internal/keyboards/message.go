@@ -80,9 +80,10 @@ func FormatReminderConfirmation(userState *types.UserSelectionState) (string, *t
 	if userState.IsWeekly {
 		confirmation += "📆 " + s.Days + ": "
 		days := []string{}
+		weekdayNames := s.WeekdayNames
 		for i, selected := range userState.WeekOptions {
 			if selected {
-				days = append(days, LongDayNames[i])
+				days = append(days, weekdayNames[i])
 			}
 		}
 		if len(days) > 0 {
