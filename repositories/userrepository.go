@@ -2,7 +2,6 @@ package repositories
 
 import (
 	"github.com/ivanenkomaksym/remindme_bot/models"
-	"github.com/ivanenkomaksym/remindme_bot/types"
 )
 
 type UserRepository interface {
@@ -12,12 +11,12 @@ type UserRepository interface {
 	UpdateUserLanguage(userID int64, language string) bool
 
 	// User state management
-	GetUserState(userID int64) *types.UserSelectionState
-	SetUserState(userID int64, state *types.UserSelectionState)
-	UpdateUserState(userID int64, state *types.UserSelectionState)
-	ClearUserState(userID int64)
+	GetUserSelection(userID int64) *models.UserSelection
+	SetUserSelection(userID int64, state *models.UserSelection)
+	UpdateUserSelection(userID int64, state *models.UserSelection)
+	ClearUserSelection(userID int64)
 
 	// Combined operations
-	GetUserWithState(userID int64) (*models.User, *types.UserSelectionState)
-	CreateOrUpdateUserWithState(userID int64, userName, firstName, lastName, language string) (*models.User, *types.UserSelectionState)
+	GetUserWithSelection(userID int64) (*models.User, *models.UserSelection)
+	CreateOrUpdateUserWithSelection(userID int64, userName, firstName, lastName, language string) (*models.User, *models.UserSelection)
 }

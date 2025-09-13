@@ -5,7 +5,6 @@ import (
 
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 	"github.com/ivanenkomaksym/remindme_bot/models"
-	"github.com/ivanenkomaksym/remindme_bot/types"
 )
 
 func TestIsMessageSelectionCallback(t *testing.T) {
@@ -29,34 +28,34 @@ func TestGetMessageSelectionMarkup(t *testing.T) {
 func TestHandleMessageSelection_DefaultAndCustom(t *testing.T) {
 	var msg tgbotapi.EditMessageTextConfig
 	user := &models.User{}
-	state := &types.UserSelectionState{}
+	userSelection := &models.UserSelection{}
 	s := T(LangEN)
 
 	// Custom path
-	mk, done := HandleMessageSelection(CallbackMessageCustom, &msg, user, state)
+	mk, done := HandleMessageSelection(CallbackMessageCustom, &msg, user, userSelection)
 	if mk != nil || done {
 		t.Fatalf("custom should return nil, false")
 	}
-	if !state.CustomText {
+	if !userSelection.CustomText {
 		t.Fatalf("state.CustomText should be true")
 	}
 
 	// Pick default message index 1
-	mk, done = HandleMessageSelection(CallbackPrefixMessage+string(rune(1)), &msg, user, state)
+	mk, done = HandleMessageSelection(CallbackPrefixMessage+string(rune(1)), &msg, user, userSelection)
 	if mk != nil || !done {
 		t.Fatalf("default select should return nil, true")
 	}
-	if state.ReminderMessage != s.DefaultMessages[1] {
-		t.Fatalf("unexpected message: %s", state.ReminderMessage)
+	if userSelection.ReminderMessage != s.DefaultMessages[1] {
+		t.Fatalf("unexpected message: %s", userSelection.ReminderMessage)
 	}
 }
 
 func TestHadleCustomText(t *testing.T) {
 	var msg tgbotapi.MessageConfig
 	user := &models.User{}
-	state := &types.UserSelectionState{}
-	_, done := HadleCustomText("hello", &msg, user, state)
-	if !done || state.ReminderMessage != "hello" {
+	userSelection := &models.UserSelection{}
+	_, done := HadleCustomText("hello", &msg, user, userSelection)
+	if !done || userSelection.ReminderMessage != "hello" {
 		t.Fatalf("custom text failed")
 	}
 }

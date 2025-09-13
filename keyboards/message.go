@@ -5,7 +5,6 @@ import (
 
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 	"github.com/ivanenkomaksym/remindme_bot/models"
-	"github.com/ivanenkomaksym/remindme_bot/types"
 )
 
 // The callback data prefixes help to parse the user's message selection.
@@ -44,10 +43,10 @@ func GetMessageSelectionMarkup(lang string) *tgbotapi.InlineKeyboardMarkup {
 func HandleMessageSelection(callbackData string,
 	msg *tgbotapi.EditMessageTextConfig,
 	user *models.User,
-	userState *types.UserSelectionState) (*tgbotapi.InlineKeyboardMarkup, bool) {
+	userSelection *models.UserSelection) (*tgbotapi.InlineKeyboardMarkup, bool) {
 
 	if callbackData == CallbackMessageCustom {
-		userState.CustomText = true
+		userSelection.CustomText = true
 		s := T(user.Language)
 		msg.Text = s.MsgEnterCustomMessage
 		return nil, false
@@ -58,7 +57,7 @@ func HandleMessageSelection(callbackData string,
 		// Extract message index
 		msgIndex := int(callbackData[len(CallbackPrefixMessage)])
 		if msgIndex >= 0 && msgIndex < len(s.DefaultMessages) {
-			userState.ReminderMessage = s.DefaultMessages[msgIndex]
+			userSelection.ReminderMessage = s.DefaultMessages[msgIndex]
 		}
 		return nil, true
 	}
@@ -69,22 +68,22 @@ func HandleMessageSelection(callbackData string,
 func HadleCustomText(text string,
 	msg *tgbotapi.MessageConfig,
 	user *models.User,
-	userState *types.UserSelectionState) (*tgbotapi.InlineKeyboardMarkup, bool) {
-	userState.ReminderMessage = text
+	userSelection *models.UserSelection) (*tgbotapi.InlineKeyboardMarkup, bool) {
+	userSelection.ReminderMessage = text
 	return nil, true
 }
 
-func FormatReminderConfirmation(user *models.User, userState *types.UserSelectionState) (string, *tgbotapi.InlineKeyboardMarkup) {
+func FormatReminderConfirmation(user *models.User, userSelection *models.UserSelection) (string, *tgbotapi.InlineKeyboardMarkup) {
 	s := T(user.Language)
 
 	confirmation := "✅ " + s.ReminderSet + "!\n\n"
-	confirmation += "📅 " + s.Frequency + ": " + userState.RecurrenceType.String() + "\n"
+	confirmation += "📅 " + s.Frequency + ": " + userSelection.RecurrenceType.String() + "\n"
 
-	if userState.IsWeekly {
+	if userSelection.IsWeekly {
 		confirmation += "📆 " + s.Days + ": "
 		days := []string{}
 		weekdayNames := s.WeekdayNames
-		for i, selected := range userState.WeekOptions {
+		for i, selected := range userSelection.WeekOptions {
 			if selected {
 				days = append(days, weekdayNames[i])
 			}
@@ -97,8 +96,8 @@ func FormatReminderConfirmation(user *models.User, userState *types.UserSelectio
 		confirmation += "\n"
 	}
 
-	confirmation += "⏰ " + s.Time + ": " + userState.SelectedTime + "\n"
-	confirmation += "💬 " + s.Message + ": " + userState.ReminderMessage + "\n\n"
+	confirmation += "⏰ " + s.Time + ": " + userSelection.SelectedTime + "\n"
+	confirmation += "💬 " + s.Message + ": " + userSelection.ReminderMessage + "\n\n"
 	confirmation += s.ReminderScheduled
 
 	myRemindersMenu := tgbotapi.NewInlineKeyboardMarkup(

@@ -7,7 +7,6 @@ import (
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 	"github.com/ivanenkomaksym/remindme_bot/models"
 	"github.com/ivanenkomaksym/remindme_bot/scheduler"
-	"github.com/ivanenkomaksym/remindme_bot/types"
 )
 
 // The callback data prefixes help to parse the user's selection.
@@ -30,7 +29,7 @@ func IsTimeSelectionCallback(callbackData string) bool {
 func HandleTimeSelection(callbackData string,
 	msg *tgbotapi.EditMessageTextConfig,
 	user *models.User,
-	userState *types.UserSelectionState) *tgbotapi.InlineKeyboardMarkup {
+	userSelection *models.UserSelection) *tgbotapi.InlineKeyboardMarkup {
 	s := T(user.Language)
 	switch {
 	case strings.Contains(callbackData, CallbackTimeStart):
@@ -54,13 +53,13 @@ func HandleTimeSelection(callbackData string,
 	case strings.Contains(callbackData, CallbackPrefixSpecificTime):
 		// User selected a specific time, go to message selection
 		timeStr := callbackData[len(CallbackPrefixSpecificTime):]
-		userState.SelectedTime = timeStr
+		userSelection.SelectedTime = timeStr
 		msg.Text = s.MsgSelectMessage
 		return GetMessageSelectionMarkup(user.Language)
 
 	case strings.Contains(callbackData, CallbackPrefixCustom):
 		// User wants custom time input
-		userState.CustomTime = true
+		userSelection.CustomTime = true
 		msg.Text = s.MsgEnterCustomTime
 		return nil
 	}
@@ -146,7 +145,7 @@ func GetSpecificTimeMarkup(startHour int, lang string) *tgbotapi.InlineKeyboardM
 func HadleCustomTimeSelection(text string,
 	msg *tgbotapi.MessageConfig,
 	user *models.User,
-	userState *types.UserSelectionState) *tgbotapi.InlineKeyboardMarkup {
+	userSelection *models.UserSelection) *tgbotapi.InlineKeyboardMarkup {
 	_, _, ok := scheduler.ParseHourMinute(text)
 
 	if !ok {
@@ -154,7 +153,7 @@ func HadleCustomTimeSelection(text string,
 		msg.Text = fmt.Sprintf("%s. %s", s.MsgInvalidTimeFormat, s.MsgEnterCustomTime)
 		return GetHourRangeMarkup(user.Language)
 	} else {
-		userState.SelectedTime = text
+		userSelection.SelectedTime = text
 		s := T(user.Language)
 		msg.Text = s.MsgSelectMessage
 		return GetMessageSelectionMarkup(user.Language)
