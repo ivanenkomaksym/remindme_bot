@@ -1,39 +1,32 @@
 package keyboards
 
 import (
-	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
-	"github.com/ivanenkomaksym/remindme_bot/models"
+	"github.com/ivanenkomaksym/remindme_bot/domain/entities"
 )
 
 func HandleRecurrenceTypeSelection(callbackData string,
-	msg *tgbotapi.EditMessageTextConfig,
-	user *models.User,
-	userSelection *models.UserSelection) (*tgbotapi.InlineKeyboardMarkup, error) {
-	recurrenceType, err := models.ToRecurrenceType(callbackData)
+	user *entities.User,
+	userSelection *entities.UserSelection) (*SelectionResult, error) {
+	recurrenceType, err := entities.ToRecurrenceType(callbackData)
 	if err != nil {
 		return nil, err
 	}
 
 	userSelection.RecurrenceType = recurrenceType
-	userSelection.IsWeekly = (recurrenceType == models.Weekly)
+	userSelection.IsWeekly = (recurrenceType == entities.Weekly)
 
 	s := T(user.Language)
 	switch recurrenceType {
-	case models.Daily:
-		msg.Text = s.MsgSelectTime
-		return GetHourRangeMarkup(user.Language), nil
-	case models.Weekly:
-		msg.Text = s.MsgSelectWeekdays
-		return GetWeekRangeMarkup(userSelection.WeekOptions, user.Language), nil
-	case models.Monthly:
-		msg.Text = s.MsgSelectTime
-		return GetHourRangeMarkup(user.Language), nil
-	case models.Interval:
-		msg.Text = s.MsgSelectTime
-		return GetHourRangeMarkup(user.Language), nil
-	case models.Custom:
-		msg.Text = s.MsgEnterCustomTime
-		return GetHourRangeMarkup(user.Language), nil
+	case entities.Daily:
+		return &SelectionResult{Text: s.MsgSelectTime, Markup: GetHourRangeMarkup(user.Language)}, nil
+	case entities.Weekly:
+		return &SelectionResult{Text: s.MsgSelectWeekdays, Markup: GetWeekRangeMarkup(userSelection.WeekOptions, user.Language)}, nil
+	case entities.Monthly:
+		return &SelectionResult{Text: s.MsgSelectTime, Markup: GetHourRangeMarkup(user.Language)}, nil
+	case entities.Interval:
+		return &SelectionResult{Text: s.MsgSelectTime, Markup: GetHourRangeMarkup(user.Language)}, nil
+	case entities.Custom:
+		return &SelectionResult{Text: s.MsgEnterCustomTime, Markup: GetHourRangeMarkup(user.Language)}, nil
 	}
 
 	return nil, nil

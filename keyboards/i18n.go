@@ -1,10 +1,10 @@
 package keyboards
 
-import "github.com/ivanenkomaksym/remindme_bot/models"
+import "github.com/ivanenkomaksym/remindme_bot/domain/entities"
 
 type Strings struct {
 	Welcome               string
-	RecurrenceTypes       map[models.RecurrenceType]string
+	RecurrenceTypes       map[entities.RecurrenceType]string
 	BtnBack               string
 	BtnCustomTime         string
 	MsgSelectTime         string
@@ -37,12 +37,12 @@ type Strings struct {
 var stringsByLang = map[string]Strings{
 	LangEN: {
 		Welcome: "Welcome to the Reminder Bot!",
-		RecurrenceTypes: map[models.RecurrenceType]string{
-			models.Daily:    "Daily",
-			models.Weekly:   "Weekly",
-			models.Monthly:  "Monthly",
-			models.Interval: "Interval",
-			models.Custom:   "Custom",
+		RecurrenceTypes: map[entities.RecurrenceType]string{
+			entities.Daily:    "Daily",
+			entities.Weekly:   "Weekly",
+			entities.Monthly:  "Monthly",
+			entities.Interval: "Interval",
+			entities.Custom:   "Custom",
 		},
 		BtnBack:               "← Back",
 		BtnCustomTime:         "Custom",
@@ -78,12 +78,12 @@ var stringsByLang = map[string]Strings{
 	},
 	LangUK: {
 		Welcome: "Ласкаво просимо до бота-нагадувача!",
-		RecurrenceTypes: map[models.RecurrenceType]string{
-			models.Daily:    "Щодня",
-			models.Weekly:   "Щотижня",
-			models.Monthly:  "Щомісяця",
-			models.Interval: "Інтервал",
-			models.Custom:   "Власний",
+		RecurrenceTypes: map[entities.RecurrenceType]string{
+			entities.Daily:    "Щодня",
+			entities.Weekly:   "Щотижня",
+			entities.Monthly:  "Щомісяця",
+			entities.Interval: "Інтервал",
+			entities.Custom:   "Власний",
 		},
 		BtnBack:               "← Назад",
 		BtnCustomTime:         "Свій час",
@@ -128,7 +128,7 @@ func T(lang string) Strings {
 
 // RecurrenceTypeLabel returns a localized string for a given recurrence type.
 // Falls back to the enum String() if translation is missing.
-func RecurrenceTypeLabel(lang string, rt models.RecurrenceType) string {
+func RecurrenceTypeLabel(lang string, rt entities.RecurrenceType) string {
 	s := T(lang)
 	if s.RecurrenceTypes != nil {
 		if v, ok := s.RecurrenceTypes[rt]; ok {

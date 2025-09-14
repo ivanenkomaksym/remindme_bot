@@ -5,12 +5,12 @@ import (
 	"testing"
 	"time"
 
-	"github.com/ivanenkomaksym/remindme_bot/models"
+	"github.com/ivanenkomaksym/remindme_bot/domain/entities"
 )
 
 func TestCreateDailyReminder_Happy(t *testing.T) {
 	repo := NewInMemoryReminderRepository()
-	user := models.User{Id: 1, UserName: "tester"}
+	user := entities.User{ID: 1, UserName: "tester"}
 	rem := repo.CreateDailyReminder("23:15", user, "daily msg")
 
 	if rem == nil {
@@ -22,7 +22,7 @@ func TestCreateDailyReminder_Happy(t *testing.T) {
 	if !rem.IsActive {
 		t.Errorf("expected IsActive true")
 	}
-	if rem.Recurrence == nil || !rem.Recurrence.IsDaily() {
+	if !rem.Recurrence.IsDaily() {
 		t.Errorf("expected daily recurrence")
 	}
 	if rem.Recurrence.TimeOfDay != "23:15" {
@@ -38,7 +38,7 @@ func TestCreateDailyReminder_Happy(t *testing.T) {
 
 func TestCreateDailyReminder_InvalidTime(t *testing.T) {
 	repo := NewInMemoryReminderRepository()
-	user := models.User{Id: 2, UserName: "tester2"}
+	user := entities.User{ID: 2, UserName: "tester2"}
 	rem := repo.CreateDailyReminder("bad", user, "daily bad")
 
 	if rem == nil {
@@ -47,14 +47,14 @@ func TestCreateDailyReminder_InvalidTime(t *testing.T) {
 	if !rem.NextTrigger.Equal(rem.CreatedAt) {
 		t.Errorf("expected NextTrigger == CreatedAt on invalid time; got %v vs %v", rem.NextTrigger, rem.CreatedAt)
 	}
-	if rem.Recurrence == nil || !rem.Recurrence.IsDaily() {
+	if !rem.Recurrence.IsDaily() {
 		t.Errorf("expected daily recurrence even for invalid time string")
 	}
 }
 
 func TestCreateWeeklyReminder_Happy(t *testing.T) {
 	repo := NewInMemoryReminderRepository()
-	user := models.User{Id: 3}
+	user := entities.User{ID: 3}
 	days := []time.Weekday{time.Wednesday, time.Friday}
 	rem := repo.CreateWeeklyReminder(days, "00:01", user, "weekly msg")
 
@@ -78,7 +78,7 @@ func TestCreateWeeklyReminder_Happy(t *testing.T) {
 
 func TestCreateWeeklyReminder_EmptyDaysFallbackDaily(t *testing.T) {
 	repo := NewInMemoryReminderRepository()
-	user := models.User{Id: 4}
+	user := entities.User{ID: 4}
 	rem := repo.CreateWeeklyReminder([]time.Weekday{}, "06:30", user, "weekly empty")
 
 	if rem == nil {
@@ -96,7 +96,7 @@ func TestCreateWeeklyReminder_EmptyDaysFallbackDaily(t *testing.T) {
 
 func TestCreateMonthlyReminder_Happy(t *testing.T) {
 	repo := NewInMemoryReminderRepository()
-	user := models.User{Id: 5}
+	user := entities.User{ID: 5}
 	days := []int{5, 20}
 	rem := repo.CreateMonthlyReminder(days, "07:45", user, "monthly msg")
 	if rem == nil {
@@ -119,7 +119,7 @@ func TestCreateMonthlyReminder_Happy(t *testing.T) {
 
 func TestCreateMonthlyReminder_InvalidDaysFallbackDaily(t *testing.T) {
 	repo := NewInMemoryReminderRepository()
-	user := models.User{Id: 6}
+	user := entities.User{ID: 6}
 	rem := repo.CreateMonthlyReminder([]int{0, 35}, "09:00", user, "monthly invalid")
 	if rem == nil {
 		t.Fatalf("expected reminder, got nil")
@@ -135,7 +135,7 @@ func TestCreateMonthlyReminder_InvalidDaysFallbackDaily(t *testing.T) {
 
 func TestGetReminders_ReturnsCopy(t *testing.T) {
 	repo := NewInMemoryReminderRepository()
-	user := models.User{Id: 7}
+	user := entities.User{ID: 7}
 	_ = repo.CreateDailyReminder("10:00", user, "original")
 	list1 := repo.GetReminders()
 	if len(list1) != 1 {
@@ -151,7 +151,7 @@ func TestGetReminders_ReturnsCopy(t *testing.T) {
 
 func TestUpdateReminder_Happy(t *testing.T) {
 	repo := NewInMemoryReminderRepository()
-	user := models.User{Id: 8}
+	user := entities.User{ID: 8}
 	rem := repo.CreateDailyReminder("12:00", user, "original message")
 	rem.Message = "updated message"
 	rem.IsActive = false
@@ -170,8 +170,8 @@ func TestUpdateReminder_Happy(t *testing.T) {
 
 func TestUpdateReminder_NotFound(t *testing.T) {
 	repo := NewInMemoryReminderRepository()
-	user := models.User{Id: 9}
-	rem := &models.Reminder{ID: 999, User: user, Message: "does not exist"}
+	user := entities.User{ID: 9}
+	rem := &entities.Reminder{ID: 999, UserID: user.ID, Message: "does not exist"}
 	ok := repo.UpdateReminder(rem)
 	if ok {
 		t.Fatalf("expected update to fail for non-existent reminder")

@@ -5,7 +5,7 @@ import (
 	"time"
 
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
-	"github.com/ivanenkomaksym/remindme_bot/models"
+	"github.com/ivanenkomaksym/remindme_bot/domain/entities"
 	"github.com/ivanenkomaksym/remindme_bot/repositories"
 )
 
@@ -18,7 +18,7 @@ func (f *fakeSender) Send(c tgbotapi.Chattable) (tgbotapi.Message, error) {
 
 func TestProcessDueReminders_DailyAdvancesNextTrigger(t *testing.T) {
 	repo := repositories.NewInMemoryReminderRepository()
-	user := models.User{Id: 123}
+	user := entities.User{ID: 123}
 	// Create a daily reminder at 00:00, set its NextTrigger to a known past time
 	rem := repo.CreateDailyReminder("00:00", user, "ping")
 	// Force NextTrigger to be at a fixed point
@@ -49,10 +49,11 @@ func TestProcessDueReminders_DailyAdvancesNextTrigger(t *testing.T) {
 func TestProcessDueReminders_OneTimeDeactivates(t *testing.T) {
 	repo := repositories.NewInMemoryReminderRepository()
 	// Manually insert one-time reminder (Recurrence=nil)
+	user := entities.User{ID: 42}
 	now := time.Now()
-	rem := models.Reminder{
+	rem := entities.Reminder{
 		ID:          999,
-		User:        models.User{Id: 42},
+		UserID:      user.ID,
 		Message:     "one-time",
 		CreatedAt:   now.Add(-time.Hour),
 		NextTrigger: now.Add(-time.Minute),
@@ -61,7 +62,7 @@ func TestProcessDueReminders_OneTimeDeactivates(t *testing.T) {
 	}
 	// Inject into repo via UpdateReminder path after appending
 	// Use repository's internal behavior by creating a daily and replacing it
-	junk := repo.CreateDailyReminder("00:00", rem.User, "junk")
+	junk := repo.CreateDailyReminder("00:00", user, "junk")
 	rem.ID = junk.ID
 	repo.UpdateReminder(&rem)
 

@@ -2,8 +2,6 @@ package keyboards
 
 import (
 	"testing"
-
-	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 )
 
 func TestIsWeekSelectionCallback(t *testing.T) {
@@ -33,21 +31,20 @@ func TestGetWeekRangeMarkup(t *testing.T) {
 }
 
 func TestHandleWeekSelection_ToggleAndSelect(t *testing.T) {
-	var msg tgbotapi.EditMessageTextConfig
 	opts := [7]bool{}
 
 	// Toggle Monday (index 0)
-	mk := HandleWeekSelection(CallbackWeekDay+"0", &msg, &opts, LangEN)
-	if mk == nil || !opts[0] {
+	res := HandleWeekSelection(CallbackWeekDay+"0", &opts, LangEN)
+	if res == nil || !opts[0] {
 		t.Fatalf("monday should be toggled on")
 	}
-	if len(mk.InlineKeyboard) != 9 {
+	if res.Markup == nil || len(res.Markup.InlineKeyboard) != 9 {
 		t.Fatalf("expected 9 rows after toggle")
 	}
 
 	// Confirm selection
-	mk = HandleWeekSelection(CallbackWeekSelect, &msg, &opts, LangEN)
-	if mk == nil {
+	res = HandleWeekSelection(CallbackWeekSelect, &opts, LangEN)
+	if res == nil || res.Markup == nil {
 		t.Fatalf("expected markup on select")
 	}
 }

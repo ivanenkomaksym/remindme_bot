@@ -36,9 +36,9 @@ func ProcessDueReminders(now time.Time, reminderRepo repositories.ReminderReposi
 		}
 
 		// Send notification
-		msg := tgbotapi.NewMessage(rem.User.Id, rem.Message)
+		msg := tgbotapi.NewMessage(rem.UserID, rem.Message)
 		if _, err := sender.Send(msg); err != nil {
-			log.Printf("Failed to send reminder to user %d: %v", rem.User.Id, err)
+			log.Printf("Failed to send reminder to user %d: %v", rem.UserID, err)
 		}
 
 		// Update NextTrigger for recurring reminders

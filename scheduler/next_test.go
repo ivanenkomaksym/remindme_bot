@@ -4,7 +4,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/ivanenkomaksym/remindme_bot/models"
+	"github.com/ivanenkomaksym/remindme_bot/domain/entities"
 )
 
 func mustTime(t *testing.T, layout, value string) time.Time {
@@ -69,21 +69,21 @@ func TestNextMonthlyTrigger(t *testing.T) {
 func TestNextForRecurrence(t *testing.T) {
 	base := mustTime(t, "2006-01-02 15:04", "2025-01-10 10:30")
 	// Daily advances 24h
-	recDaily := models.DailyAt("10:30")
+	recDaily := entities.DailyAt("10:30")
 	got := NextForRecurrence(base, recDaily)
 	want := base.Add(24 * time.Hour)
 	if !got.Equal(want) {
 		t.Fatalf("daily: expected %v, got %v", want, got)
 	}
 	// Weekly Monday at 09:00 from Friday -> next Monday at 09:00
-	recWeekly := models.CustomWeekly([]time.Weekday{time.Monday}, "09:00")
+	recWeekly := entities.CustomWeekly([]time.Weekday{time.Monday}, "09:00")
 	got = NextForRecurrence(base, recWeekly)
 	want = mustTime(t, "2006-01-02 15:04", "2025-01-13 09:00")
 	if !got.Equal(want) {
 		t.Fatalf("weekly: expected %v, got %v", want, got)
 	}
 	// Monthly 15th 09:00
-	recMonthly := models.MonthlyOnDay([]int{15}, "09:00")
+	recMonthly := entities.MonthlyOnDay([]int{15}, "09:00")
 	got = NextForRecurrence(base, recMonthly)
 	want = mustTime(t, "2006-01-02 15:04", "2025-01-15 09:00")
 	if !got.Equal(want) {

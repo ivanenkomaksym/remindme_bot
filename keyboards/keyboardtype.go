@@ -1,8 +1,6 @@
 package keyboards
 
-import (
-	"github.com/ivanenkomaksym/remindme_bot/models"
-)
+import "github.com/ivanenkomaksym/remindme_bot/domain/entities"
 
 type KeyboardType int64
 
@@ -51,7 +49,7 @@ func GetKeyboardType(callbackData string) KeyboardType {
 	if IsRemindersCallback(callbackData) {
 		return Reminders
 	}
-	_, err := models.ToRecurrenceType(callbackData)
+	_, err := entities.ToRecurrenceType(callbackData)
 	if err == nil {
 		return Reccurence
 	}

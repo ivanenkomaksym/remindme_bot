@@ -3,24 +3,24 @@ package repositories
 import (
 	"sync"
 
-	"github.com/ivanenkomaksym/remindme_bot/models"
+	"github.com/ivanenkomaksym/remindme_bot/domain/entities"
 )
 
 type InMemoryUserRepository struct {
 	mu             sync.RWMutex
-	users          map[int64]*models.User
-	userSelections map[int64]*models.UserSelection
+	users          map[int64]*entities.User
+	userSelections map[int64]*entities.UserSelection
 }
 
 func NewInMemoryUserRepository() *InMemoryUserRepository {
 	return &InMemoryUserRepository{
-		users:          make(map[int64]*models.User),
-		userSelections: make(map[int64]*models.UserSelection),
+		users:          make(map[int64]*entities.User),
+		userSelections: make(map[int64]*entities.UserSelection),
 	}
 }
 
 // User management methods
-func (r *InMemoryUserRepository) GetUser(userID int64) *models.User {
+func (r *InMemoryUserRepository) GetUser(userID int64) *entities.User {
 	r.mu.RLock()
 	defer r.mu.RUnlock()
 
@@ -34,12 +34,12 @@ func (r *InMemoryUserRepository) GetUser(userID int64) *models.User {
 	return &userCopy
 }
 
-func (r *InMemoryUserRepository) CreateOrUpdateUser(userID int64, userName, firstName, lastName, language string) *models.User {
+func (r *InMemoryUserRepository) CreateOrUpdateUser(userID int64, userName, firstName, lastName, language string) *entities.User {
 	r.mu.Lock()
 	defer r.mu.Unlock()
 
-	user := &models.User{
-		Id:        userID,
+	user := &entities.User{
+		ID:        userID,
 		UserName:  userName,
 		FirstName: firstName,
 		LastName:  lastName,
@@ -67,7 +67,7 @@ func (r *InMemoryUserRepository) UpdateUserLanguage(userID int64, language strin
 }
 
 // User state management methods
-func (r *InMemoryUserRepository) GetUserSelection(userID int64) *models.UserSelection {
+func (r *InMemoryUserRepository) GetUserSelection(userID int64) *entities.UserSelection {
 	r.mu.RLock()
 	defer r.mu.RUnlock()
 
@@ -81,7 +81,7 @@ func (r *InMemoryUserRepository) GetUserSelection(userID int64) *models.UserSele
 	return &stateCopy
 }
 
-func (r *InMemoryUserRepository) SetUserSelection(userID int64, state *models.UserSelection) {
+func (r *InMemoryUserRepository) SetUserSelection(userID int64, state *entities.UserSelection) {
 	r.mu.Lock()
 	defer r.mu.Unlock()
 
@@ -90,7 +90,7 @@ func (r *InMemoryUserRepository) SetUserSelection(userID int64, state *models.Us
 	r.userSelections[userID] = &stateCopy
 }
 
-func (r *InMemoryUserRepository) UpdateUserSelection(userID int64, state *models.UserSelection) {
+func (r *InMemoryUserRepository) UpdateUserSelection(userID int64, state *entities.UserSelection) {
 	r.mu.Lock()
 	defer r.mu.Unlock()
 
@@ -105,21 +105,21 @@ func (r *InMemoryUserRepository) ClearUserSelection(userID int64) {
 
 	if state, exists := r.userSelections[userID]; exists {
 		// Reset all fields to default values
-		*state = models.UserSelection{}
+		*state = entities.UserSelection{}
 		state.WeekOptions = [7]bool{false, false, false, false, false, false, false}
 	}
 }
 
 // Combined operations
-func (r *InMemoryUserRepository) GetUserWithSelection(userID int64) (*models.User, *models.UserSelection) {
+func (r *InMemoryUserRepository) GetUserWithSelection(userID int64) (*entities.User, *entities.UserSelection) {
 	r.mu.RLock()
 	defer r.mu.RUnlock()
 
 	user, userExists := r.users[userID]
 	state, stateExists := r.userSelections[userID]
 
-	var userCopy *models.User
-	var stateCopy *models.UserSelection
+	var userCopy *entities.User
+	var stateCopy *entities.UserSelection
 
 	if userExists {
 		userCopyVal := *user
@@ -134,13 +134,13 @@ func (r *InMemoryUserRepository) GetUserWithSelection(userID int64) (*models.Use
 	return userCopy, stateCopy
 }
 
-func (r *InMemoryUserRepository) CreateOrUpdateUserWithSelection(userID int64, userName, firstName, lastName, language string) (*models.User, *models.UserSelection) {
+func (r *InMemoryUserRepository) CreateOrUpdateUserWithSelection(userID int64, userName, firstName, lastName, language string) (*entities.User, *entities.UserSelection) {
 	r.mu.Lock()
 	defer r.mu.Unlock()
 
 	// Create or update user
-	user := &models.User{
-		Id:        userID,
+	user := &entities.User{
+		ID:        userID,
 		UserName:  userName,
 		FirstName: firstName,
 		LastName:  lastName,
@@ -151,7 +151,7 @@ func (r *InMemoryUserRepository) CreateOrUpdateUserWithSelection(userID int64, u
 	// Get or create user state
 	state, exists := r.userSelections[userID]
 	if !exists {
-		state = &models.UserSelection{
+		state = &entities.UserSelection{
 			WeekOptions: [7]bool{false, false, false, false, false, false, false},
 		}
 		r.userSelections[userID] = state

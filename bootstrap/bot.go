@@ -7,14 +7,14 @@ import (
 )
 
 func NewBot(env *Env) *tgbotapi.BotAPI {
-	bot, err := tgbotapi.NewBotAPI(env.BotToken)
+	bot, err := tgbotapi.NewBotAPI(env.Config.Bot.Token)
 	if err != nil {
 		log.Fatalf("Failed to create bot: %v", err)
 	}
 
-	bot.Debug = true
+	bot.Debug = env.Config.Bot.Debug
 
-	wh, err := tgbotapi.NewWebhook(env.WebhookUrl)
+	wh, err := tgbotapi.NewWebhook(env.Config.Bot.WebhookURL)
 	if err != nil {
 		log.Fatalf("Failed to create webhook config: %v", err)
 	}

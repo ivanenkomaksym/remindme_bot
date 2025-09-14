@@ -1,22 +1,20 @@
 package repositories
 
-import (
-	"github.com/ivanenkomaksym/remindme_bot/models"
-)
+import "github.com/ivanenkomaksym/remindme_bot/domain/entities"
 
 type UserRepository interface {
 	// User management
-	GetUser(userID int64) *models.User
-	CreateOrUpdateUser(userID int64, userName, firstName, lastName, language string) *models.User
+	GetUser(userID int64) *entities.User
+	CreateOrUpdateUser(userID int64, userName, firstName, lastName, language string) *entities.User
 	UpdateUserLanguage(userID int64, language string) bool
 
 	// User state management
-	GetUserSelection(userID int64) *models.UserSelection
-	SetUserSelection(userID int64, state *models.UserSelection)
-	UpdateUserSelection(userID int64, state *models.UserSelection)
+	GetUserSelection(userID int64) *entities.UserSelection
+	SetUserSelection(userID int64, state *entities.UserSelection)
+	UpdateUserSelection(userID int64, state *entities.UserSelection)
 	ClearUserSelection(userID int64)
 
 	// Combined operations
-	GetUserWithSelection(userID int64) (*models.User, *models.UserSelection)
-	CreateOrUpdateUserWithSelection(userID int64, userName, firstName, lastName, language string) (*models.User, *models.UserSelection)
+	GetUserWithSelection(userID int64) (*entities.User, *entities.UserSelection)
+	CreateOrUpdateUserWithSelection(userID int64, userName, firstName, lastName, language string) (*entities.User, *entities.UserSelection)
 }

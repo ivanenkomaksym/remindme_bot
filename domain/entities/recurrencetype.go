@@ -1,4 +1,4 @@
-package models
+package entities
 
 import "errors"
 
@@ -50,6 +50,6 @@ func ToRecurrenceType(s string) (RecurrenceType, error) {
 	case "Custom":
 		return Custom, nil
 	default:
-		return -1, errors.New("unknown recurrence")
+		return 0, errors.New("invalid recurrence type")
 	}
 }

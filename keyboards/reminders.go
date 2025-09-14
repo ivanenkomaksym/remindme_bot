@@ -6,7 +6,7 @@ import (
 	"strings"
 
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
-	"github.com/ivanenkomaksym/remindme_bot/models"
+	"github.com/ivanenkomaksym/remindme_bot/domain/entities"
 )
 
 const (
@@ -18,7 +18,7 @@ func IsRemindersCallback(callbackData string) bool {
 	return callbackData == CallbackRemindersList || strings.HasPrefix(callbackData, CallbackReminderDeletePrefix)
 }
 
-func GetRemindersListMarkup(reminders []models.Reminder, lang string) *tgbotapi.InlineKeyboardMarkup {
+func GetRemindersListMarkup(reminders []entities.Reminder, lang string) *tgbotapi.InlineKeyboardMarkup {
 	var rows [][]tgbotapi.InlineKeyboardButton
 	s := T(lang)
 	if len(reminders) == 0 {
@@ -30,7 +30,7 @@ func GetRemindersListMarkup(reminders []models.Reminder, lang string) *tgbotapi.
 	}
 
 	for _, r := range reminders {
-		label := fmt.Sprintf("%s • %s", RecurrenceTypeLabel(lang, r.Recurrence.Type), r.Recurrence.TimeOfDay)
+		label := fmt.Sprintf("%s • %s", RecurrenceTypeLabel(lang, r.Recurrence.Type), r.NextTrigger.Format("15:04"))
 		btn := tgbotapi.NewInlineKeyboardButtonData(
 			s.BtnDelete,
 			fmt.Sprintf("%s%d", CallbackReminderDeletePrefix, r.ID),
@@ -51,7 +51,7 @@ func GetRemindersListMarkup(reminders []models.Reminder, lang string) *tgbotapi.
 	return &menu
 }
 
-func FormatRemindersListText(reminders []models.Reminder, lang string) string {
+func FormatRemindersListText(reminders []entities.Reminder, lang string) string {
 	s := T(lang)
 	if len(reminders) == 0 {
 		return s.NoReminders
@@ -59,7 +59,7 @@ func FormatRemindersListText(reminders []models.Reminder, lang string) string {
 	var b strings.Builder
 	b.WriteString(s.YourReminders)
 	for _, r := range reminders {
-		b.WriteString(fmt.Sprintf("• %s %s %s — %s (ID %d)\n", RecurrenceTypeLabel(lang, r.Recurrence.Type), s.At, r.Recurrence.TimeOfDay, r.Message, r.ID))
+		b.WriteString(fmt.Sprintf("• %s %s %s — %s (ID %d)\n", RecurrenceTypeLabel(lang, r.Recurrence.Type), s.At, r.NextTrigger.Format("15:04"), r.Message, r.ID))
 	}
 	return b.String()
 }

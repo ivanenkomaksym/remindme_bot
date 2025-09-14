@@ -6,7 +6,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/ivanenkomaksym/remindme_bot/models"
+	"github.com/ivanenkomaksym/remindme_bot/domain/entities"
 )
 
 func ParseHourMinute(timeStr string) (int, int, bool) {
@@ -126,19 +126,19 @@ func NextMonthlyTrigger(from time.Time, daysOfMonth []int, timeStr string) time.
 }
 
 // NextForRecurrence advances from last trigger according to the recurrence configuration.
-func NextForRecurrence(last time.Time, rec *models.Recurrence) time.Time {
+func NextForRecurrence(last time.Time, rec *entities.Recurrence) time.Time {
 	switch rec.Type {
-	case models.Daily:
+	case entities.Daily:
 		// Maintain the same clock time as last trigger, add 24h
 		return last.Add(24 * time.Hour)
-	case models.Weekly:
+	case entities.Weekly:
 		return NextWeeklyTrigger(last, rec.Weekdays, rec.TimeOfDay)
-	case models.Monthly:
+	case entities.Monthly:
 		return NextMonthlyTrigger(last, rec.DayOfMonth, rec.TimeOfDay)
-	case models.Interval:
+	case entities.Interval:
 		// Fallback simple daily for now
 		return last.Add(24 * time.Hour)
-	case models.Custom:
+	case entities.Custom:
 		// Fallback simple daily for now
 		return last.Add(24 * time.Hour)
 	default:

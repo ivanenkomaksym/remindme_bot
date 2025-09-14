@@ -4,7 +4,7 @@ import (
 	"strings"
 
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
-	"github.com/ivanenkomaksym/remindme_bot/models"
+	"github.com/ivanenkomaksym/remindme_bot/domain/entities"
 )
 
 // The callback data prefixes help to parse the user's message selection.
@@ -41,15 +41,13 @@ func GetMessageSelectionMarkup(lang string) *tgbotapi.InlineKeyboardMarkup {
 }
 
 func HandleMessageSelection(callbackData string,
-	msg *tgbotapi.EditMessageTextConfig,
-	user *models.User,
-	userSelection *models.UserSelection) (*tgbotapi.InlineKeyboardMarkup, bool) {
+	user *entities.User,
+	userSelection *entities.UserSelection) (*SelectionResult, bool) {
 
 	if callbackData == CallbackMessageCustom {
 		userSelection.CustomText = true
 		s := T(user.Language)
-		msg.Text = s.MsgEnterCustomMessage
-		return nil, false
+		return &SelectionResult{Text: s.MsgEnterCustomMessage, Markup: nil}, false
 	}
 
 	s := T(user.Language)
@@ -62,18 +60,18 @@ func HandleMessageSelection(callbackData string,
 		return nil, true
 	}
 
-	return GetMessageSelectionMarkup(user.Language), false
+	return &SelectionResult{Text: s.MsgSelectMessage, Markup: GetMessageSelectionMarkup(user.Language)}, false
 }
 
 func HadleCustomText(text string,
 	msg *tgbotapi.MessageConfig,
-	user *models.User,
-	userSelection *models.UserSelection) (*tgbotapi.InlineKeyboardMarkup, bool) {
+	user *entities.User,
+	userSelection *entities.UserSelection) (*SelectionResult, bool) {
 	userSelection.ReminderMessage = text
 	return nil, true
 }
 
-func FormatReminderConfirmation(user *models.User, userSelection *models.UserSelection) (string, *tgbotapi.InlineKeyboardMarkup) {
+func FormatReminderConfirmation(user *entities.User, userSelection *entities.UserSelection) (string, *tgbotapi.InlineKeyboardMarkup) {
 	s := T(user.Language)
 
 	confirmation := "✅ " + s.ReminderSet + "!\n\n"

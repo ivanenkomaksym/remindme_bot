@@ -40,7 +40,7 @@ func GetWeekRangeMarkup(currentOptions [7]bool, lang string) *tgbotapi.InlineKey
 	return &tgbotapi.InlineKeyboardMarkup{InlineKeyboard: inlineKeyboard}
 }
 
-func HandleWeekSelection(callbackData string, msg *tgbotapi.EditMessageTextConfig, currentOptions *[7]bool, lang string) *tgbotapi.InlineKeyboardMarkup {
+func HandleWeekSelection(callbackData string, currentOptions *[7]bool, lang string) *SelectionResult {
 	if stringsHasPrefix(callbackData, CallbackWeekDay) {
 		var idx int
 		_, _ = fmt.Sscanf(callbackData[len(CallbackWeekDay):], "%d", &idx)
@@ -49,14 +49,10 @@ func HandleWeekSelection(callbackData string, msg *tgbotapi.EditMessageTextConfi
 		}
 	}
 	s := T(lang)
-	msg.Text = s.MsgSelectWeekdays
-
 	if callbackData == CallbackWeekSelect {
-		msg.Text = s.MsgSelectTimeWeekly
-		return GetHourRangeMarkup(lang)
+		return &SelectionResult{Text: s.MsgSelectTimeWeekly, Markup: GetHourRangeMarkup(lang)}
 	}
-
-	return GetWeekRangeMarkup(*currentOptions, lang)
+	return &SelectionResult{Text: s.MsgSelectWeekdays, Markup: GetWeekRangeMarkup(*currentOptions, lang)}
 }
 
 func buttonText(text string, opt bool) string {
