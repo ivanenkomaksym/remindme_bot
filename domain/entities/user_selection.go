@@ -1,7 +1,5 @@
 package entities
 
-
-
 // UserSelection represents a user's current selection state for creating reminders
 type UserSelection struct {
 	RecurrenceType  RecurrenceType `json:"recurrenceType"`

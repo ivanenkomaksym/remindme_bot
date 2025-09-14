@@ -30,7 +30,7 @@ func GetRemindersListMarkup(reminders []entities.Reminder, lang string) *tgbotap
 	}
 
 	for _, r := range reminders {
-		label := fmt.Sprintf("%s • %s", RecurrenceTypeLabel(lang, r.Recurrence.Type), r.NextTrigger.Format("15:04"))
+		label := fmt.Sprintf("%s • %s", RecurrenceTypeLabel(lang, r.Recurrence.Type), r.Recurrence.TimeOfDay)
 		btn := tgbotapi.NewInlineKeyboardButtonData(
 			s.BtnDelete,
 			fmt.Sprintf("%s%d", CallbackReminderDeletePrefix, r.ID),
@@ -59,7 +59,7 @@ func FormatRemindersListText(reminders []entities.Reminder, lang string) string 
 	var b strings.Builder
 	b.WriteString(s.YourReminders)
 	for _, r := range reminders {
-		b.WriteString(fmt.Sprintf("• %s %s %s — %s (ID %d)\n", RecurrenceTypeLabel(lang, r.Recurrence.Type), s.At, r.NextTrigger.Format("15:04"), r.Message, r.ID))
+		b.WriteString(fmt.Sprintf("• %s %s %s — %s (ID %d)\n", RecurrenceTypeLabel(lang, r.Recurrence.Type), s.At, r.Recurrence.TimeOfDay, r.Message, r.ID))
 	}
 	return b.String()
 }

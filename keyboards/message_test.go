@@ -50,11 +50,11 @@ func TestHandleMessageSelection_DefaultAndCustom(t *testing.T) {
 }
 
 func TestHadleCustomText(t *testing.T) {
-   var msg tgbotapi.MessageConfig
-   user := &entities.User{}
-   userSelection := &entities.UserSelection{}
-   _, done := HadleCustomText("hello", &msg, user, userSelection)
-   if !done || userSelection.ReminderMessage != "hello" {
-	   t.Fatalf("custom text failed")
-   }
+	var msg tgbotapi.MessageConfig
+	user := &entities.User{}
+	userSelection := &entities.UserSelection{}
+	_, done := HandleCustomText("hello", &msg, user, userSelection)
+	if !done || userSelection.ReminderMessage != "hello" {
+		t.Fatalf("custom text failed")
+	}
 }

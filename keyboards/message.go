@@ -63,7 +63,7 @@ func HandleMessageSelection(callbackData string,
 	return &SelectionResult{Text: s.MsgSelectMessage, Markup: GetMessageSelectionMarkup(user.Language)}, false
 }
 
-func HadleCustomText(text string,
+func HandleCustomText(text string,
 	msg *tgbotapi.MessageConfig,
 	user *entities.User,
 	userSelection *entities.UserSelection) (*SelectionResult, bool) {
@@ -71,7 +71,7 @@ func HadleCustomText(text string,
 	return nil, true
 }
 
-func FormatReminderConfirmation(user *entities.User, userSelection *entities.UserSelection) (string, *tgbotapi.InlineKeyboardMarkup) {
+func FormatReminderConfirmation(user *entities.User, userSelection *entities.UserSelection) *SelectionResult {
 	s := T(user.Language)
 
 	confirmation := "✅ " + s.ReminderSet + "!\n\n"
@@ -104,5 +104,5 @@ func FormatReminderConfirmation(user *entities.User, userSelection *entities.Use
 		),
 	)
 
-	return confirmation, &myRemindersMenu
+	return &SelectionResult{Text: confirmation, Markup: &myRemindersMenu}
 }

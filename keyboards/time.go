@@ -43,7 +43,7 @@ func HandleTimeSelection(callbackData string,
 	case strings.Contains(callbackData, CallbackPrefixMinuteRange):
 		startHour := 0
 		fmt.Sscanf(callbackData[len(CallbackPrefixMinuteRange):], "%d", &startHour)
-		return &SelectionResult{Text: fmt.Sprintf(s.MsgSelectWithinHour, startHour, (startHour+1)%24), Markup: GetMinuteRangeMarkup(startHour, user.Language)}
+		return &SelectionResult{Text: fmt.Sprintf(s.MsgSelectWithinHour, startHour, (startHour+1)%24), Markup: GetSpecificTimeMarkup(startHour, user.Language)}
 
 	case strings.Contains(callbackData, CallbackPrefixSpecificTime):
 		timeStr := callbackData[len(CallbackPrefixSpecificTime):]
@@ -133,7 +133,7 @@ func GetSpecificTimeMarkup(startHour int, lang string) *tgbotapi.InlineKeyboardM
 	return &menu
 }
 
-func HadleCustomTimeSelection(text string,
+func HandleCustomTimeSelection(text string,
 	msg *tgbotapi.MessageConfig,
 	user *entities.User,
 	userSelection *entities.UserSelection) *SelectionResult {

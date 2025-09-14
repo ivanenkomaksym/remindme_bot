@@ -3,7 +3,6 @@ package usecases
 import (
 	"log"
 
-	"github.com/ivanenkomaksym/remindme_bot/domain/adapters"
 	"github.com/ivanenkomaksym/remindme_bot/domain/entities"
 	"github.com/ivanenkomaksym/remindme_bot/domain/errors"
 	"github.com/ivanenkomaksym/remindme_bot/keyboards"
@@ -196,10 +195,11 @@ func (b *botUseCase) handleMainMenu(user *tgbotapi.User, userEntity *entities.Us
 }
 
 func (b *botUseCase) handleRecurrenceSelection(user *tgbotapi.User, callbackData string, userEntity *entities.User, selection *entities.UserSelection) (*keyboards.SelectionResult, error) {
-	result, err := adapters.HandleRecurrenceTypeSelection(callbackData, userEntity, selection)
+	result, err := keyboards.HandleRecurrenceTypeSelection(callbackData, userEntity, selection)
 	if err != nil {
 		return nil, err
 	}
+
 	err = b.userUseCase.UpdateUserSelection(user.ID, selection)
 	if err != nil {
 		log.Printf("Failed to update user selection: %v", err)
@@ -208,7 +208,7 @@ func (b *botUseCase) handleRecurrenceSelection(user *tgbotapi.User, callbackData
 }
 
 func (b *botUseCase) handleTimeSelection(user *tgbotapi.User, callbackData string, userEntity *entities.User, selection *entities.UserSelection) (*keyboards.SelectionResult, error) {
-	result := adapters.HandleTimeSelection(callbackData, userEntity, selection)
+	result := keyboards.HandleTimeSelection(callbackData, userEntity, selection)
 	err := b.userUseCase.UpdateUserSelection(user.ID, selection)
 	if err != nil {
 		log.Printf("Failed to update user selection: %v", err)
@@ -217,7 +217,7 @@ func (b *botUseCase) handleTimeSelection(user *tgbotapi.User, callbackData strin
 }
 
 func (b *botUseCase) handleWeekSelection(user *tgbotapi.User, callbackData string, userEntity *entities.User, selection *entities.UserSelection) (*keyboards.SelectionResult, error) {
-	result := adapters.HandleWeekSelection(callbackData, &selection.WeekOptions, userEntity.Language)
+	result := keyboards.HandleWeekSelection(callbackData, &selection.WeekOptions, userEntity.Language)
 	err := b.userUseCase.UpdateUserSelection(user.ID, selection)
 	if err != nil {
 		log.Printf("Failed to update user selection: %v", err)
@@ -226,7 +226,7 @@ func (b *botUseCase) handleWeekSelection(user *tgbotapi.User, callbackData strin
 }
 
 func (b *botUseCase) handleMessageSelection(user *tgbotapi.User, callbackData string, userEntity *entities.User, selection *entities.UserSelection) (*keyboards.SelectionResult, error) {
-	result, completed := adapters.HandleMessageSelection(callbackData, userEntity, selection)
+	result, completed := keyboards.HandleMessageSelection(callbackData, userEntity, selection)
 	err := b.userUseCase.UpdateUserSelection(user.ID, selection)
 	if err != nil {
 		log.Printf("Failed to update user selection: %v", err)
@@ -236,6 +236,8 @@ func (b *botUseCase) handleMessageSelection(user *tgbotapi.User, callbackData st
 		if err != nil {
 			log.Printf("Failed to create reminder: %v", err)
 		} else {
+			result = keyboards.FormatReminderConfirmation(userEntity, selection)
+
 			err = b.userUseCase.ClearUserSelection(user.ID)
 			if err != nil {
 				log.Printf("Failed to clear user selection: %v", err)
@@ -255,11 +257,11 @@ func (b *botUseCase) handleRemindersList(user *tgbotapi.User, userEntity *entiti
 		return nil, err
 	}
 
-	return &keyboards.SelectionResult{Text: adapters.FormatRemindersListText(reminders, userEntity.Language), Markup: adapters.GetRemindersListMarkup(reminders, userEntity.Language)}, nil
+	return &keyboards.SelectionResult{Text: keyboards.FormatRemindersListText(reminders, userEntity.Language), Markup: keyboards.GetRemindersListMarkup(reminders, userEntity.Language)}, nil
 }
 
 func (b *botUseCase) handleCustomTimeInput(user *tgbotapi.User, text string, userEntity *entities.User, selection *entities.UserSelection) (*keyboards.SelectionResult, error) {
-	selectionResult := adapters.HandleCustomTimeSelection(text, &tgbotapi.MessageConfig{}, userEntity, selection)
+	selectionResult := keyboards.HandleCustomTimeSelection(text, &tgbotapi.MessageConfig{}, userEntity, selection)
 
 	// Update user selection
 	err := b.userUseCase.UpdateUserSelection(user.ID, selection)
@@ -271,7 +273,7 @@ func (b *botUseCase) handleCustomTimeInput(user *tgbotapi.User, text string, use
 }
 
 func (b *botUseCase) handleCustomTextInput(user *tgbotapi.User, text string, userEntity *entities.User, selection *entities.UserSelection) (*keyboards.SelectionResult, error) {
-	selectionResult, completed := adapters.HandleCustomText(text, &tgbotapi.MessageConfig{}, userEntity, selection)
+	selectionResult, completed := keyboards.HandleCustomText(text, &tgbotapi.MessageConfig{}, userEntity, selection)
 
 	// Update user selection
 	err := b.userUseCase.UpdateUserSelection(user.ID, selection)
@@ -285,6 +287,8 @@ func (b *botUseCase) handleCustomTextInput(user *tgbotapi.User, text string, use
 		if err != nil {
 			log.Printf("Failed to create reminder: %v", err)
 		} else {
+			selectionResult = keyboards.FormatReminderConfirmation(userEntity, selection)
+
 			// Clear user selection after successful reminder creation
 			err = b.userUseCase.ClearUserSelection(user.ID)
 			if err != nil {
