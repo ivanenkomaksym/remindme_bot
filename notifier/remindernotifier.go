@@ -5,7 +5,7 @@ import (
 	"time"
 
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
-	"github.com/ivanenkomaksym/remindme_bot/repositories"
+	"github.com/ivanenkomaksym/remindme_bot/domain/repositories"
 	"github.com/ivanenkomaksym/remindme_bot/scheduler"
 )
 
@@ -25,7 +25,7 @@ func StartReminderNotifier(reminderRepo repositories.ReminderRepository, bot *tg
 // ProcessDueReminders performs a single pass over repository reminders, sending due ones
 // and updating their next trigger. Extracted for testability.
 func ProcessDueReminders(now time.Time, reminderRepo repositories.ReminderRepository, sender BotSender) {
-	reminders := reminderRepo.GetReminders()
+	reminders, _ := reminderRepo.GetReminders()
 	for i := range reminders {
 		rem := &reminders[i]
 		if !rem.IsActive {

@@ -6,7 +6,7 @@ import (
 
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 	"github.com/ivanenkomaksym/remindme_bot/domain/entities"
-	"github.com/ivanenkomaksym/remindme_bot/repositories"
+	"github.com/ivanenkomaksym/remindme_bot/repositories/inmemory"
 )
 
 type fakeSender struct{ sent int }
@@ -17,10 +17,10 @@ func (f *fakeSender) Send(c tgbotapi.Chattable) (tgbotapi.Message, error) {
 }
 
 func TestProcessDueReminders_DailyAdvancesNextTrigger(t *testing.T) {
-	repo := repositories.NewInMemoryReminderRepository()
+	repo := inmemory.NewInMemoryReminderRepository()
 	user := entities.User{ID: 123}
 	// Create a daily reminder at 00:00, set its NextTrigger to a known past time
-	rem := repo.CreateDailyReminder("00:00", user, "ping")
+	rem, _ := repo.CreateDailyReminder("00:00", &user, "ping")
 	// Force NextTrigger to be at a fixed point
 	past := time.Now().Add(-2 * time.Hour).Truncate(time.Minute)
 	rem.NextTrigger = past
@@ -36,7 +36,8 @@ func TestProcessDueReminders_DailyAdvancesNextTrigger(t *testing.T) {
 	}
 
 	// After processing, NextTrigger should advance by 24h for daily recurrence
-	updated := repo.GetReminders()[0]
+	reminders, _ := repo.GetReminders()
+	updated := reminders[0]
 	want := past.Add(24 * time.Hour)
 	if !updated.NextTrigger.Equal(want) {
 		t.Fatalf("expected NextTrigger %v, got %v", want, updated.NextTrigger)
@@ -47,7 +48,7 @@ func TestProcessDueReminders_DailyAdvancesNextTrigger(t *testing.T) {
 }
 
 func TestProcessDueReminders_OneTimeDeactivates(t *testing.T) {
-	repo := repositories.NewInMemoryReminderRepository()
+	repo := inmemory.NewInMemoryReminderRepository()
 	// Manually insert one-time reminder (Recurrence=nil)
 	user := entities.User{ID: 42}
 	now := time.Now()
@@ -62,7 +63,7 @@ func TestProcessDueReminders_OneTimeDeactivates(t *testing.T) {
 	}
 	// Inject into repo via UpdateReminder path after appending
 	// Use repository's internal behavior by creating a daily and replacing it
-	junk := repo.CreateDailyReminder("00:00", user, "junk")
+	junk, _ := repo.CreateDailyReminder("00:00", &user, "junk")
 	rem.ID = junk.ID
 	repo.UpdateReminder(&rem)
 
@@ -74,7 +75,8 @@ func TestProcessDueReminders_OneTimeDeactivates(t *testing.T) {
 		t.Fatalf("expected 1 message sent, got %d", sender.sent)
 	}
 
-	updated := repo.GetReminders()[0]
+	reminders, _ := repo.GetReminders()
+	updated := reminders[0]
 	if updated.IsActive {
 		t.Fatalf("one-time reminder should be deactivated after sending")
 	}

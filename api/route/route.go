@@ -6,6 +6,7 @@ import (
 
 	"github.com/ivanenkomaksym/remindme_bot/api/middleware"
 	"github.com/ivanenkomaksym/remindme_bot/bootstrap"
+	"github.com/ivanenkomaksym/remindme_bot/notifier"
 )
 
 func Setup(app *bootstrap.Application) {
@@ -38,6 +39,8 @@ func Setup(app *bootstrap.Application) {
 		w.WriteHeader(http.StatusOK)
 		w.Write([]byte("OK"))
 	})
+
+	notifier.StartReminderNotifier(app.Container.ReminderRepo, app.Bot)
 
 	log.Printf("Starting HTTP server on %s", addr)
 	// Start the HTTP server. This will block indefinitely, serving requests.

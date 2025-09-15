@@ -1,4 +1,4 @@
-package repositories
+package inmemory
 
 import (
 	"slices"
@@ -11,7 +11,7 @@ import (
 func TestCreateDailyReminder_Happy(t *testing.T) {
 	repo := NewInMemoryReminderRepository()
 	user := entities.User{ID: 1, UserName: "tester"}
-	rem := repo.CreateDailyReminder("23:15", user, "daily msg")
+	rem, _ := repo.CreateDailyReminder("23:15", &user, "daily msg")
 
 	if rem == nil {
 		t.Fatalf("expected reminder, got nil")
@@ -39,7 +39,7 @@ func TestCreateDailyReminder_Happy(t *testing.T) {
 func TestCreateDailyReminder_InvalidTime(t *testing.T) {
 	repo := NewInMemoryReminderRepository()
 	user := entities.User{ID: 2, UserName: "tester2"}
-	rem := repo.CreateDailyReminder("bad", user, "daily bad")
+	rem, _ := repo.CreateDailyReminder("bad", &user, "daily bad")
 
 	if rem == nil {
 		t.Fatalf("expected reminder, got nil")
@@ -56,7 +56,7 @@ func TestCreateWeeklyReminder_Happy(t *testing.T) {
 	repo := NewInMemoryReminderRepository()
 	user := entities.User{ID: 3}
 	days := []time.Weekday{time.Wednesday, time.Friday}
-	rem := repo.CreateWeeklyReminder(days, "00:01", user, "weekly msg")
+	rem, _ := repo.CreateWeeklyReminder(days, "00:01", &user, "weekly msg")
 
 	if rem == nil {
 		t.Fatalf("expected reminder, got nil")
@@ -79,7 +79,7 @@ func TestCreateWeeklyReminder_Happy(t *testing.T) {
 func TestCreateWeeklyReminder_EmptyDaysFallbackDaily(t *testing.T) {
 	repo := NewInMemoryReminderRepository()
 	user := entities.User{ID: 4}
-	rem := repo.CreateWeeklyReminder([]time.Weekday{}, "06:30", user, "weekly empty")
+	rem, _ := repo.CreateWeeklyReminder([]time.Weekday{}, "06:30", &user, "weekly empty")
 
 	if rem == nil {
 		t.Fatalf("expected reminder, got nil")
@@ -98,7 +98,7 @@ func TestCreateMonthlyReminder_Happy(t *testing.T) {
 	repo := NewInMemoryReminderRepository()
 	user := entities.User{ID: 5}
 	days := []int{5, 20}
-	rem := repo.CreateMonthlyReminder(days, "07:45", user, "monthly msg")
+	rem, _ := repo.CreateMonthlyReminder(days, "07:45", &user, "monthly msg")
 	if rem == nil {
 		t.Fatalf("expected reminder, got nil")
 	}
@@ -120,7 +120,7 @@ func TestCreateMonthlyReminder_Happy(t *testing.T) {
 func TestCreateMonthlyReminder_InvalidDaysFallbackDaily(t *testing.T) {
 	repo := NewInMemoryReminderRepository()
 	user := entities.User{ID: 6}
-	rem := repo.CreateMonthlyReminder([]int{0, 35}, "09:00", user, "monthly invalid")
+	rem, _ := repo.CreateMonthlyReminder([]int{0, 35}, "09:00", &user, "monthly invalid")
 	if rem == nil {
 		t.Fatalf("expected reminder, got nil")
 	}
@@ -136,14 +136,14 @@ func TestCreateMonthlyReminder_InvalidDaysFallbackDaily(t *testing.T) {
 func TestGetReminders_ReturnsCopy(t *testing.T) {
 	repo := NewInMemoryReminderRepository()
 	user := entities.User{ID: 7}
-	_ = repo.CreateDailyReminder("10:00", user, "original")
-	list1 := repo.GetReminders()
+	_, _ = repo.CreateDailyReminder("10:00", &user, "original")
+	list1, _ := repo.GetReminders()
 	if len(list1) != 1 {
 		t.Fatalf("expected 1 reminder, got %d", len(list1))
 	}
 	// mutate returned slice
 	list1[0].Message = "changed"
-	list2 := repo.GetReminders()
+	list2, _ := repo.GetReminders()
 	if list2[0].Message != "original" {
 		t.Errorf("expected internal data unchanged, got %q", list2[0].Message)
 	}
@@ -152,14 +152,15 @@ func TestGetReminders_ReturnsCopy(t *testing.T) {
 func TestUpdateReminder_Happy(t *testing.T) {
 	repo := NewInMemoryReminderRepository()
 	user := entities.User{ID: 8}
-	rem := repo.CreateDailyReminder("12:00", user, "original message")
+	rem, _ := repo.CreateDailyReminder("12:00", &user, "original message")
 	rem.Message = "updated message"
 	rem.IsActive = false
 	ok := repo.UpdateReminder(rem)
-	if !ok {
+	if ok != nil {
 		t.Fatalf("expected update to succeed")
 	}
-	updated := repo.GetReminders()[0]
+	reminders, _ := repo.GetReminders()
+	updated := reminders[0]
 	if updated.Message != "updated message" {
 		t.Errorf("expected message 'updated message', got %q", updated.Message)
 	}
@@ -173,7 +174,7 @@ func TestUpdateReminder_NotFound(t *testing.T) {
 	user := entities.User{ID: 9}
 	rem := &entities.Reminder{ID: 999, UserID: user.ID, Message: "does not exist"}
 	ok := repo.UpdateReminder(rem)
-	if ok {
+	if ok != nil {
 		t.Fatalf("expected update to fail for non-existent reminder")
 	}
 }

@@ -6,6 +6,7 @@ import (
 
 	"github.com/ivanenkomaksym/remindme_bot/domain/entities"
 	"github.com/ivanenkomaksym/remindme_bot/domain/repositories"
+	"github.com/ivanenkomaksym/remindme_bot/scheduler"
 )
 
 type InMemoryReminderRepository struct {
@@ -27,7 +28,7 @@ func (r *InMemoryReminderRepository) CreateDailyReminder(timeStr string, user *e
 	defer r.mu.Unlock()
 
 	now := time.Now()
-	next := now.Add(24 * time.Hour) // Simple implementation
+	next := scheduler.NextDailyTrigger(now, timeStr)
 
 	recurrence := entities.DailyAt(timeStr)
 	reminder := entities.NewReminder(r.nextID, user.ID, message, recurrence, next)
@@ -42,7 +43,7 @@ func (r *InMemoryReminderRepository) CreateWeeklyReminder(daysOfWeek []time.Week
 	defer r.mu.Unlock()
 
 	now := time.Now()
-	next := now.Add(7 * 24 * time.Hour) // Simple implementation
+	next := scheduler.NextWeeklyTrigger(now, daysOfWeek, timeStr)
 
 	recurrence := entities.CustomWeekly(daysOfWeek, timeStr)
 	reminder := entities.NewReminder(r.nextID, user.ID, message, recurrence, next)
@@ -57,7 +58,7 @@ func (r *InMemoryReminderRepository) CreateMonthlyReminder(daysOfMonth []int, ti
 	defer r.mu.Unlock()
 
 	now := time.Now()
-	next := now.Add(30 * 24 * time.Hour) // Simple implementation
+	next := scheduler.NextMonthlyTrigger(now, daysOfMonth, timeStr)
 
 	recurrence := entities.MonthlyOnDay(daysOfMonth, timeStr)
 	reminder := entities.NewReminder(r.nextID, user.ID, message, recurrence, next)
