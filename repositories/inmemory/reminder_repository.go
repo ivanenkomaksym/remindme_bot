@@ -23,6 +23,18 @@ func NewInMemoryReminderRepository() repositories.ReminderRepository {
 }
 
 // Reminder creation methods
+func (r *InMemoryReminderRepository) CreateOnceReminder(timeStr string, user *entities.User, message string) (*entities.Reminder, error) {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+
+	recurrence := entities.OnceAt(timeStr)
+	reminder := entities.NewReminder(r.nextID, user.ID, message, recurrence, nil)
+	r.nextID++
+	r.reminders = append(r.reminders, *reminder)
+
+	return &r.reminders[len(r.reminders)-1], nil
+}
+
 func (r *InMemoryReminderRepository) CreateDailyReminder(timeStr string, user *entities.User, message string) (*entities.Reminder, error) {
 	r.mu.Lock()
 	defer r.mu.Unlock()
@@ -31,7 +43,7 @@ func (r *InMemoryReminderRepository) CreateDailyReminder(timeStr string, user *e
 	next := scheduler.NextDailyTrigger(now, timeStr)
 
 	recurrence := entities.DailyAt(timeStr)
-	reminder := entities.NewReminder(r.nextID, user.ID, message, recurrence, next)
+	reminder := entities.NewReminder(r.nextID, user.ID, message, recurrence, &next)
 	r.nextID++
 	r.reminders = append(r.reminders, *reminder)
 
@@ -46,7 +58,7 @@ func (r *InMemoryReminderRepository) CreateWeeklyReminder(daysOfWeek []time.Week
 	next := scheduler.NextWeeklyTrigger(now, daysOfWeek, timeStr)
 
 	recurrence := entities.CustomWeekly(daysOfWeek, timeStr)
-	reminder := entities.NewReminder(r.nextID, user.ID, message, recurrence, next)
+	reminder := entities.NewReminder(r.nextID, user.ID, message, recurrence, &next)
 	r.nextID++
 	r.reminders = append(r.reminders, *reminder)
 
@@ -61,7 +73,7 @@ func (r *InMemoryReminderRepository) CreateMonthlyReminder(daysOfMonth []int, ti
 	next := scheduler.NextMonthlyTrigger(now, daysOfMonth, timeStr)
 
 	recurrence := entities.MonthlyOnDay(daysOfMonth, timeStr)
-	reminder := entities.NewReminder(r.nextID, user.ID, message, recurrence, next)
+	reminder := entities.NewReminder(r.nextID, user.ID, message, recurrence, &next)
 	r.nextID++
 	r.reminders = append(r.reminders, *reminder)
 
@@ -166,7 +178,7 @@ func (r *InMemoryReminderRepository) UpdateNextTrigger(reminderID int64, nextTri
 
 	for i := range r.reminders {
 		if r.reminders[i].ID == reminderID {
-			r.reminders[i].UpdateNextTrigger(nextTrigger)
+			r.reminders[i].UpdateNextTrigger(&nextTrigger)
 			return nil
 		}
 	}

@@ -23,7 +23,7 @@ func TestProcessDueReminders_DailyAdvancesNextTrigger(t *testing.T) {
 	rem, _ := repo.CreateDailyReminder("00:00", &user, "ping")
 	// Force NextTrigger to be at a fixed point
 	past := time.Now().Add(-2 * time.Hour).Truncate(time.Minute)
-	rem.NextTrigger = past
+	rem.NextTrigger = &past
 	repo.UpdateReminder(rem)
 
 	sender := &fakeSender{}
@@ -52,12 +52,13 @@ func TestProcessDueReminders_OneTimeDeactivates(t *testing.T) {
 	// Manually insert one-time reminder (Recurrence=nil)
 	user := entities.User{ID: 42}
 	now := time.Now()
+	next := now.Add(-time.Minute)
 	rem := entities.Reminder{
 		ID:          999,
 		UserID:      user.ID,
 		Message:     "one-time",
 		CreatedAt:   now.Add(-time.Hour),
-		NextTrigger: now.Add(-time.Minute),
+		NextTrigger: &next,
 		Recurrence:  nil,
 		IsActive:    true,
 	}

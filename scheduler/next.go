@@ -126,22 +126,30 @@ func NextMonthlyTrigger(from time.Time, daysOfMonth []int, timeStr string) time.
 }
 
 // NextForRecurrence advances from last trigger according to the recurrence configuration.
-func NextForRecurrence(last time.Time, rec *entities.Recurrence) time.Time {
+func NextForRecurrence(last time.Time, rec *entities.Recurrence) *time.Time {
 	switch rec.Type {
+	case entities.Once:
+		return nil
 	case entities.Daily:
 		// Maintain the same clock time as last trigger, add 24h
-		return last.Add(24 * time.Hour)
+		result := last.Add(24 * time.Hour)
+		return &result
 	case entities.Weekly:
-		return NextWeeklyTrigger(last, rec.Weekdays, rec.TimeOfDay)
+		result := NextWeeklyTrigger(last, rec.Weekdays, rec.TimeOfDay)
+		return &result
 	case entities.Monthly:
-		return NextMonthlyTrigger(last, rec.DayOfMonth, rec.TimeOfDay)
+		result := NextMonthlyTrigger(last, rec.DayOfMonth, rec.TimeOfDay)
+		return &result
 	case entities.Interval:
 		// Fallback simple daily for now
-		return last.Add(24 * time.Hour)
+		result := last.Add(24 * time.Hour)
+		return &result
 	case entities.Custom:
 		// Fallback simple daily for now
-		return last.Add(24 * time.Hour)
+		result := last.Add(24 * time.Hour)
+		return &result
 	default:
-		return last.Add(24 * time.Hour)
+		result := last.Add(24 * time.Hour)
+		return &result
 	}
 }

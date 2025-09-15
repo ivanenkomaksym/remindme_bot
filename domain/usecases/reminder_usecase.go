@@ -56,6 +56,8 @@ func (r *reminderUseCase) CreateReminder(userID int64, selection *entities.UserS
 
 	// Create reminder based on recurrence type
 	switch selection.RecurrenceType {
+	case entities.Once:
+		return r.createOnceReminder(user, selection)
 	case entities.Daily:
 		return r.createDailyReminder(user, selection)
 	case entities.Weekly:
@@ -70,18 +72,21 @@ func (r *reminderUseCase) CreateReminder(userID int64, selection *entities.UserS
 	}
 }
 
-func (r *reminderUseCase) createDailyReminder(user *entities.User, selection *entities.UserSelection) (*entities.Reminder, error) {
-	// For now, we'll create a simple daily reminder
-	// In a real implementation, you'd calculate the next trigger time
-	nextTrigger := time.Now().Add(24 * time.Hour)
+func (r *reminderUseCase) createOnceReminder(user *entities.User, selection *entities.UserSelection) (*entities.Reminder, error) {
+	reminder, err := r.reminderRepo.CreateOnceReminder(selection.SelectedTime, user, selection.ReminderMessage)
+	if err != nil {
+		return nil, err
+	}
 
+	return reminder, nil
+}
+
+func (r *reminderUseCase) createDailyReminder(user *entities.User, selection *entities.UserSelection) (*entities.Reminder, error) {
 	reminder, err := r.reminderRepo.CreateDailyReminder(selection.SelectedTime, user, selection.ReminderMessage)
 	if err != nil {
 		return nil, err
 	}
 
-	// Update the next trigger time
-	reminder.UpdateNextTrigger(nextTrigger)
 	return reminder, nil
 }
 

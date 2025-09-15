@@ -5,7 +5,8 @@ import "errors"
 type RecurrenceType int64
 
 const (
-	Daily RecurrenceType = iota
+	Once RecurrenceType = iota
+	Daily
 	Weekly
 	Monthly
 	Interval
@@ -13,6 +14,7 @@ const (
 )
 
 var RecurrenceTypeValues = []RecurrenceType{
+	Once,
 	Daily,
 	Weekly,
 	Monthly,
@@ -22,6 +24,8 @@ var RecurrenceTypeValues = []RecurrenceType{
 
 func (r RecurrenceType) String() string {
 	switch r {
+	case Once:
+		return "Once"
 	case Daily:
 		return "Daily"
 	case Weekly:
@@ -39,6 +43,8 @@ func (r RecurrenceType) String() string {
 
 func ToRecurrenceType(s string) (RecurrenceType, error) {
 	switch s {
+	case "Once":
+		return Once, nil
 	case "Daily":
 		return Daily, nil
 	case "Weekly":

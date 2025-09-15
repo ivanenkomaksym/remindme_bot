@@ -38,6 +38,7 @@ var stringsByLang = map[string]Strings{
 	LangEN: {
 		Welcome: "Welcome to the Reminder Bot!",
 		RecurrenceTypes: map[entities.RecurrenceType]string{
+			entities.Once:     "Once",
 			entities.Daily:    "Daily",
 			entities.Weekly:   "Weekly",
 			entities.Monthly:  "Monthly",
@@ -79,6 +80,7 @@ var stringsByLang = map[string]Strings{
 	LangUK: {
 		Welcome: "Ласкаво просимо до бота-нагадувача!",
 		RecurrenceTypes: map[entities.RecurrenceType]string{
+			entities.Once:     "Один раз",
 			entities.Daily:    "Щодня",
 			entities.Weekly:   "Щотижня",
 			entities.Monthly:  "Щомісяця",
@@ -87,7 +89,7 @@ var stringsByLang = map[string]Strings{
 		},
 		BtnBack:               "← Назад",
 		BtnCustomTime:         "Свій час",
-		MsgSelectTime:         "Оберіть час для щоденних нагадувань:",
+		MsgSelectTime:         "Оберіть час для нагадувань:",
 		MsgSelectHour:         "Оберіть діапазон часу:",
 		MsgSelectWithinHour:   "Оберіть час між %02d:00-%02d:00:",
 		MsgSelectMessage:      "Оберіть текст нагадування:",

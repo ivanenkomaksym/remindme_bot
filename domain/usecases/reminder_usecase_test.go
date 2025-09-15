@@ -14,6 +14,33 @@ func newReminderUC() ReminderUseCase {
 	return NewReminderUseCase(remRepo, userRepo)
 }
 
+func TestCreateReminder_ValidOnce(t *testing.T) {
+	uc := newReminderUC()
+	// seed user
+	userRepo := inmemory.NewInMemoryUserRepository()
+	userRepo.CreateOrUpdateUser(1, "u", "f", "l", "en")
+
+	// Build a new UC that shares the same user repo as above
+	remRepo := inmemory.NewInMemoryReminderRepository()
+	uc = NewReminderUseCase(remRepo, userRepo)
+
+	sel := entities.NewUserSelection()
+	sel.RecurrenceType = entities.Once
+	sel.SelectedTime = "12:00"
+	sel.ReminderMessage = "Check e-mail"
+
+	rem, err := uc.CreateReminder(1, sel)
+	if rem.NextTrigger != nil {
+		t.Fatalf("expected Next trigger to be nil")
+	}
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if rem == nil {
+		t.Fatalf("expected reminder, got nil")
+	}
+}
+
 func TestCreateReminder_ValidDaily(t *testing.T) {
 	uc := newReminderUC()
 	// seed user

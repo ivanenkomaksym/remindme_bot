@@ -9,6 +9,7 @@ import (
 // ReminderRepository defines the interface for reminder data operations
 type ReminderRepository interface {
 	// Reminder creation
+	CreateOnceReminder(timeStr string, user *entities.User, message string) (*entities.Reminder, error)
 	CreateDailyReminder(timeStr string, user *entities.User, message string) (*entities.Reminder, error)
 	CreateWeeklyReminder(daysOfWeek []time.Weekday, timeStr string, user *entities.User, message string) (*entities.Reminder, error)
 	CreateMonthlyReminder(daysOfMonth []int, timeStr string, user *entities.User, message string) (*entities.Reminder, error)

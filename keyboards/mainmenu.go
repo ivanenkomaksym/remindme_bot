@@ -17,6 +17,9 @@ func GetMainMenuMarkup(lang string) *tgbotapi.InlineKeyboardMarkup {
 	s := T(lang)
 	mainMenu := tgbotapi.NewInlineKeyboardMarkup(
 		tgbotapi.NewInlineKeyboardRow(
+			tgbotapi.NewInlineKeyboardButtonData(RecurrenceTypeLabel(lang, entities.Once), entities.Once.String()),
+		),
+		tgbotapi.NewInlineKeyboardRow(
 			tgbotapi.NewInlineKeyboardButtonData(RecurrenceTypeLabel(lang, entities.Daily), entities.Daily.String()),
 		),
 		tgbotapi.NewInlineKeyboardRow(

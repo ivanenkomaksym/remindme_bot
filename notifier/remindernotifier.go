@@ -31,7 +31,7 @@ func ProcessDueReminders(now time.Time, reminderRepo repositories.ReminderReposi
 		if !rem.IsActive {
 			continue
 		}
-		if rem.NextTrigger.After(now) {
+		if rem.NextTrigger == nil || rem.NextTrigger.After(now) {
 			continue
 		}
 
@@ -43,8 +43,7 @@ func ProcessDueReminders(now time.Time, reminderRepo repositories.ReminderReposi
 
 		// Update NextTrigger for recurring reminders
 		if rem.Recurrence != nil {
-			next := scheduler.NextForRecurrence(rem.NextTrigger, rem.Recurrence)
-			rem.NextTrigger = next
+			rem.NextTrigger = scheduler.NextForRecurrence(*rem.NextTrigger, rem.Recurrence)
 		} else {
 			rem.IsActive = false // deactivate one-time reminders
 		}

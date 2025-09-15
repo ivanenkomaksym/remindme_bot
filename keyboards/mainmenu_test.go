@@ -13,11 +13,11 @@ func TestIsMainMenuSelection(t *testing.T) {
 
 func TestGetMainMenuMarkup(t *testing.T) {
 	m := GetMainMenuMarkup(LangEN)
-	if len(m.InlineKeyboard) != 6 {
-		t.Fatalf("expected 6 rows, got %d", len(m.InlineKeyboard))
+	if len(m.InlineKeyboard) != 7 {
+		t.Fatalf("expected 7 rows, got %d", len(m.InlineKeyboard))
 	}
 	// Each row should contain exactly 1 button
-	for i := 0; i < 6; i++ {
+	for i := 0; i < 7; i++ {
 		if len(m.InlineKeyboard[i]) != 1 {
 			t.Fatalf("row %d expected 1 button, got %d", i, len(m.InlineKeyboard[i]))
 		}

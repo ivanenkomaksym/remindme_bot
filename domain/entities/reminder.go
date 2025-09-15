@@ -10,13 +10,13 @@ type Reminder struct {
 	UserID      int64       `json:"userId"`
 	Message     string      `json:"message"`
 	CreatedAt   time.Time   `json:"createdAt"`
-	NextTrigger time.Time   `json:"nextTrigger"`
+	NextTrigger *time.Time  `json:"nextTrigger"`
 	Recurrence  *Recurrence `json:"recurrence"`
 	IsActive    bool        `json:"isActive"`
 }
 
 // NewReminder creates a new reminder entity
-func NewReminder(id, userID int64, message string, recurrence *Recurrence, nextTrigger time.Time) *Reminder {
+func NewReminder(id, userID int64, message string, recurrence *Recurrence, nextTrigger *time.Time) *Reminder {
 	return &Reminder{
 		ID:          id,
 		UserID:      userID,
@@ -34,6 +34,6 @@ func (r *Reminder) Deactivate() {
 }
 
 // UpdateNextTrigger updates the next trigger time
-func (r *Reminder) UpdateNextTrigger(nextTrigger time.Time) {
+func (r *Reminder) UpdateNextTrigger(nextTrigger *time.Time) {
 	r.NextTrigger = nextTrigger
 }
