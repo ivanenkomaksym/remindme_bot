@@ -5,6 +5,7 @@ type UserSelection struct {
 	RecurrenceType  RecurrenceType `json:"recurrenceType"`
 	IsWeekly        bool           `json:"isWeekly"`
 	WeekOptions     [7]bool        `json:"weekOptions"`
+	SelectedDate    string         `json:"selectedDate"`
 	SelectedTime    string         `json:"selectedTime"`
 	ReminderMessage string         `json:"reminderMessage"`
 	CustomTime      bool           `json:"customTime"`

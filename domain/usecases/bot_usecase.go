@@ -96,6 +96,8 @@ func (b *botUseCase) HandleCallbackQuery(user *tgbotapi.User, callbackData strin
 		return b.handleMainMenu(user, userEntity)
 	case keyboards.Reccurence:
 		return b.handleRecurrenceSelection(user, callbackData, userEntity, selection)
+	case keyboards.Date:
+		return b.handleDateSelection(user, callbackData, userEntity, selection)
 	case keyboards.Time:
 		return b.handleTimeSelection(user, callbackData, userEntity, selection)
 	case keyboards.Week:
@@ -201,6 +203,15 @@ func (b *botUseCase) handleRecurrenceSelection(user *tgbotapi.User, callbackData
 	}
 
 	err = b.userUseCase.UpdateUserSelection(user.ID, selection)
+	if err != nil {
+		log.Printf("Failed to update user selection: %v", err)
+	}
+	return result, nil
+}
+
+func (b *botUseCase) handleDateSelection(user *tgbotapi.User, callbackData string, userEntity *entities.User, selection *entities.UserSelection) (*keyboards.SelectionResult, error) {
+	result := keyboards.HandleDateSelection(callbackData, userEntity, selection)
+	err := b.userUseCase.UpdateUserSelection(user.ID, selection)
 	if err != nil {
 		log.Printf("Failed to update user selection: %v", err)
 	}

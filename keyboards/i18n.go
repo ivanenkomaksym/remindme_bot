@@ -32,6 +32,8 @@ type Strings struct {
 	MsgSelectWeekdays   string
 	MsgSelectTimeWeekly string
 	BtnSelect           string
+	// Date-related i18n
+	MsgSelectDate string
 }
 
 var stringsByLang = map[string]Strings{
@@ -76,6 +78,7 @@ var stringsByLang = map[string]Strings{
 		MsgSelectWeekdays:   "Select weekdays:",
 		MsgSelectTimeWeekly: "Select time for weekly reminders:",
 		BtnSelect:           "Select",
+		MsgSelectDate:       "Select a date:",
 	},
 	LangUK: {
 		Welcome: "Ласкаво просимо до бота-нагадувача!",
@@ -118,6 +121,7 @@ var stringsByLang = map[string]Strings{
 		MsgSelectWeekdays:   "Оберіть дні тижня:",
 		MsgSelectTimeWeekly: "Оберіть час для щотижневих нагадувань:",
 		BtnSelect:           "Обрати",
+		MsgSelectDate:       "Оберіть дату:",
 	},
 }
 
