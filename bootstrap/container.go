@@ -21,6 +21,7 @@ type Container struct {
 	UserUseCase     usecases.UserUseCase
 	ReminderUseCase usecases.ReminderUseCase
 	BotUseCase      usecases.BotUseCase
+	DateUseCase     usecases.DateUseCase
 
 	// Controllers
 	BotController      *controllers.BotController
@@ -63,8 +64,9 @@ func (c *Container) initUseCases() {
 
 // initControllers initializes all controllers
 func (c *Container) initControllers(bot *tgbotapi.BotAPI) {
-	c.BotUseCase = usecases.NewBotUseCase(c.UserUseCase, c.ReminderUseCase, bot)
-	c.BotController = controllers.NewBotController(c.BotUseCase, bot)
+	c.DateUseCase = usecases.NewDateUseCase(c.UserUseCase, bot)
+	c.BotUseCase = usecases.NewBotUseCase(c.UserUseCase, c.ReminderUseCase, c.DateUseCase, bot)
+	c.BotController = controllers.NewBotController(c.BotUseCase, c.DateUseCase, bot)
 	c.UserController = controllers.NewUserController(c.UserUseCase)
 	c.ReminderController = controllers.NewReminderController(c.ReminderUseCase)
 }

@@ -22,14 +22,16 @@ type BotUseCase interface {
 type botUseCase struct {
 	userUseCase     UserUseCase
 	reminderUseCase ReminderUseCase
+	dateUseCase     DateUseCase
 	bot             *tgbotapi.BotAPI
 }
 
 // NewBotUseCase creates a new bot use case
-func NewBotUseCase(userUseCase UserUseCase, reminderUseCase ReminderUseCase, bot *tgbotapi.BotAPI) BotUseCase {
+func NewBotUseCase(userUseCase UserUseCase, reminderUseCase ReminderUseCase, dateUseCase DateUseCase, bot *tgbotapi.BotAPI) BotUseCase {
 	return &botUseCase{
 		userUseCase:     userUseCase,
 		reminderUseCase: reminderUseCase,
+		dateUseCase:     dateUseCase,
 		bot:             bot,
 	}
 }
@@ -210,7 +212,7 @@ func (b *botUseCase) handleRecurrenceSelection(user *tgbotapi.User, callbackData
 }
 
 func (b *botUseCase) handleDateSelection(user *tgbotapi.User, callbackData string, userEntity *entities.User, selection *entities.UserSelection) (*keyboards.SelectionResult, error) {
-	result := keyboards.HandleDateSelection(callbackData, userEntity, selection)
+	result := b.dateUseCase.HandleDatepickerSelection(userEntity, selection)
 	err := b.userUseCase.UpdateUserSelection(user.ID, selection)
 	if err != nil {
 		log.Printf("Failed to update user selection: %v", err)

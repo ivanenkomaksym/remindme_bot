@@ -12,15 +12,17 @@ import (
 
 // BotController handles bot-related HTTP requests
 type BotController struct {
-	botUseCase usecases.BotUseCase
-	bot        *tgbotapi.BotAPI
+	botUseCase  usecases.BotUseCase
+	dateUseCase usecases.DateUseCase
+	bot         *tgbotapi.BotAPI
 }
 
 // NewBotController creates a new bot controller
-func NewBotController(botUseCase usecases.BotUseCase, bot *tgbotapi.BotAPI) *BotController {
+func NewBotController(botUseCase usecases.BotUseCase, dateUseCase usecases.DateUseCase, bot *tgbotapi.BotAPI) *BotController {
 	return &BotController{
-		botUseCase: botUseCase,
-		bot:        bot,
+		botUseCase:  botUseCase,
+		dateUseCase: dateUseCase,
+		bot:         bot,
 	}
 }
 
@@ -64,6 +66,11 @@ func (c *BotController) processUpdate(update tgbotapi.Update) error {
 
 // processCallbackQuery processes callback queries (button presses)
 func (c *BotController) processCallbackQuery(callbackQuery *tgbotapi.CallbackQuery) error {
+	// Check if this is a datepicker callback first
+	if c.dateUseCase.HandleDatepickerCallback(callbackQuery) {
+		return nil
+	}
+
 	msg := tgbotapi.NewEditMessageText(
 		callbackQuery.Message.Chat.ID,
 		callbackQuery.Message.MessageID,

@@ -7,6 +7,7 @@ import (
 	"net/http/httptest"
 	"testing"
 
+	"github.com/ivanenkomaksym/remindme_bot/domain/entities"
 	"github.com/ivanenkomaksym/remindme_bot/domain/usecases"
 	"github.com/ivanenkomaksym/remindme_bot/keyboards"
 
@@ -32,12 +33,24 @@ func (m *botUseCaseMock) ProcessUserInput(msg *tgbotapi.Message) (*keyboards.Sel
 	return nil, nil
 }
 
+type dateUseCaseMock struct {
+	handleDatepickerSelection func(user *entities.User, userSelection *entities.UserSelection) *keyboards.SelectionResult
+	handleDatepickerCallback  func(callbackQuery *tgbotapi.CallbackQuery) bool
+}
+
+func (m *dateUseCaseMock) HandleDatepickerSelection(user *entities.User, userSelection *entities.UserSelection) *keyboards.SelectionResult {
+	return nil
+}
+func (m *dateUseCaseMock) HandleDatepickerCallback(callbackQuery *tgbotapi.CallbackQuery) bool {
+	return false
+}
+
 type botAPINop struct{ t *testing.T }
 
 func (b *botAPINop) Send(ch interface{}) (tgbotapi.Message, error) { return tgbotapi.Message{}, nil }
 
 func TestHandleWebhook_MethodGuard(t *testing.T) {
-	ctrl := NewBotController(&botUseCaseMock{}, &tgbotapi.BotAPI{})
+	ctrl := NewBotController(&botUseCaseMock{}, &dateUseCaseMock{}, &tgbotapi.BotAPI{})
 	req := httptest.NewRequest(http.MethodGet, "/webhook", nil)
 	rw := httptest.NewRecorder()
 
@@ -49,7 +62,7 @@ func TestHandleWebhook_MethodGuard(t *testing.T) {
 }
 
 func TestHandleWebhook_BadJSON(t *testing.T) {
-	ctrl := NewBotController(&botUseCaseMock{}, &tgbotapi.BotAPI{})
+	ctrl := NewBotController(&botUseCaseMock{}, &dateUseCaseMock{}, &tgbotapi.BotAPI{})
 	req := httptest.NewRequest(http.MethodPost, "/webhook", bytes.NewBufferString("{"))
 	rw := httptest.NewRecorder()
 
@@ -67,7 +80,7 @@ func TestHandleWebhook_ValidUpdate(t *testing.T) {
 
 	// Return nil selection to avoid calling Send on real bot
 	mockUC := &botUseCaseMock{processUserInputFn: func(msg *tgbotapi.Message) (*keyboards.SelectionResult, error) { return nil, nil }}
-	ctrl := NewBotController(mockUC, &tgbotapi.BotAPI{})
+	ctrl := NewBotController(mockUC, &dateUseCaseMock{}, &tgbotapi.BotAPI{})
 	req := httptest.NewRequest(http.MethodPost, "/webhook", bytes.NewReader(body))
 	rw := httptest.NewRecorder()
 
