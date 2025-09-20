@@ -43,8 +43,6 @@ func (c *BotController) HandleWebhook(w http.ResponseWriter, r *http.Request) {
 	// Process the update
 	if err := c.processUpdate(update); err != nil {
 		log.Printf("ERROR: Failed to process update: %v", err)
-		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
-		return
 	}
 
 	// Respond with 200 OK to Telegram immediately
