@@ -12,7 +12,7 @@ import (
 )
 
 type DateUseCase interface {
-	HandleDatepickerSelection(user *entities.User, userSelection *entities.UserSelection) *keyboards.SelectionResult
+	CreateDatepicker(message *tgbotapi.Message, user *entities.User, userSelection *entities.UserSelection) *keyboards.SelectionResult
 	HandleDatepickerCallback(callbackQuery *tgbotapi.CallbackQuery) bool
 }
 
@@ -31,7 +31,8 @@ func NewDateUseCase(userUseCase UserUseCase, bot *tgbotapi.BotAPI) DateUseCase {
 	}
 }
 
-func (d *dateUseCase) HandleDatepickerSelection(user *entities.User,
+func (d *dateUseCase) CreateDatepicker(message *tgbotapi.Message,
+	user *entities.User,
 	userSelection *entities.UserSelection) *keyboards.SelectionResult {
 
 	onSelect := func(bot *tgbotapi.BotAPI, m *tgbotapi.Message, date time.Time) {
@@ -47,7 +48,7 @@ func (d *dateUseCase) HandleDatepickerSelection(user *entities.User,
 
 		msg := tgbotapi.NewEditMessageText(
 			user.ID,
-			0,
+			message.MessageID,
 			"", // Text will be set later
 		)
 
@@ -66,7 +67,8 @@ func (d *dateUseCase) HandleDatepickerSelection(user *entities.User,
 
 	dp := datepicker.New(onSelect,
 		datepicker.Language(user.Language),
-		datepicker.OnCancel(onCancel))
+		datepicker.OnCancel(onCancel),
+		datepicker.WithCallbackPrefix("datepicker_selection"))
 
 	// Store datepicker instance for this user
 	d.datepickers[user.ID] = dp

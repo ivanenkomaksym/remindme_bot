@@ -73,6 +73,7 @@ func (r *reminderUseCase) CreateReminder(userID int64, selection *entities.UserS
 }
 
 func (r *reminderUseCase) createOnceReminder(user *entities.User, selection *entities.UserSelection) (*entities.Reminder, error) {
+	// TODO: extend with selected date
 	reminder, err := r.reminderRepo.CreateOnceReminder(selection.SelectedTime, user, selection.ReminderMessage)
 	if err != nil {
 		return nil, err

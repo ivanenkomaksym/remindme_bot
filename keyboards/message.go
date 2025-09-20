@@ -77,7 +77,7 @@ func FormatReminderConfirmation(user *entities.User, userSelection *entities.Use
 	confirmation := "✅ " + s.ReminderSet + "!\n\n"
 	confirmation += "📅 " + s.Frequency + ": " + userSelection.RecurrenceType.String() + "\n"
 
-	if userSelection.IsWeekly {
+	if userSelection.RecurrenceType == entities.Weekly {
 		confirmation += "📆 " + s.Days + ": "
 		days := []string{}
 		weekdayNames := s.WeekdayNames

@@ -79,6 +79,13 @@ func WithPrefix(s string) Option {
 	}
 }
 
+// WithCallbackPrefix sets a specific callback prefix for date picker interactions
+func WithCallbackPrefix(prefix string) Option {
+	return func(w *DatePicker) {
+		w.prefix = prefix
+	}
+}
+
 // NoDeleteAfterSelect prevents remove keyboard after select
 func NoDeleteAfterSelect() Option {
 	return func(dp *DatePicker) {

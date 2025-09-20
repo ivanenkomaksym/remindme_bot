@@ -1,7 +1,14 @@
 package keyboards
 
-import "github.com/ivanenkomaksym/remindme_bot/domain/entities"
+import (
+	"strings"
+)
 
-func IsDateSelectionCallback(callbackData string) bool {
-	return callbackData == entities.Once.String()
+// Callback prefixes for Once flow
+const (
+	CallbackDatepickerSelection = "datepicker_selection"
+)
+
+func IsDateCallback(callbackData string) bool {
+	return strings.HasPrefix(callbackData, CallbackDatepickerSelection)
 }

@@ -34,11 +34,11 @@ func (m *botUseCaseMock) ProcessUserInput(msg *tgbotapi.Message) (*keyboards.Sel
 }
 
 type dateUseCaseMock struct {
-	handleDatepickerSelection func(user *entities.User, userSelection *entities.UserSelection) *keyboards.SelectionResult
-	handleDatepickerCallback  func(callbackQuery *tgbotapi.CallbackQuery) bool
+	createDatepicker         func(user *entities.User, userSelection *entities.UserSelection) *keyboards.SelectionResult
+	handleDatepickerCallback func(callbackQuery *tgbotapi.CallbackQuery) bool
 }
 
-func (m *dateUseCaseMock) HandleDatepickerSelection(user *entities.User, userSelection *entities.UserSelection) *keyboards.SelectionResult {
+func (m *dateUseCaseMock) CreateDatepicker(message *tgbotapi.Message, user *entities.User, userSelection *entities.UserSelection) *keyboards.SelectionResult {
 	return nil
 }
 func (m *dateUseCaseMock) HandleDatepickerCallback(callbackQuery *tgbotapi.CallbackQuery) bool {

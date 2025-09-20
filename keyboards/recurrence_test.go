@@ -16,7 +16,7 @@ func TestHandleRecurrenceTypeSelection(t *testing.T) {
 	if err != nil || res == nil {
 		t.Fatalf("once should return result and nil error")
 	}
-	if !strings.Contains(res.Text, "time") {
+	if !strings.Contains(res.Text, "Select a date") {
 		t.Fatalf("unexpected result text: %s", res.Text)
 	}
 
@@ -31,7 +31,7 @@ func TestHandleRecurrenceTypeSelection(t *testing.T) {
 
 	// Weekly
 	res, err = HandleRecurrenceTypeSelection(entities.Weekly.String(), user, userSelection)
-	if err != nil || res == nil || !userSelection.IsWeekly {
+	if err != nil || res == nil || userSelection.RecurrenceType != entities.Weekly {
 		t.Fatalf("weekly should set IsWeekly and return result")
 	}
 

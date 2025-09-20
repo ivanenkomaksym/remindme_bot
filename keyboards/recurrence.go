@@ -13,7 +13,6 @@ func HandleRecurrenceTypeSelection(callbackData string,
 	}
 
 	userSelection.RecurrenceType = recurrenceType
-	userSelection.IsWeekly = (recurrenceType == entities.Weekly)
 
 	s := T(user.Language)
 	switch recurrenceType {

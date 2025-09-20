@@ -40,7 +40,7 @@ func GetKeyboardType(callbackData string) KeyboardType {
 		return Main
 	}
 
-	if IsDateSelectionCallback(callbackData) {
+	if IsDateCallback(callbackData) {
 		return Date
 	}
 

@@ -34,20 +34,20 @@ func (d *DatePicker) callback(bot *tgbotapi.BotAPI, upd *tgbotapi.Update) {
 		d.month = time.Month(st.param)
 		d.showMain(bot, upd)
 	case cmdDayClick:
-		if d.deleteOnSelect {
+		/*if d.deleteOnSelect {
 			deleteCfg := tgbotapi.NewDeleteMessage(upd.CallbackQuery.Message.Chat.ID, upd.CallbackQuery.Message.MessageID)
 			if _, err := bot.Request(deleteCfg); err != nil {
 				d.onError(fmt.Errorf("failed to delete message onSelect: %w", err))
 			}
-		}
+		}*/
 		d.onSelect(bot, upd.CallbackQuery.Message, time.Date(d.year, d.month, st.param, 0, 0, 0, 0, time.Local))
 	case cmdCancel:
-		if d.deleteOnCancel {
+		/*if d.deleteOnCancel {
 			deleteCfg := tgbotapi.NewDeleteMessage(upd.CallbackQuery.Message.Chat.ID, upd.CallbackQuery.Message.MessageID)
 			if _, err := bot.Request(deleteCfg); err != nil {
 				d.onError(fmt.Errorf("failed to delete message onCancel: %w", err))
 			}
-		}
+		}*/
 		d.onCancel(bot, upd.CallbackQuery.Message)
 	case cmdPrevYears:
 		d.showSelectYear(bot, upd, st.param)

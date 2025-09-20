@@ -3,7 +3,7 @@ package entities
 import "time"
 
 type Recurrence struct {
-	Type       RecurrenceType `json:"type"`          // e.g., "daily", "weekly", "monthly", "interval", "custom"
+	Type       RecurrenceType `json:"type"`          // e.g., "once", "daily", "weekly", "monthly", "interval", "custom"
 	Interval   int            `json:"interval"`      // e.g., every N days/hours/minutes
 	Weekdays   []time.Weekday `json:"weekdays"`      // For weekly recurrence (e.g., [Tuesday, Thursday])
 	DayOfMonth []int          `json:"days_of_month"` // For monthly recurrence (e.g., [1, 15])

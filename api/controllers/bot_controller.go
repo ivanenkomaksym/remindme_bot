@@ -64,11 +64,6 @@ func (c *BotController) processUpdate(update tgbotapi.Update) error {
 
 // processCallbackQuery processes callback queries (button presses)
 func (c *BotController) processCallbackQuery(callbackQuery *tgbotapi.CallbackQuery) error {
-	// Check if this is a datepicker callback first
-	if c.dateUseCase.HandleDatepickerCallback(callbackQuery) {
-		return nil
-	}
-
 	msg := tgbotapi.NewEditMessageText(
 		callbackQuery.Message.Chat.ID,
 		callbackQuery.Message.MessageID,
