@@ -13,7 +13,7 @@ import (
 // BotUseCase defines the interface for bot business logic
 type BotUseCase interface {
 	HandleStartCommand(user *tgbotapi.User) (*keyboards.SelectionResult, error)
-	HandleCallbackQuery(user *tgbotapi.User, callbackData string) (*keyboards.SelectionResult, error)
+	HandleCallbackQuery(user *tgbotapi.User, callbackData string, callbackQuery *tgbotapi.CallbackQuery) (*keyboards.SelectionResult, error)
 	HandleTextMessage(user *tgbotapi.User, text string) (*keyboards.SelectionResult, error)
 	ProcessKeyboardSelection(callbackQuery *tgbotapi.CallbackQuery) (*keyboards.SelectionResult, error)
 	ProcessUserInput(message *tgbotapi.Message) (*keyboards.SelectionResult, error)
@@ -79,7 +79,7 @@ func (b *botUseCase) HandleStartCommand(user *tgbotapi.User) (*keyboards.Selecti
 	return &keyboards.SelectionResult{Text: text, Markup: markup}, nil
 }
 
-func (b *botUseCase) HandleCallbackQuery(user *tgbotapi.User, callbackData string) (*keyboards.SelectionResult, error) {
+func (b *botUseCase) HandleCallbackQuery(user *tgbotapi.User, callbackData string, callbackQuery *tgbotapi.CallbackQuery) (*keyboards.SelectionResult, error) {
 	// Get user and selection
 	userEntity, selection, err := b.getUserWithSelection(user.ID)
 	if err != nil {
@@ -96,10 +96,10 @@ func (b *botUseCase) HandleCallbackQuery(user *tgbotapi.User, callbackData strin
 	switch keyboardType {
 	case keyboards.Main:
 		return b.handleMainMenu(user, userEntity)
+	case keyboards.Date:
+		return b.dateUseCase.HandleDatepickerSelection(userEntity, selection), nil
 	case keyboards.Reccurence:
 		return b.handleRecurrenceSelection(user, callbackData, userEntity, selection)
-	case keyboards.Date:
-		return b.handleDateSelection(user, callbackData, userEntity, selection)
 	case keyboards.Time:
 		return b.handleTimeSelection(user, callbackData, userEntity, selection)
 	case keyboards.Week:
@@ -147,7 +147,7 @@ func (b *botUseCase) ProcessKeyboardSelection(callbackQuery *tgbotapi.CallbackQu
 		callbackQuery.From.LastName,
 		callbackQuery.Data)
 
-	selectionResult, err := b.HandleCallbackQuery(callbackQuery.From, callbackQuery.Data)
+	selectionResult, err := b.HandleCallbackQuery(callbackQuery.From, callbackQuery.Data, callbackQuery)
 	if err != nil {
 		return nil, err
 	}
@@ -208,6 +208,12 @@ func (b *botUseCase) handleRecurrenceSelection(user *tgbotapi.User, callbackData
 	if err != nil {
 		log.Printf("Failed to update user selection: %v", err)
 	}
+
+	// If this is a "Once" recurrence, trigger the date picker
+	if selection.RecurrenceType == entities.Once {
+		return b.dateUseCase.HandleDatepickerSelection(userEntity, selection), nil
+	}
+
 	return result, nil
 }
 

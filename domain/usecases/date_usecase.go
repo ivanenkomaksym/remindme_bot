@@ -22,11 +22,12 @@ type dateUseCase struct {
 	bot         *tgbotapi.BotAPI
 }
 
-// NewBotUseCase creates a new bot use case
+// NewDateUseCase creates a new date use case
 func NewDateUseCase(userUseCase UserUseCase, bot *tgbotapi.BotAPI) DateUseCase {
 	return &dateUseCase{
 		userUseCase: userUseCase,
 		bot:         bot,
+		datepickers: make(map[int64]*datepicker.DatePicker),
 	}
 }
 
@@ -34,14 +35,26 @@ func (d *dateUseCase) HandleDatepickerSelection(user *entities.User,
 	userSelection *entities.UserSelection) *keyboards.SelectionResult {
 
 	onSelect := func(bot *tgbotapi.BotAPI, m *tgbotapi.Message, date time.Time) {
-		userSelection.SelectedDate = date.Format("2006-01-02")
+		userSelection.SetSelectedDate(date)
 		err := d.userUseCase.UpdateUserSelection(user.ID, userSelection)
 		if err != nil {
 			log.Printf("Failed to update user selection: %v", err)
 		}
 
-		msg := tgbotapi.NewMessage(m.Chat.ID, "Selected date: "+date.Format("2006-01-02"))
-		bot.Send(msg)
+		s := keyboards.T(user.Language)
+		text := s.MsgSelectTime
+		markup := keyboards.GetHourRangeMarkup(user.Language)
+
+		msg := tgbotapi.NewEditMessageText(
+			user.ID,
+			0,
+			"", // Text will be set later
+		)
+
+		msg.Text = text
+		msg.ReplyMarkup = markup
+		msg.ParseMode = "HTML"
+		d.bot.Send(msg)
 
 		delete(d.datepickers, user.ID)
 	}
@@ -58,7 +71,11 @@ func (d *dateUseCase) HandleDatepickerSelection(user *entities.User,
 	// Store datepicker instance for this user
 	d.datepickers[user.ID] = dp
 
-	return &keyboards.SelectionResult{}
+	s := keyboards.T(user.Language)
+	text := s.MsgSelectDate
+	markup := dp.Keyboard()
+
+	return &keyboards.SelectionResult{Text: text, Markup: &markup}
 }
 
 // HandleDatepickerCallback handles datepicker-specific callbacks

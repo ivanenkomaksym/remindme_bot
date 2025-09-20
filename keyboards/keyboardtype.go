@@ -40,6 +40,10 @@ func GetKeyboardType(callbackData string) KeyboardType {
 		return Main
 	}
 
+	if IsDateSelectionCallback(callbackData) {
+		return Date
+	}
+
 	if IsTimeSelectionCallback(callbackData) {
 		return Time
 	}

@@ -1,15 +1,18 @@
 package entities
 
+import "time"
+
 // UserSelection represents a user's current selection state for creating reminders
 type UserSelection struct {
 	RecurrenceType  RecurrenceType `json:"recurrenceType"`
 	IsWeekly        bool           `json:"isWeekly"`
 	WeekOptions     [7]bool        `json:"weekOptions"`
-	SelectedDate    string         `json:"selectedDate"`
+	SelectedDate    time.Time      `json:"selectedDate"`
 	SelectedTime    string         `json:"selectedTime"`
 	ReminderMessage string         `json:"reminderMessage"`
 	CustomTime      bool           `json:"customTime"`
 	CustomText      bool           `json:"customText"`
+	DateSelection   bool           `json:"dateSelection"`
 }
 
 // NewUserSelection creates a new user selection with default values
@@ -54,6 +57,12 @@ func (us *UserSelection) SetReminderMessage(message string) {
 func (us *UserSelection) SetCustomText() {
 	us.CustomText = true
 	us.ReminderMessage = ""
+}
+
+// SetCustomText enables custom text input
+func (us *UserSelection) SetSelectedDate(selectedDate time.Time) {
+	us.SelectedDate = selectedDate
+	us.DateSelection = false
 }
 
 // Clear resets the user selection to default values
