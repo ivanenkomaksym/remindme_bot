@@ -33,10 +33,11 @@ func CustomWeekly(weekdays []time.Weekday, timeOfDay string) *Recurrence {
 	}
 }
 
-func OnceAt(timeOfDay string) *Recurrence {
+func OnceAt(date time.Time, timeOfDay string) *Recurrence {
 	return &Recurrence{
 		Type:      Once,
 		TimeOfDay: timeOfDay,
+		StartDate: &date,
 	}
 }
 

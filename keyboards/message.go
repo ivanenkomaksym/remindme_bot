@@ -75,7 +75,7 @@ func FormatReminderConfirmation(user *entities.User, userSelection *entities.Use
 	s := T(user.Language)
 
 	confirmation := "✅ " + s.ReminderSet + "!\n\n"
-	confirmation += "📅 " + s.Frequency + ": " + userSelection.RecurrenceType.String() + "\n"
+	confirmation += "📅 " + s.Frequency + ": " + RecurrenceTypeLabel(user.Language, userSelection.RecurrenceType) + "\n"
 
 	if userSelection.RecurrenceType == entities.Weekly {
 		confirmation += "📆 " + s.Days + ": "
@@ -92,6 +92,10 @@ func FormatReminderConfirmation(user *entities.User, userSelection *entities.Use
 			confirmation += s.NoneSelected
 		}
 		confirmation += "\n"
+	}
+
+	if userSelection.RecurrenceType == entities.Once {
+		confirmation += "📅 " + s.Date + ": " + userSelection.SelectedDate.Format("2006-01-02") + "\n"
 	}
 
 	confirmation += "⏰ " + s.Time + ": " + userSelection.SelectedTime + "\n"

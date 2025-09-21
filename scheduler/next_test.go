@@ -69,7 +69,7 @@ func TestNextMonthlyTrigger(t *testing.T) {
 func TestNextForRecurrence(t *testing.T) {
 	base := mustTime(t, "2006-01-02 15:04", "2025-01-10 10:30")
 
-	recOnce := entities.OnceAt("10:30")
+	recOnce := entities.OnceAt(base, "10:30")
 	got := NextForRecurrence(base, recOnce)
 	if got != nil {
 		t.Fatalf("daily: expected %v, got %v", nil, got)

@@ -23,11 +23,11 @@ func NewInMemoryReminderRepository() repositories.ReminderRepository {
 }
 
 // Reminder creation methods
-func (r *InMemoryReminderRepository) CreateOnceReminder(timeStr string, user *entities.User, message string) (*entities.Reminder, error) {
+func (r *InMemoryReminderRepository) CreateOnceReminder(date time.Time, timeStr string, user *entities.User, message string) (*entities.Reminder, error) {
 	r.mu.Lock()
 	defer r.mu.Unlock()
 
-	recurrence := entities.OnceAt(timeStr)
+	recurrence := entities.OnceAt(date, timeStr)
 	reminder := entities.NewReminder(r.nextID, user.ID, message, recurrence, nil)
 	r.nextID++
 	r.reminders = append(r.reminders, *reminder)

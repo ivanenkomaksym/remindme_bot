@@ -59,7 +59,11 @@ func FormatRemindersListText(reminders []entities.Reminder, lang string) string 
 	var b strings.Builder
 	b.WriteString(s.YourReminders)
 	for _, r := range reminders {
-		b.WriteString(fmt.Sprintf("• %s %s %s — %s (ID %d)\n", RecurrenceTypeLabel(lang, r.Recurrence.Type), s.At, r.Recurrence.TimeOfDay, r.Message, r.ID))
+		if r.Recurrence.Type == entities.Once {
+			b.WriteString(fmt.Sprintf("• %s %s %s %s — %s (ID %d)\n", RecurrenceTypeLabel(lang, r.Recurrence.Type), s.At, r.Recurrence.StartDate.Format("2006-01-02"), r.Recurrence.TimeOfDay, r.Message, r.ID))
+		} else {
+			b.WriteString(fmt.Sprintf("• %s %s %s — %s (ID %d)\n", RecurrenceTypeLabel(lang, r.Recurrence.Type), s.At, r.Recurrence.TimeOfDay, r.Message, r.ID))
+		}
 	}
 	return b.String()
 }

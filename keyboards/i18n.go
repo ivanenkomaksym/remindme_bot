@@ -23,6 +23,7 @@ type Strings struct {
 	Frequency             string
 	Days                  string
 	NoneSelected          string
+	Date                  string
 	Time                  string
 	Message               string
 	ReminderScheduled     string
@@ -70,6 +71,7 @@ var stringsByLang = map[string]Strings{
 		Frequency:           "Frequency",
 		Days:                "Days",
 		NoneSelected:        "None selected",
+		Date:                "Date",
 		Time:                "Time",
 		Message:             "Message",
 		ReminderScheduled:   "Your reminder has been scheduled!",
@@ -113,6 +115,7 @@ var stringsByLang = map[string]Strings{
 		Frequency:           "Частота",
 		Days:                "Дні",
 		NoneSelected:        "Нічого не вибрано",
+		Date:                "Дата",
 		Time:                "Час",
 		Message:             "Повідомлення",
 		ReminderScheduled:   "Ваше нагадування заплановано!",
