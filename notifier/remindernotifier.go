@@ -5,6 +5,7 @@ import (
 	"time"
 
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
+	"github.com/ivanenkomaksym/remindme_bot/domain/entities"
 	"github.com/ivanenkomaksym/remindme_bot/domain/repositories"
 	"github.com/ivanenkomaksym/remindme_bot/scheduler"
 )
@@ -42,7 +43,7 @@ func ProcessDueReminders(now time.Time, reminderRepo repositories.ReminderReposi
 		}
 
 		// Update NextTrigger for recurring reminders
-		if rem.Recurrence != nil {
+		if rem.Recurrence != nil && rem.Recurrence.Type != entities.Once {
 			rem.NextTrigger = scheduler.NextForRecurrence(*rem.NextTrigger, rem.Recurrence)
 		} else {
 			rem.IsActive = false // deactivate one-time reminders

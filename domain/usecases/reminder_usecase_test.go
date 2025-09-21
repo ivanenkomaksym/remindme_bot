@@ -2,6 +2,7 @@ package usecases
 
 import (
 	"testing"
+	"time"
 
 	"github.com/ivanenkomaksym/remindme_bot/domain/entities"
 	"github.com/ivanenkomaksym/remindme_bot/domain/errors"
@@ -26,12 +27,13 @@ func TestCreateReminder_ValidOnce(t *testing.T) {
 
 	sel := entities.NewUserSelection()
 	sel.RecurrenceType = entities.Once
+	sel.SelectedDate = time.Now().Add(24 * time.Hour) // Tomorrow
 	sel.SelectedTime = "12:00"
 	sel.ReminderMessage = "Check e-mail"
 
 	rem, err := uc.CreateReminder(1, sel)
-	if rem.NextTrigger != nil {
-		t.Fatalf("expected Next trigger to be nil")
+	if rem.NextTrigger == nil {
+		t.Fatalf("expected Next trigger to be set for once reminder")
 	}
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)

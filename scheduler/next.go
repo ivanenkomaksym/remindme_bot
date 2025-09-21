@@ -125,6 +125,15 @@ func NextMonthlyTrigger(from time.Time, daysOfMonth []int, timeStr string) time.
 	return best
 }
 
+// NextOnceTrigger calculates the trigger time for a once reminder based on date and time
+func NextOnceTrigger(date time.Time, timeStr string) time.Time {
+	hour, minute, ok := ParseHourMinute(timeStr)
+	if !ok {
+		return date
+	}
+	return time.Date(date.Year(), date.Month(), date.Day(), hour, minute, 0, 0, date.Location())
+}
+
 // NextForRecurrence advances from last trigger according to the recurrence configuration.
 func NextForRecurrence(last time.Time, rec *entities.Recurrence) *time.Time {
 	switch rec.Type {

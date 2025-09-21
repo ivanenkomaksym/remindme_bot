@@ -28,7 +28,8 @@ func (r *InMemoryReminderRepository) CreateOnceReminder(date time.Time, timeStr 
 	defer r.mu.Unlock()
 
 	recurrence := entities.OnceAt(date, timeStr)
-	reminder := entities.NewReminder(r.nextID, user.ID, message, recurrence, nil)
+	nextTrigger := scheduler.NextOnceTrigger(date, timeStr)
+	reminder := entities.NewReminder(r.nextID, user.ID, message, recurrence, &nextTrigger)
 	r.nextID++
 	r.reminders = append(r.reminders, *reminder)
 
