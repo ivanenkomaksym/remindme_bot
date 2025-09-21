@@ -125,15 +125,6 @@ func NextMonthlyTrigger(from time.Time, daysOfMonth []int, timeStr string) time.
 	return best
 }
 
-// NextOnceTrigger calculates the trigger time for a once reminder based on date and time
-func NextOnceTrigger(date time.Time, timeStr string) time.Time {
-	hour, minute, ok := ParseHourMinute(timeStr)
-	if !ok {
-		return date
-	}
-	return time.Date(date.Year(), date.Month(), date.Day(), hour, minute, 0, 0, date.Location())
-}
-
 // NextForRecurrence advances from last trigger according to the recurrence configuration.
 func NextForRecurrence(last time.Time, rec *entities.Recurrence) *time.Time {
 	switch rec.Type {
@@ -144,10 +135,10 @@ func NextForRecurrence(last time.Time, rec *entities.Recurrence) *time.Time {
 		result := last.Add(24 * time.Hour)
 		return &result
 	case entities.Weekly:
-		result := NextWeeklyTrigger(last, rec.Weekdays, rec.TimeOfDay)
+		result := NextWeeklyTrigger(last, rec.Weekdays, rec.GetTimeOfDay())
 		return &result
 	case entities.Monthly:
-		result := NextMonthlyTrigger(last, rec.DayOfMonth, rec.TimeOfDay)
+		result := NextMonthlyTrigger(last, rec.DayOfMonth, rec.GetTimeOfDay())
 		return &result
 	case entities.Interval:
 		// Fallback simple daily for now

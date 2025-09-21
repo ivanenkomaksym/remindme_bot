@@ -7,8 +7,7 @@ type Recurrence struct {
 	Interval   int            `json:"interval"`      // e.g., every N days/hours/minutes
 	Weekdays   []time.Weekday `json:"weekdays"`      // For weekly recurrence (e.g., [Tuesday, Thursday])
 	DayOfMonth []int          `json:"days_of_month"` // For monthly recurrence (e.g., [1, 15])
-	TimeOfDay  string         `json:"time_of_day"`   // e.g., "14:00"
-	StartDate  *time.Time     `json:"start_date"`    // When recurrence begins
+	StartDate  *time.Time     `json:"start_date"`    // When recurrence begins (includes time)
 	EndDate    *time.Time     `json:"end_date"`      // When recurrence ends (optional)
 }
 
@@ -24,37 +23,101 @@ func (r *Recurrence) WithEndDate(endDate time.Time) *Recurrence {
 	return r
 }
 
+// GetTimeOfDay returns the time of day in "HH:MM" format from StartDate
+func (r *Recurrence) GetTimeOfDay() string {
+	if r.StartDate == nil {
+		return "00:00"
+	}
+	return r.StartDate.Format("15:04")
+}
+
+// GetTimeOfDayAsTime returns the time portion of StartDate
+func (r *Recurrence) GetTimeOfDayAsTime() time.Time {
+	if r.StartDate == nil {
+		return time.Time{}
+	}
+	hour, minute, second := r.StartDate.Clock()
+	return time.Date(0, 1, 1, hour, minute, second, 0, time.UTC)
+}
+
 // CustomWeekly creates a custom weekly recurrence on specific weekdays
 func CustomWeekly(weekdays []time.Weekday, timeOfDay string) *Recurrence {
+	now := time.Now()
+	startDate := time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, now.Location())
+
+	// Parse time and set it to startDate
+	if hour, minute, ok := parseTimeOfDay(timeOfDay); ok {
+		startDate = time.Date(now.Year(), now.Month(), now.Day(), hour, minute, 0, 0, now.Location())
+	}
+
 	return &Recurrence{
 		Type:      Weekly,
 		Weekdays:  weekdays,
-		TimeOfDay: timeOfDay,
+		StartDate: &startDate,
 	}
 }
 
 func OnceAt(date time.Time, timeOfDay string) *Recurrence {
+	// Parse time and set it to the provided date
+	startDate := date
+	if hour, minute, ok := parseTimeOfDay(timeOfDay); ok {
+		startDate = time.Date(date.Year(), date.Month(), date.Day(), hour, minute, 0, 0, date.Location())
+	}
+
 	return &Recurrence{
 		Type:      Once,
-		TimeOfDay: timeOfDay,
-		StartDate: &date,
+		StartDate: &startDate,
 	}
 }
 
 // DailyAt creates a daily recurrence at a specific time
 func DailyAt(timeOfDay string) *Recurrence {
+	now := time.Now()
+	startDate := time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, now.Location())
+
+	// Parse time and set it to startDate
+	if hour, minute, ok := parseTimeOfDay(timeOfDay); ok {
+		startDate = time.Date(now.Year(), now.Month(), now.Day(), hour, minute, 0, 0, now.Location())
+	}
+
 	return &Recurrence{
 		Type:      Daily,
-		TimeOfDay: timeOfDay,
+		StartDate: &startDate,
 	}
 }
 
 // MonthlyOnDay creates a monthly recurrence on a specific day of the month
 func MonthlyOnDay(daysOfMonth []int, timeOfDay string) *Recurrence {
+	now := time.Now()
+	startDate := time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, now.Location())
+
+	// Parse time and set it to startDate
+	if hour, minute, ok := parseTimeOfDay(timeOfDay); ok {
+		startDate = time.Date(now.Year(), now.Month(), now.Day(), hour, minute, 0, 0, now.Location())
+	}
+
 	return &Recurrence{
 		Type:       Monthly,
 		DayOfMonth: daysOfMonth,
-		TimeOfDay:  timeOfDay,
+		StartDate:  &startDate,
+	}
+}
+
+// parseTimeOfDay parses a time string in "HH:MM" format
+func parseTimeOfDay(timeStr string) (hour, minute int, ok bool) {
+	if len(timeStr) != 5 || timeStr[2] != ':' {
+		return 0, 0, false
+	}
+
+	hourStr := timeStr[:2]
+	minuteStr := timeStr[3:]
+
+	if h, err := time.Parse("15", hourStr); err != nil {
+		return 0, 0, false
+	} else if m, err := time.Parse("04", minuteStr); err != nil {
+		return 0, 0, false
+	} else {
+		return h.Hour(), m.Minute(), true
 	}
 }
 

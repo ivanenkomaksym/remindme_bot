@@ -25,8 +25,8 @@ func TestCreateDailyReminder_Happy(t *testing.T) {
 	if !rem.Recurrence.IsDaily() {
 		t.Errorf("expected daily recurrence")
 	}
-	if rem.Recurrence.TimeOfDay != "23:15" {
-		t.Errorf("expected TimeOfDay 23:15, got %s", rem.Recurrence.TimeOfDay)
+	if rem.Recurrence.GetTimeOfDay() != "23:15" {
+		t.Errorf("expected TimeOfDay 23:15, got %s", rem.Recurrence.GetTimeOfDay())
 	}
 	if !rem.NextTrigger.After(rem.CreatedAt) {
 		t.Errorf("expected NextTrigger after CreatedAt")
