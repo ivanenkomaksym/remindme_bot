@@ -68,7 +68,8 @@ func (d *dateUseCase) CreateDatepicker(message *tgbotapi.Message,
 	dp := datepicker.New(onSelect,
 		datepicker.Language(user.Language),
 		datepicker.OnCancel(onCancel),
-		datepicker.WithCallbackPrefix("datepicker_selection"))
+		datepicker.WithCallbackPrefix("datepicker_selection"),
+		datepicker.ForbidPastDates())
 
 	// Store datepicker instance for this user
 	d.datepickers[user.ID] = dp

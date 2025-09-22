@@ -99,3 +99,16 @@ func NoDeleteAfterCancel() Option {
 		dp.deleteOnCancel = false
 	}
 }
+
+// ForbidPastDates ensures users cannot pick dates earlier than today.
+// It sets the minimum selectable date (from) to the start of today,
+// unless a later minimum was already configured via From().
+func ForbidPastDates() Option {
+	return func(dp *DatePicker) {
+		now := time.Now()
+		startOfToday := time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, now.Location())
+		if dp.from.IsZero() || dp.from.Before(startOfToday) {
+			dp.from = startOfToday
+		}
+	}
+}

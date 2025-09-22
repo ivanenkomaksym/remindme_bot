@@ -167,11 +167,17 @@ func (d *DatePicker) buildKeyboard() [][]tgbotapi.InlineKeyboardButton {
 	if d.from.IsZero() || d.from.Before(startOfMonth) {
 		prevMonth := startOfMonth.AddDate(0, -1, 0)
 		bottom = append(bottom, tgbotapi.NewInlineKeyboardButtonData(fmt.Sprintf("\u2190 %s %d", d.lang(prevMonth.Month().String()), prevMonth.Year()), d.encodeState(state{cmd: cmdPrevMonth})))
+	} else {
+		// show disabled prev indicator when navigation to previous month is forbidden
+		bottom = append(bottom, tgbotapi.NewInlineKeyboardButtonData("\u2190", d.encodeState(state{cmd: cmdNop})))
 	}
 	bottom = append(bottom, tgbotapi.NewInlineKeyboardButtonData(d.lang("Cancel"), d.encodeState(state{cmd: cmdCancel})))
 	if d.to.IsZero() || d.to.After(startOfMonth.AddDate(0, 1, -1)) {
 		nextMonth := startOfMonth.AddDate(0, 1, 0)
 		bottom = append(bottom, tgbotapi.NewInlineKeyboardButtonData(fmt.Sprintf("%s %d \u2192", d.lang(nextMonth.Month().String()), nextMonth.Year()), d.encodeState(state{cmd: cmdNextMonth})))
+	} else {
+		// show disabled next indicator when navigation to next month is forbidden
+		bottom = append(bottom, tgbotapi.NewInlineKeyboardButtonData("\u2192", d.encodeState(state{cmd: cmdNop})))
 	}
 	data = append(data, bottom)
 
