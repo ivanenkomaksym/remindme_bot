@@ -36,7 +36,23 @@ func GetRemindersListMarkup(reminders []entities.Reminder, lang string) *tgbotap
 			status = "✅" // active
 		}
 
-		label := fmt.Sprintf("%s %s • %s", status, RecurrenceTypeLabel(lang, r.Recurrence.Type), r.Recurrence.GetTimeOfDay())
+		label := fmt.Sprintf("%s %s", status, RecurrenceTypeLabel(lang, r.Recurrence.Type))
+		// Add extra detail for monthly recurrences
+		if r.Recurrence.IsMonthly() {
+			// format days like: 1, 5, 12
+			if len(r.Recurrence.DayOfMonth) > 0 {
+				var daysStr strings.Builder
+				for i, d := range r.Recurrence.DayOfMonth {
+					if i > 0 {
+						daysStr.WriteString(", ")
+					}
+					daysStr.WriteString(fmt.Sprintf("%d", d))
+				}
+				label = fmt.Sprintf("%s • %s", label, daysStr.String())
+			}
+		}
+		// Always append time of day (or full date for once below)
+		label = fmt.Sprintf("%s • %s", label, r.Recurrence.GetTimeOfDay())
 		btn := tgbotapi.NewInlineKeyboardButtonData(
 			s.BtnDelete,
 			fmt.Sprintf("%s%d", CallbackReminderDeletePrefix, r.ID),

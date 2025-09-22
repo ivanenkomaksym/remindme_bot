@@ -1,6 +1,7 @@
 package keyboards
 
 import (
+	"fmt"
 	"strings"
 
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
@@ -84,6 +85,22 @@ func FormatReminderConfirmation(user *entities.User, userSelection *entities.Use
 		for i, selected := range userSelection.WeekOptions {
 			if selected {
 				days = append(days, weekdayNames[i])
+			}
+		}
+		if len(days) > 0 {
+			confirmation += strings.Join(days, ", ")
+		} else {
+			confirmation += s.NoneSelected
+		}
+		confirmation += "\n"
+	}
+
+	if userSelection.RecurrenceType == entities.Monthly {
+		confirmation += "📆 " + s.Days + ": "
+		var days []string
+		for i, selected := range userSelection.MonthOptions {
+			if selected {
+				days = append(days, fmt.Sprintf("%d", i+1))
 			}
 		}
 		if len(days) > 0 {
