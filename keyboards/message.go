@@ -115,6 +115,14 @@ func FormatReminderConfirmation(user *entities.User, userSelection *entities.Use
 		confirmation += "📅 " + s.Date + ": " + userSelection.SelectedDate.Format("2006-01-02") + "\n"
 	}
 
+	if userSelection.RecurrenceType == entities.Interval {
+		if userSelection.IntervalDays > 0 {
+			confirmation += "📆 " + fmt.Sprintf(s.MsgEveryNDays, userSelection.IntervalDays) + "\n"
+		} else {
+			confirmation += "📆 " + s.MsgIntervalPrompt + "\n"
+		}
+	}
+
 	confirmation += "⏰ " + s.Time + ": " + userSelection.SelectedTime + "\n"
 	confirmation += "💬 " + s.Message + ": " + userSelection.ReminderMessage + "\n\n"
 	confirmation += s.ReminderScheduled

@@ -64,7 +64,9 @@ func (r *reminderUseCase) CreateReminder(userID int64, selection *entities.UserS
 		return r.createWeeklyReminder(user, selection)
 	case entities.Monthly:
 		return r.createMonthlyReminder(user, selection)
-	case entities.Interval, entities.Custom:
+	case entities.Interval:
+		return r.createIntervalReminder(user, selection)
+	case entities.Custom:
 		// Treat as daily for now
 		return r.createDailyReminder(user, selection)
 	default:
@@ -124,6 +126,17 @@ func (r *reminderUseCase) createMonthlyReminder(user *entities.User, selection *
 		return nil, err
 	}
 
+	return reminder, nil
+}
+
+func (r *reminderUseCase) createIntervalReminder(user *entities.User, selection *entities.UserSelection) (*entities.Reminder, error) {
+	if selection.IntervalDays <= 0 {
+		return nil, errors.NewDomainError("INVALID_INTERVAL", "Interval must be a positive number of days", nil)
+	}
+	reminder, err := r.reminderRepo.CreateIntervalReminder(selection.IntervalDays, selection.SelectedTime, user, selection.ReminderMessage)
+	if err != nil {
+		return nil, err
+	}
 	return reminder, nil
 }
 

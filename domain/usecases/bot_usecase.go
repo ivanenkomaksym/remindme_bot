@@ -144,6 +144,11 @@ func (b *botUseCase) HandleTextMessage(user *tgbotapi.User, text string) (*keybo
 		return b.handleCustomTextInput(user, text, userEntity, selection)
 	}
 
+	// Handle custom text input
+	if selection.CustomInterval {
+		return b.handleCustomIntervalInput(user, text, userEntity, selection)
+	}
+
 	return &keyboards.SelectionResult{Text: "I didn't understand that. Please use the menu buttons.", Markup: nil}, nil
 }
 
@@ -326,6 +331,18 @@ func (b *botUseCase) handleCustomTextInput(user *tgbotapi.User, text string, use
 				log.Printf("Failed to clear user selection: %v", err)
 			}
 		}
+	}
+
+	return selectionResult, nil
+}
+
+func (b *botUseCase) handleCustomIntervalInput(user *tgbotapi.User, text string, userEntity *entities.User, selection *entities.UserSelection) (*keyboards.SelectionResult, error) {
+	selectionResult := keyboards.HandleCustomIntervalInput(text, userEntity, selection)
+
+	// Update user selection
+	err := b.userUseCase.UpdateUserSelection(user.ID, selection)
+	if err != nil {
+		log.Printf("Failed to update user selection: %v", err)
 	}
 
 	return selectionResult, nil

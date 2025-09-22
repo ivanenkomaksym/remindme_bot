@@ -81,6 +81,23 @@ func (r *InMemoryReminderRepository) CreateMonthlyReminder(daysOfMonth []int, ti
 	return &r.reminders[len(r.reminders)-1], nil
 }
 
+func (r *InMemoryReminderRepository) CreateIntervalReminder(intervalDays int, timeStr string, user *entities.User, message string) (*entities.Reminder, error) {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+
+	now := time.Now()
+	// Next trigger is N days from now at specified time
+	base := scheduler.NextDailyTrigger(now, timeStr)
+	next := base.Add(time.Duration(intervalDays-1) * 24 * time.Hour)
+
+	recurrence := entities.IntervalEveryDays(intervalDays, timeStr)
+	reminder := entities.NewReminder(r.nextID, user.ID, message, recurrence, &next)
+	r.nextID++
+	r.reminders = append(r.reminders, *reminder)
+
+	return &r.reminders[len(r.reminders)-1], nil
+}
+
 // Reminder retrieval methods
 func (r *InMemoryReminderRepository) GetReminders() ([]entities.Reminder, error) {
 	r.mu.RLock()

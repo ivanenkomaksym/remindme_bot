@@ -3,31 +3,32 @@ package keyboards
 import "github.com/ivanenkomaksym/remindme_bot/domain/entities"
 
 type Strings struct {
-	Welcome               string
-	RecurrenceTypes       map[entities.RecurrenceType]string
-	BtnBack               string
-	BtnCustomTime         string
-	MsgSelectTime         string
-	MsgSelectHour         string
-	MsgSelectWithinHour   string
-	MsgSelectMessage      string
-	MsgEnterCustomTime    string
-	MsgEnterCustomMessage string
-	MsgInvalidTimeFormat  string
-	BtnMyReminders        string
-	NoReminders           string
-	YourReminders         string
-	BtnDelete             string
-	DefaultMessages       []string
-	ReminderSet           string
-	Frequency             string
-	Days                  string
-	NoneSelected          string
-	Date                  string
-	Time                  string
-	Message               string
-	ReminderScheduled     string
-	At                    string
+	Welcome                  string
+	RecurrenceTypes          map[entities.RecurrenceType]string
+	BtnBack                  string
+	BtnCustomTime            string
+	MsgSelectTime            string
+	MsgSelectHour            string
+	MsgSelectWithinHour      string
+	MsgSelectMessage         string
+	MsgEnterCustomTime       string
+	MsgEnterCustomMessage    string
+	MsgInvalidTimeFormat     string
+	MsgInvalidIntervalFormat string
+	BtnMyReminders           string
+	NoReminders              string
+	YourReminders            string
+	BtnDelete                string
+	DefaultMessages          []string
+	ReminderSet              string
+	Frequency                string
+	Days                     string
+	NoneSelected             string
+	Date                     string
+	Time                     string
+	Message                  string
+	ReminderScheduled        string
+	At                       string
 	// Week-related i18n
 	WeekdayNames        []string
 	MsgSelectWeekdays   string
@@ -35,6 +36,9 @@ type Strings struct {
 	BtnSelect           string
 	// Date-related i18n
 	MsgSelectDate string
+	// Interval-related i18n
+	MsgIntervalPrompt string // e.g., "Every N days"
+	MsgEveryNDays     string // e.g., "Every %d days"
 }
 
 var stringsByLang = map[string]Strings{
@@ -48,19 +52,20 @@ var stringsByLang = map[string]Strings{
 			entities.Interval: "Interval",
 			entities.Custom:   "Custom",
 		},
-		BtnBack:               "← Back",
-		BtnCustomTime:         "Custom",
-		MsgSelectTime:         "Select time for daily reminders:",
-		MsgSelectHour:         "Select time range:",
-		MsgSelectWithinHour:   "Select time within %02d:00-%02d:00:",
-		MsgSelectMessage:      "Select your reminder message:",
-		MsgEnterCustomTime:    "Please type your custom time in HH:MM format (e.g., 14:30):",
-		MsgEnterCustomMessage: "Please type your custom reminder message:",
-		MsgInvalidTimeFormat:  "Invalid time format.",
-		BtnMyReminders:        "My reminders",
-		NoReminders:           "You have no reminders yet.",
-		YourReminders:         "Your reminders:\n\n",
-		BtnDelete:             "Delete",
+		BtnBack:                  "← Back",
+		BtnCustomTime:            "Custom",
+		MsgSelectTime:            "Select time for daily reminders:",
+		MsgSelectHour:            "Select time range:",
+		MsgSelectWithinHour:      "Select time within %02d:00-%02d:00:",
+		MsgSelectMessage:         "Select your reminder message:",
+		MsgEnterCustomTime:       "Please type your custom time in HH:MM format (e.g., 14:30):",
+		MsgEnterCustomMessage:    "Please type your custom reminder message:",
+		MsgInvalidTimeFormat:     "Invalid time format.",
+		MsgInvalidIntervalFormat: "Invalid interval format. Expected 1-7",
+		BtnMyReminders:           "My reminders",
+		NoReminders:              "You have no reminders yet.",
+		YourReminders:            "Your reminders:\n\n",
+		BtnDelete:                "Delete",
 		DefaultMessages: []string{"Time to take a break!",
 			"Don't forget your medication",
 			"Check your email",
@@ -81,6 +86,8 @@ var stringsByLang = map[string]Strings{
 		MsgSelectTimeWeekly: "Select time for weekly reminders:",
 		BtnSelect:           "Select",
 		MsgSelectDate:       "Select a date:",
+		MsgIntervalPrompt:   "Every N days",
+		MsgEveryNDays:       "Every %d days",
 	},
 	LangUK: {
 		Welcome: "Ласкаво просимо до бота-нагадувача!",
@@ -92,19 +99,20 @@ var stringsByLang = map[string]Strings{
 			entities.Interval: "Інтервал",
 			entities.Custom:   "Власний",
 		},
-		BtnBack:               "← Назад",
-		BtnCustomTime:         "Свій час",
-		MsgSelectTime:         "Оберіть час для нагадувань:",
-		MsgSelectHour:         "Оберіть діапазон часу:",
-		MsgSelectWithinHour:   "Оберіть час між %02d:00-%02d:00:",
-		MsgSelectMessage:      "Оберіть текст нагадування:",
-		MsgEnterCustomTime:    "Введіть час у форматі HH:MM (напр., 14:30):",
-		MsgEnterCustomMessage: "Введіть власний текст нагадування:",
-		MsgInvalidTimeFormat:  "Неправильний формат часу.",
-		BtnMyReminders:        "Мої нагадування",
-		NoReminders:           "У вас ще немає нагадувань.",
-		YourReminders:         "Ваші нагадування:\n\n",
-		BtnDelete:             "Видалити",
+		BtnBack:                  "← Назад",
+		BtnCustomTime:            "Свій час",
+		MsgSelectTime:            "Оберіть час для нагадувань:",
+		MsgSelectHour:            "Оберіть діапазон часу:",
+		MsgSelectWithinHour:      "Оберіть час між %02d:00-%02d:00:",
+		MsgSelectMessage:         "Оберіть текст нагадування:",
+		MsgEnterCustomTime:       "Введіть час у форматі HH:MM (напр., 14:30):",
+		MsgEnterCustomMessage:    "Введіть власний текст нагадування:",
+		MsgInvalidTimeFormat:     "Неправильний формат часу.",
+		MsgInvalidIntervalFormat: "Неправильний формат інтервалу. Очікується 1-7",
+		BtnMyReminders:           "Мої нагадування",
+		NoReminders:              "У вас ще немає нагадувань.",
+		YourReminders:            "Ваші нагадування:\n\n",
+		BtnDelete:                "Видалити",
 		DefaultMessages: []string{"Час зробити перерву!",
 			"Не забудьте прийняти ліки",
 			"Перевірте свою електронну пошту",
@@ -125,6 +133,8 @@ var stringsByLang = map[string]Strings{
 		MsgSelectTimeWeekly: "Оберіть час для щотижневих нагадувань:",
 		BtnSelect:           "Обрати",
 		MsgSelectDate:       "Оберіть дату:",
+		MsgIntervalPrompt:   "Кожні N днів",
+		MsgEveryNDays:       "Кожні %d днів",
 	},
 }
 

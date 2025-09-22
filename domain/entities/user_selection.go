@@ -9,9 +9,11 @@ type UserSelection struct {
 	MonthOptions    [28]bool       `json:"monthOptions"`
 	SelectedDate    time.Time      `json:"selectedDate"`
 	SelectedTime    string         `json:"selectedTime"`
+	IntervalDays    int            `json:"intervalDays"`
 	ReminderMessage string         `json:"reminderMessage"`
 	CustomTime      bool           `json:"customTime"`
 	CustomText      bool           `json:"customText"`
+	CustomInterval  bool           `json:"customInterval"`
 }
 
 // NewUserSelection creates a new user selection with default values
@@ -61,6 +63,17 @@ func (us *UserSelection) SetReminderMessage(message string) {
 func (us *UserSelection) SetCustomText() {
 	us.CustomText = true
 	us.ReminderMessage = ""
+}
+
+// Enables custom interval input
+func (us *UserSelection) StartCustomInterval() {
+	us.CustomInterval = true
+}
+
+// Enables custom interval input
+func (us *UserSelection) SetCustomInterval(interval int) {
+	us.CustomInterval = false
+	us.IntervalDays = interval
 }
 
 // SetCustomText enables custom text input

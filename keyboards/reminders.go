@@ -51,6 +51,13 @@ func GetRemindersListMarkup(reminders []entities.Reminder, lang string) *tgbotap
 				label = fmt.Sprintf("%s • %s", label, daysStr.String())
 			}
 		}
+		// Extra detail for interval recurrences
+		if r.Recurrence.IsInterval() {
+			if r.Recurrence.Interval > 0 {
+				s := T(lang)
+				label = fmt.Sprintf("%s • "+s.MsgEveryNDays, label, r.Recurrence.Interval)
+			}
+		}
 		// Always append time of day (or full date for once below)
 		label = fmt.Sprintf("%s • %s", label, r.Recurrence.GetTimeOfDay())
 		btn := tgbotapi.NewInlineKeyboardButtonData(

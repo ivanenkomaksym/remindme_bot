@@ -13,6 +13,7 @@ type ReminderRepository interface {
 	CreateDailyReminder(timeStr string, user *entities.User, message string) (*entities.Reminder, error)
 	CreateWeeklyReminder(daysOfWeek []time.Weekday, timeStr string, user *entities.User, message string) (*entities.Reminder, error)
 	CreateMonthlyReminder(daysOfMonth []int, timeStr string, user *entities.User, message string) (*entities.Reminder, error)
+	CreateIntervalReminder(intervalDays int, timeStr string, user *entities.User, message string) (*entities.Reminder, error)
 
 	// Reminder retrieval
 	GetReminders() ([]entities.Reminder, error)

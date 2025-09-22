@@ -133,6 +133,50 @@ func TestCreateMonthlyReminder_InvalidDaysFallbackDaily(t *testing.T) {
 	}
 }
 
+func TestCreateIntervalReminder_Happy(t *testing.T) {
+	repo := NewInMemoryReminderRepository()
+	user := entities.User{ID: 10}
+	intervalDays := 3
+	rem, _ := repo.CreateIntervalReminder(intervalDays, "08:20", &user, "interval msg")
+
+	if rem == nil {
+		t.Fatalf("expected reminder, got nil")
+	}
+	if rem.Recurrence == nil || !rem.Recurrence.IsInterval() {
+		t.Fatalf("expected interval recurrence")
+	}
+	if rem.Recurrence.Interval != intervalDays {
+		t.Errorf("expected interval %d, got %d", intervalDays, rem.Recurrence.Interval)
+	}
+	if rem.NextTrigger.Hour() != 8 || rem.NextTrigger.Minute() != 20 {
+		t.Errorf("expected next at 08:20, got %02d:%02d", rem.NextTrigger.Hour(), rem.NextTrigger.Minute())
+	}
+	// next should be within N days from creation (inclusive upper bound)
+	delta := rem.NextTrigger.Sub(rem.CreatedAt)
+	if delta <= 0 || delta > time.Duration(intervalDays)*24*time.Hour {
+		t.Errorf("expected next trigger within %d days; delta=%v", intervalDays, delta)
+	}
+}
+
+func TestCreateIntervalReminder_OneDayBehavesDaily(t *testing.T) {
+	repo := NewInMemoryReminderRepository()
+	user := entities.User{ID: 11}
+	rem, _ := repo.CreateIntervalReminder(1, "05:05", &user, "interval 1d")
+	if rem == nil {
+		t.Fatalf("expected reminder, got nil")
+	}
+	if !rem.Recurrence.IsInterval() || rem.Recurrence.Interval != 1 {
+		t.Fatalf("expected interval=1 recurrence")
+	}
+	if rem.NextTrigger.Hour() != 5 || rem.NextTrigger.Minute() != 5 {
+		t.Errorf("expected next at 05:05, got %02d:%02d", rem.NextTrigger.Hour(), rem.NextTrigger.Minute())
+	}
+	delta := rem.NextTrigger.Sub(rem.CreatedAt)
+	if delta <= 0 || delta > 24*time.Hour {
+		t.Errorf("expected next trigger within 24h; delta=%v", delta)
+	}
+}
+
 func TestGetReminders_ReturnsCopy(t *testing.T) {
 	repo := NewInMemoryReminderRepository()
 	user := entities.User{ID: 7}

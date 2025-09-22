@@ -141,8 +141,12 @@ func NextForRecurrence(last time.Time, rec *entities.Recurrence) *time.Time {
 		result := NextMonthlyTrigger(last, rec.DayOfMonth, rec.GetTimeOfDay())
 		return &result
 	case entities.Interval:
-		// Fallback simple daily for now
-		result := last.Add(24 * time.Hour)
+		// Advance by configured number of days, retain time of day
+		days := rec.Interval
+		if days <= 0 {
+			days = 1
+		}
+		result := last.Add(time.Duration(days) * 24 * time.Hour)
 		return &result
 	case entities.Custom:
 		// Fallback simple daily for now

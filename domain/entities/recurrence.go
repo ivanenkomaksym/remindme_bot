@@ -86,6 +86,23 @@ func DailyAt(timeOfDay string) *Recurrence {
 	}
 }
 
+// IntervalEveryDays creates a recurrence that triggers every N days at a specific time
+func IntervalEveryDays(intervalDays int, timeOfDay string) *Recurrence {
+	now := time.Now()
+	startDate := time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, now.Location())
+
+	// Parse time and set it to startDate
+	if hour, minute, ok := parseTimeOfDay(timeOfDay); ok {
+		startDate = time.Date(now.Year(), now.Month(), now.Day(), hour, minute, 0, 0, now.Location())
+	}
+
+	return &Recurrence{
+		Type:      Interval,
+		Interval:  intervalDays,
+		StartDate: &startDate,
+	}
+}
+
 // MonthlyOnDay creates a monthly recurrence on a specific day of the month
 func MonthlyOnDay(daysOfMonth []int, timeOfDay string) *Recurrence {
 	now := time.Now()
