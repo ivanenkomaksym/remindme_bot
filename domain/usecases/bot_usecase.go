@@ -109,6 +109,8 @@ func (b *botUseCase) HandleCallbackQuery(user *tgbotapi.User, message *tgbotapi.
 		return b.handleTimeSelection(user, callbackData, userEntity, selection)
 	case keyboards.Week:
 		return b.handleWeekSelection(user, callbackData, userEntity, selection)
+	case keyboards.Month:
+		return b.handleMonthSelection(user, callbackData, userEntity, selection)
 	case keyboards.Message:
 		return b.handleMessageSelection(user, callbackData, userEntity, selection)
 	case keyboards.Reminders:
@@ -238,6 +240,15 @@ func (b *botUseCase) handleTimeSelection(user *tgbotapi.User, callbackData strin
 
 func (b *botUseCase) handleWeekSelection(user *tgbotapi.User, callbackData string, userEntity *entities.User, selection *entities.UserSelection) (*keyboards.SelectionResult, error) {
 	result := keyboards.HandleWeekSelection(callbackData, &selection.WeekOptions, userEntity.Language)
+	err := b.userUseCase.UpdateUserSelection(user.ID, selection)
+	if err != nil {
+		log.Printf("Failed to update user selection: %v", err)
+	}
+	return result, nil
+}
+
+func (b *botUseCase) handleMonthSelection(user *tgbotapi.User, callbackData string, userEntity *entities.User, selection *entities.UserSelection) (*keyboards.SelectionResult, error) {
+	result := keyboards.HandleMonthSelection(callbackData, &selection.MonthOptions, userEntity.Language)
 	err := b.userUseCase.UpdateUserSelection(user.ID, selection)
 	if err != nil {
 		log.Printf("Failed to update user selection: %v", err)

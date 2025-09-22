@@ -10,6 +10,7 @@ const (
 	Date
 	Time
 	Week
+	Month
 	Message
 	Reminders
 )
@@ -26,6 +27,8 @@ func (k KeyboardType) String() string {
 		return "time"
 	case Week:
 		return "week"
+	case Month:
+		return "month"
 	case Message:
 		return "message"
 	case Reminders:
@@ -49,6 +52,9 @@ func GetKeyboardType(callbackData string) KeyboardType {
 	}
 	if IsWeekSelectionCallback(callbackData) {
 		return Week
+	}
+	if IsMonthSelectionCallback(callbackData) {
+		return Month
 	}
 	if IsMessageSelectionCallback(callbackData) {
 		return Message

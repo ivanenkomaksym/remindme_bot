@@ -23,7 +23,7 @@ func HandleRecurrenceTypeSelection(callbackData string,
 	case entities.Weekly:
 		return &SelectionResult{Text: s.MsgSelectWeekdays, Markup: GetWeekRangeMarkup(userSelection.WeekOptions, user.Language)}, nil
 	case entities.Monthly:
-		return &SelectionResult{Text: s.MsgSelectTime, Markup: GetHourRangeMarkup(user.Language)}, nil
+		return &SelectionResult{Text: s.MsgSelectDate, Markup: GetMonthRangeMarkup(userSelection.MonthOptions, user.Language)}, nil
 	case entities.Interval:
 		return &SelectionResult{Text: s.MsgSelectTime, Markup: GetHourRangeMarkup(user.Language)}, nil
 	case entities.Custom:

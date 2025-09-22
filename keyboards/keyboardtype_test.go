@@ -13,6 +13,7 @@ func TestKeyboardTypeString(t *testing.T) {
 		{Reccurence, "reccurence"},
 		{Time, "time"},
 		{Week, "week"},
+		{Month, "month"},
 		{Message, "message"},
 		{KeyboardType(-1), "unknown"},
 	}
@@ -34,6 +35,9 @@ func TestGetKeyboardType(t *testing.T) {
 	}
 	if got := GetKeyboardType(CallbackWeekDay + s.WeekdayNames[0]); got != Week {
 		t.Fatalf("GetKeyboardType(week day) = %v, want %v", got, Week)
+	}
+	if got := GetKeyboardType(CallbackMonthDay + "1"); got != Month {
+		t.Fatalf("GetKeyboardType(month day) = %v, want %v", got, Month)
 	}
 	if got := GetKeyboardType(CallbackPrefixMessage + "0"); got != Message {
 		t.Fatalf("GetKeyboardType(message) = %v, want %v", got, Message)

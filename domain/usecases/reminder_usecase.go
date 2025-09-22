@@ -112,8 +112,12 @@ func (r *reminderUseCase) createWeeklyReminder(user *entities.User, selection *e
 }
 
 func (r *reminderUseCase) createMonthlyReminder(user *entities.User, selection *entities.UserSelection) (*entities.Reminder, error) {
-	// For monthly, use the 1st of each month for now
-	daysOfMonth := []int{1}
+	daysOfMonth := []int{}
+	for idx, day := range selection.MonthOptions {
+		if day {
+			daysOfMonth = append(daysOfMonth, idx+1)
+		}
+	}
 
 	reminder, err := r.reminderRepo.CreateMonthlyReminder(daysOfMonth, selection.SelectedTime, user, selection.ReminderMessage)
 	if err != nil {

@@ -6,6 +6,7 @@ import "time"
 type UserSelection struct {
 	RecurrenceType  RecurrenceType `json:"recurrenceType"`
 	WeekOptions     [7]bool        `json:"weekOptions"`
+	MonthOptions    [28]bool       `json:"monthOptions"`
 	SelectedDate    time.Time      `json:"selectedDate"`
 	SelectedTime    string         `json:"selectedTime"`
 	ReminderMessage string         `json:"reminderMessage"`
@@ -17,6 +18,12 @@ type UserSelection struct {
 func NewUserSelection() *UserSelection {
 	return &UserSelection{
 		WeekOptions: [7]bool{false, false, false, false, false, false, false},
+		MonthOptions: [28]bool{
+			false, false, false, false, false, false, false,
+			false, false, false, false, false, false, false,
+			false, false, false, false, false, false, false,
+			false, false, false, false, false, false,
+		},
 	}
 }
 
