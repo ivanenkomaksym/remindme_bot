@@ -148,10 +148,6 @@ func NextForRecurrence(last time.Time, rec *entities.Recurrence) *time.Time {
 		}
 		result := last.Add(time.Duration(days) * 24 * time.Hour)
 		return &result
-	case entities.Custom:
-		// Fallback simple daily for now
-		result := last.Add(24 * time.Hour)
-		return &result
 	default:
 		result := last.Add(24 * time.Hour)
 		return &result

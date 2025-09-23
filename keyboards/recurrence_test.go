@@ -46,10 +46,4 @@ func TestHandleRecurrenceTypeSelection(t *testing.T) {
 	if err != nil || res == nil {
 		t.Fatalf("interval should return result")
 	}
-
-	// Custom
-	res, err = HandleRecurrenceTypeSelection(entities.Custom.String(), user, userSelection)
-	if err != nil || res == nil {
-		t.Fatalf("custom should return result")
-	}
 }

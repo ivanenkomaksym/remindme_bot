@@ -66,9 +66,6 @@ func (r *reminderUseCase) CreateReminder(userID int64, selection *entities.UserS
 		return r.createMonthlyReminder(user, selection)
 	case entities.Interval:
 		return r.createIntervalReminder(user, selection)
-	case entities.Custom:
-		// Treat as daily for now
-		return r.createDailyReminder(user, selection)
 	default:
 		return nil, errors.ErrInvalidRecurrenceType
 	}

@@ -32,9 +32,6 @@ func GetMainMenuMarkup(lang string) *tgbotapi.InlineKeyboardMarkup {
 			tgbotapi.NewInlineKeyboardButtonData(RecurrenceTypeLabel(lang, entities.Interval), entities.Interval.String()),
 		),
 		tgbotapi.NewInlineKeyboardRow(
-			tgbotapi.NewInlineKeyboardButtonData(RecurrenceTypeLabel(lang, entities.Custom), entities.Custom.String()),
-		),
-		tgbotapi.NewInlineKeyboardRow(
 			tgbotapi.NewInlineKeyboardButtonData(s.BtnMyReminders, CallbackRemindersList),
 		),
 	)

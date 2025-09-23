@@ -10,7 +10,6 @@ const (
 	Weekly
 	Monthly
 	Interval
-	Custom
 )
 
 var RecurrenceTypeValues = []RecurrenceType{
@@ -19,7 +18,6 @@ var RecurrenceTypeValues = []RecurrenceType{
 	Weekly,
 	Monthly,
 	Interval,
-	Custom,
 }
 
 func (r RecurrenceType) String() string {
@@ -34,8 +32,6 @@ func (r RecurrenceType) String() string {
 		return "Monthly"
 	case Interval:
 		return "Interval"
-	case Custom:
-		return "Custom"
 	default:
 		return "unknown"
 	}
@@ -53,8 +49,6 @@ func ToRecurrenceType(s string) (RecurrenceType, error) {
 		return Monthly, nil
 	case "Interval":
 		return Interval, nil
-	case "Custom":
-		return Custom, nil
 	default:
 		return 0, errors.New("invalid recurrence type")
 	}
