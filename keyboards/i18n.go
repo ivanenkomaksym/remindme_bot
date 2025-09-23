@@ -39,6 +39,7 @@ type Strings struct {
 	// Interval-related i18n
 	MsgIntervalPrompt string // e.g., "Every N days"
 	MsgEveryNDays     string // e.g., "Every %d days"
+	MsgParsingFailed  string
 }
 
 var stringsByLang = map[string]Strings{
@@ -87,6 +88,7 @@ var stringsByLang = map[string]Strings{
 		MsgSelectDate:       "Select a date:",
 		MsgIntervalPrompt:   "Every N days",
 		MsgEveryNDays:       "Every %d days",
+		MsgParsingFailed:    "I didn't understand that. Please use the menu buttons.",
 	},
 	LangUK: {
 		Welcome: "Ласкаво просимо до бота-нагадувача!",
@@ -133,6 +135,7 @@ var stringsByLang = map[string]Strings{
 		MsgSelectDate:       "Оберіть дату:",
 		MsgIntervalPrompt:   "Кожні N днів",
 		MsgEveryNDays:       "Кожні %d днів",
+		MsgParsingFailed:    "Я не зрозумів. Будь ласка, скористайтеся кнопками меню.",
 	},
 }
 

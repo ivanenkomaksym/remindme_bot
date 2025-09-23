@@ -91,11 +91,6 @@ func (b *botUseCase) HandleCallbackQuery(user *tgbotapi.User, message *tgbotapi.
 		return b.handleLanguageSelection(user, callbackData, userEntity)
 	}
 
-	// Handle date picker callbacks (datepicker_selection)
-	//if b.dateUseCase.HandleDatepickerCallback(callbackQuery) {
-	//	return nil, nil // Date picker handled the callback
-	//}
-
 	// Handle other callback types
 	keyboardType := keyboards.GetKeyboardType(callbackData)
 	switch keyboardType {
@@ -149,7 +144,7 @@ func (b *botUseCase) HandleTextMessage(user *tgbotapi.User, text string) (*keybo
 		return b.handleCustomIntervalInput(user, text, userEntity, selection)
 	}
 
-	return &keyboards.SelectionResult{Text: "I didn't understand that. Please use the menu buttons.", Markup: nil}, nil
+	return &keyboards.SelectionResult{Text: keyboards.T(userEntity.Language).MsgParsingFailed, Markup: keyboards.GetMainMenuMarkup(userEntity.Language)}, nil
 }
 
 func (b *botUseCase) ProcessKeyboardSelection(callbackQuery *tgbotapi.CallbackQuery) (*keyboards.SelectionResult, error) {
@@ -178,7 +173,7 @@ func (b *botUseCase) ProcessUserInput(message *tgbotapi.Message) (*keyboards.Sel
 		return b.HandleTextMessage(message.From, message.Text)
 	}
 
-	return &keyboards.SelectionResult{Text: "I didn't understand that. Please use the menu buttons.", Markup: nil}, nil
+	return &keyboards.SelectionResult{Text: "", Markup: nil}, nil
 }
 
 // Helper methods
