@@ -8,6 +8,7 @@ import (
 
 // UserUseCase defines the interface for user business logic
 type UserUseCase interface {
+	GetUsers() ([]*entities.User, error)
 	GetUser(userID int64) (*entities.User, error)
 	CreateOrUpdateUser(userID int64, userName, firstName, lastName, language string) (*entities.User, error)
 	UpdateUserLanguage(userID int64, language string) error
@@ -25,6 +26,10 @@ func NewUserUseCase(userRepo repositories.UserRepository) UserUseCase {
 	return &userUseCase{
 		userRepo: userRepo,
 	}
+}
+
+func (u *userUseCase) GetUsers() ([]*entities.User, error) {
+	return u.userRepo.GetUsers()
 }
 
 func (u *userUseCase) GetUser(userID int64) (*entities.User, error) {

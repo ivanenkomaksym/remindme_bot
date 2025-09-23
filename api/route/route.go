@@ -24,7 +24,8 @@ func Setup(app *bootstrap.Application) {
 	mux.HandleFunc("/telegram-webhook", app.Container.BotController.HandleWebhook)
 
 	// API endpoints
-	mux.HandleFunc("/api/users", app.Container.UserController.GetUser)
+	mux.HandleFunc("/api/users", app.Container.UserController.GetUsers)
+	mux.HandleFunc("/api/users/{user_id}", app.Container.UserController.GetUser)
 	mux.HandleFunc("/api/users/language", app.Container.UserController.UpdateUserLanguage)
 	mux.HandleFunc("/api/users/selection", app.Container.UserController.GetUserSelection)
 	mux.HandleFunc("/api/users/selection/clear", app.Container.UserController.ClearUserSelection)

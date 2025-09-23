@@ -20,6 +20,19 @@ func NewInMemoryUserRepository() repositories.UserRepository {
 	}
 }
 
+func (r *InMemoryUserRepository) GetUsers() ([]*entities.User, error) {
+	r.mu.RLock()
+	defer r.mu.RUnlock()
+
+	var users = []*entities.User{}
+
+	for _, user := range r.users {
+		users = append(users, user)
+	}
+
+	return users, nil
+}
+
 // User management methods
 func (r *InMemoryUserRepository) GetUser(userID int64) (*entities.User, error) {
 	r.mu.RLock()

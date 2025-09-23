@@ -8,6 +8,7 @@ import (
 type MockUserRepository struct {
 	Users                   map[int64]*entities.User
 	UserSelections          map[int64]*entities.UserSelection
+	GetUsersFunc            func() ([]*entities.User, error)
 	GetUserFunc             func(userID int64) (*entities.User, error)
 	CreateOrUpdateUserFunc  func(userID int64, userName, firstName, lastName, language string) (*entities.User, error)
 	UpdateUserLanguageFunc  func(userID int64, language string) error
@@ -21,6 +22,16 @@ func NewMockUserRepository() *MockUserRepository {
 		Users:          make(map[int64]*entities.User),
 		UserSelections: make(map[int64]*entities.UserSelection),
 	}
+}
+
+func (m *MockUserRepository) GetUsers() ([]*entities.User, error) {
+	var users = []*entities.User{}
+
+	for _, user := range m.Users {
+		users = append(users, user)
+	}
+
+	return users, nil
 }
 
 func (m *MockUserRepository) GetUser(userID int64) (*entities.User, error) {

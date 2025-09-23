@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"strconv"
 
+	"github.com/ivanenkomaksym/remindme_bot/domain/errors"
 	"github.com/ivanenkomaksym/remindme_bot/domain/usecases"
 )
 
@@ -22,6 +23,23 @@ func NewUserController(userUseCase usecases.UserUseCase) *UserController {
 }
 
 // GetUser returns user information
+func (c *UserController) GetUsers(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodGet {
+		http.Error(w, "Only GET requests are allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
+	users, err := c.userUseCase.GetUsers()
+	if err != nil {
+		log.Printf("Failed to get users: %v", err)
+		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(users)
+}
+
 func (c *UserController) GetUser(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
 		http.Error(w, "Only GET requests are allowed", http.StatusMethodNotAllowed)
@@ -29,7 +47,7 @@ func (c *UserController) GetUser(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Extract user ID from query parameters
-	userIDStr := r.URL.Query().Get("user_id")
+	userIDStr := r.PathValue("user_id")
 	if userIDStr == "" {
 		http.Error(w, "user_id parameter is required", http.StatusBadRequest)
 		return
@@ -42,7 +60,10 @@ func (c *UserController) GetUser(w http.ResponseWriter, r *http.Request) {
 	}
 
 	user, err := c.userUseCase.GetUser(userID)
-	if err != nil {
+	if err == errors.ErrUserNotFound {
+		w.WriteHeader(404)
+		return
+	} else if err != nil {
 		log.Printf("Failed to get user: %v", err)
 		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
 		return

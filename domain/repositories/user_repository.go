@@ -5,6 +5,7 @@ import "github.com/ivanenkomaksym/remindme_bot/domain/entities"
 // UserRepository defines the interface for user data operations
 type UserRepository interface {
 	// User management
+	GetUsers() ([]*entities.User, error)
 	GetUser(userID int64) (*entities.User, error)
 	CreateOrUpdateUser(userID int64, userName, firstName, lastName, language string) (*entities.User, error)
 	UpdateUserLanguage(userID int64, language string) error
