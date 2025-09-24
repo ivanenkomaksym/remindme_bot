@@ -1,6 +1,10 @@
 package entities
 
-import "errors"
+import (
+	"bytes"
+	"encoding/json"
+	"errors"
+)
 
 type RecurrenceType int64
 
@@ -52,4 +56,24 @@ func ToRecurrenceType(s string) (RecurrenceType, error) {
 	default:
 		return 0, errors.New("invalid recurrence type")
 	}
+}
+
+// MarshalJSON marshals the enum as a quoted json string
+func (r RecurrenceType) MarshalJSON() ([]byte, error) {
+	buffer := bytes.NewBufferString(`"`)
+	buffer.WriteString(r.String())
+	buffer.WriteString(`"`)
+	return buffer.Bytes(), nil
+}
+
+// UnmarshalJSON unmashals a quoted json string to the enum value
+func (r *RecurrenceType) UnmarshalJSON(b []byte) error {
+	var s string
+	err := json.Unmarshal(b, &s)
+	if err != nil {
+		return err
+	}
+	// Note that if the string cannot be found then it will be set to the zero value, 'Created' in this case.
+	*r, _ = ToRecurrenceType(s)
+	return nil
 }
