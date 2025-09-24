@@ -47,7 +47,7 @@ func TestReminderController_MethodGuards(t *testing.T) {
 
 	// Wrong method for GetUserReminders
 	rw := httptest.NewRecorder()
-	req := httptest.NewRequest(http.MethodPost, "/reminders?user_id=1", nil)
+	req := httptest.NewRequest(http.MethodPost, "/reminders/1", nil)
 	c.GetUserReminders(rw, req)
 	if rw.Code != http.StatusMethodNotAllowed {
 		t.Fatalf("expected 405, got %d", rw.Code)
@@ -63,7 +63,7 @@ func TestReminderController_MethodGuards(t *testing.T) {
 
 	// Wrong method for DeleteReminder
 	rw = httptest.NewRecorder()
-	req = httptest.NewRequest(http.MethodGet, "/reminders/delete?reminder_id=1&user_id=1", nil)
+	req = httptest.NewRequest(http.MethodGet, "/reminders/1/1", nil)
 	c.DeleteReminder(rw, req)
 	if rw.Code != http.StatusMethodNotAllowed {
 		t.Fatalf("expected 405, got %d", rw.Code)
@@ -91,7 +91,8 @@ func TestReminderController_GetUserReminders_Validation(t *testing.T) {
 
 	// bad user_id
 	rw = httptest.NewRecorder()
-	req = httptest.NewRequest(http.MethodGet, "/reminders?user_id=abc", nil)
+	req = httptest.NewRequest(http.MethodGet, "/reminders/abc", nil)
+	req.SetPathValue("user_id", "abc")
 	c.GetUserReminders(rw, req)
 	if rw.Code != http.StatusBadRequest {
 		t.Fatalf("expected 400, got %d", rw.Code)
@@ -103,7 +104,7 @@ func TestReminderController_DeleteReminder_Validation(t *testing.T) {
 
 	// missing params
 	rw := httptest.NewRecorder()
-	req := httptest.NewRequest(http.MethodDelete, "/reminders/delete", nil)
+	req := httptest.NewRequest(http.MethodDelete, "/reminders", nil)
 	c.DeleteReminder(rw, req)
 	if rw.Code != http.StatusBadRequest {
 		t.Fatalf("expected 400, got %d", rw.Code)
@@ -111,7 +112,9 @@ func TestReminderController_DeleteReminder_Validation(t *testing.T) {
 
 	// bad reminder_id
 	rw = httptest.NewRecorder()
-	req = httptest.NewRequest(http.MethodDelete, "/reminders/delete?reminder_id=x&user_id=1", nil)
+	req = httptest.NewRequest(http.MethodDelete, "/reminders/1/x", nil)
+	req.SetPathValue("user_id", "1")
+	req.SetPathValue("reminder_id", "x")
 	c.DeleteReminder(rw, req)
 	if rw.Code != http.StatusBadRequest {
 		t.Fatalf("expected 400, got %d", rw.Code)
@@ -119,7 +122,9 @@ func TestReminderController_DeleteReminder_Validation(t *testing.T) {
 
 	// bad user_id
 	rw = httptest.NewRecorder()
-	req = httptest.NewRequest(http.MethodDelete, "/reminders/delete?reminder_id=1&user_id=x", nil)
+	req = httptest.NewRequest(http.MethodDelete, "/reminders/x/1", nil)
+	req.SetPathValue("user_id", "x")
+	req.SetPathValue("reminder_id", "1")
 	c.DeleteReminder(rw, req)
 	if rw.Code != http.StatusBadRequest {
 		t.Fatalf("expected 400, got %d", rw.Code)

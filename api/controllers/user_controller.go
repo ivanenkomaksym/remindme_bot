@@ -81,7 +81,7 @@ func (c *UserController) UpdateUserLanguage(w http.ResponseWriter, r *http.Reque
 	}
 
 	// Extract user ID from query parameters
-	userIDStr := r.URL.Query().Get("user_id")
+	userIDStr := r.PathValue("user_id")
 	if userIDStr == "" {
 		http.Error(w, "user_id parameter is required", http.StatusBadRequest)
 		return
@@ -126,7 +126,7 @@ func (c *UserController) GetUserSelection(w http.ResponseWriter, r *http.Request
 	}
 
 	// Extract user ID from query parameters
-	userIDStr := r.URL.Query().Get("user_id")
+	userIDStr := r.PathValue("user_id")
 	if userIDStr == "" {
 		http.Error(w, "user_id parameter is required", http.StatusBadRequest)
 		return
@@ -157,7 +157,7 @@ func (c *UserController) ClearUserSelection(w http.ResponseWriter, r *http.Reque
 	}
 
 	// Extract user ID from query parameters
-	userIDStr := r.URL.Query().Get("user_id")
+	userIDStr := r.PathValue("user_id")
 	if userIDStr == "" {
 		http.Error(w, "user_id parameter is required", http.StatusBadRequest)
 		return

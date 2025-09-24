@@ -48,7 +48,7 @@ func TestUserController_MethodGuards(t *testing.T) {
 
 	// GetUser wrong method
 	rw := httptest.NewRecorder()
-	req := httptest.NewRequest(http.MethodPost, "/user?user_id=1", nil)
+	req := httptest.NewRequest(http.MethodPost, "/users/1", nil)
 	c.GetUser(rw, req)
 	if rw.Code != http.StatusMethodNotAllowed {
 		t.Fatalf("expected 405, got %d", rw.Code)
@@ -56,7 +56,7 @@ func TestUserController_MethodGuards(t *testing.T) {
 
 	// UpdateUserLanguage wrong method
 	rw = httptest.NewRecorder()
-	req = httptest.NewRequest(http.MethodGet, "/user/language?user_id=1", nil)
+	req = httptest.NewRequest(http.MethodGet, "/users/1/language", nil)
 	c.UpdateUserLanguage(rw, req)
 	if rw.Code != http.StatusMethodNotAllowed {
 		t.Fatalf("expected 405, got %d", rw.Code)
@@ -64,7 +64,7 @@ func TestUserController_MethodGuards(t *testing.T) {
 
 	// GetUserSelection wrong method
 	rw = httptest.NewRecorder()
-	req = httptest.NewRequest(http.MethodPost, "/user/selection?user_id=1", nil)
+	req = httptest.NewRequest(http.MethodPost, "/users/1/selection", nil)
 	c.GetUserSelection(rw, req)
 	if rw.Code != http.StatusMethodNotAllowed {
 		t.Fatalf("expected 405, got %d", rw.Code)
@@ -72,7 +72,7 @@ func TestUserController_MethodGuards(t *testing.T) {
 
 	// ClearUserSelection wrong method
 	rw = httptest.NewRecorder()
-	req = httptest.NewRequest(http.MethodPost, "/user/selection?user_id=1", nil)
+	req = httptest.NewRequest(http.MethodPost, "/users/1/selection", nil)
 	c.ClearUserSelection(rw, req)
 	if rw.Code != http.StatusMethodNotAllowed {
 		t.Fatalf("expected 405, got %d", rw.Code)
@@ -84,7 +84,7 @@ func TestUserController_GetUser_Validation(t *testing.T) {
 
 	// missing user_id
 	rw := httptest.NewRecorder()
-	req := httptest.NewRequest(http.MethodGet, "/user", nil)
+	req := httptest.NewRequest(http.MethodGet, "/users", nil)
 	c.GetUser(rw, req)
 	if rw.Code != http.StatusBadRequest {
 		t.Fatalf("expected 400, got %d", rw.Code)
@@ -92,7 +92,8 @@ func TestUserController_GetUser_Validation(t *testing.T) {
 
 	// bad user_id
 	rw = httptest.NewRecorder()
-	req = httptest.NewRequest(http.MethodGet, "/user?user_id=abc", nil)
+	req = httptest.NewRequest(http.MethodGet, "/users/abc", nil)
+	req.SetPathValue("user_id", "abc")
 	c.GetUser(rw, req)
 	if rw.Code != http.StatusBadRequest {
 		t.Fatalf("expected 400, got %d", rw.Code)
@@ -104,7 +105,7 @@ func TestUserController_UpdateUserLanguage_Validation(t *testing.T) {
 
 	// missing user_id
 	rw := httptest.NewRecorder()
-	req := httptest.NewRequest(http.MethodPut, "/user/language", bytes.NewBufferString(`{"language":"en"}`))
+	req := httptest.NewRequest(http.MethodPut, "/users/language", bytes.NewBufferString(`{"language":"en"}`))
 	c.UpdateUserLanguage(rw, req)
 	if rw.Code != http.StatusBadRequest {
 		t.Fatalf("expected 400, got %d", rw.Code)
@@ -112,7 +113,8 @@ func TestUserController_UpdateUserLanguage_Validation(t *testing.T) {
 
 	// invalid json
 	rw = httptest.NewRecorder()
-	req = httptest.NewRequest(http.MethodPut, "/user/language?user_id=1", bytes.NewBufferString("{"))
+	req = httptest.NewRequest(http.MethodPut, "/users/1/language", bytes.NewBufferString("{"))
+	req.SetPathValue("user_id", "1")
 	c.UpdateUserLanguage(rw, req)
 	if rw.Code != http.StatusBadRequest {
 		t.Fatalf("expected 400, got %d", rw.Code)
@@ -120,7 +122,8 @@ func TestUserController_UpdateUserLanguage_Validation(t *testing.T) {
 
 	// missing field
 	rw = httptest.NewRecorder()
-	req = httptest.NewRequest(http.MethodPut, "/user/language?user_id=1", bytes.NewBufferString(`{}`))
+	req = httptest.NewRequest(http.MethodPut, "/users/1/language", bytes.NewBufferString(`{}`))
+	req.SetPathValue("user_id", "1")
 	c.UpdateUserLanguage(rw, req)
 	if rw.Code != http.StatusBadRequest {
 		t.Fatalf("expected 400, got %d", rw.Code)
@@ -132,7 +135,7 @@ func TestUserController_GetUserSelection_Validation(t *testing.T) {
 
 	// missing user_id
 	rw := httptest.NewRecorder()
-	req := httptest.NewRequest(http.MethodGet, "/user/selection", nil)
+	req := httptest.NewRequest(http.MethodGet, "/users/selection", nil)
 	c.GetUserSelection(rw, req)
 	if rw.Code != http.StatusBadRequest {
 		t.Fatalf("expected 400, got %d", rw.Code)
@@ -140,7 +143,8 @@ func TestUserController_GetUserSelection_Validation(t *testing.T) {
 
 	// bad user_id
 	rw = httptest.NewRecorder()
-	req = httptest.NewRequest(http.MethodGet, "/user/selection?user_id=abc", nil)
+	req = httptest.NewRequest(http.MethodGet, "/users/abc/selection", nil)
+	req.SetPathValue("user_id", "abc")
 	c.GetUserSelection(rw, req)
 	if rw.Code != http.StatusBadRequest {
 		t.Fatalf("expected 400, got %d", rw.Code)
@@ -152,7 +156,7 @@ func TestUserController_ClearUserSelection_Validation(t *testing.T) {
 
 	// missing user_id
 	rw := httptest.NewRecorder()
-	req := httptest.NewRequest(http.MethodDelete, "/user/selection", nil)
+	req := httptest.NewRequest(http.MethodDelete, "/users/selection", nil)
 	c.ClearUserSelection(rw, req)
 	if rw.Code != http.StatusBadRequest {
 		t.Fatalf("expected 400, got %d", rw.Code)
@@ -160,7 +164,8 @@ func TestUserController_ClearUserSelection_Validation(t *testing.T) {
 
 	// bad user_id
 	rw = httptest.NewRecorder()
-	req = httptest.NewRequest(http.MethodDelete, "/user/selection?user_id=abc", nil)
+	req = httptest.NewRequest(http.MethodDelete, "/users/abc/selection", nil)
+	req.SetPathValue("user_id", "abc")
 	c.ClearUserSelection(rw, req)
 	if rw.Code != http.StatusBadRequest {
 		t.Fatalf("expected 400, got %d", rw.Code)

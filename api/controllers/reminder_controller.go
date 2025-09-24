@@ -28,8 +28,8 @@ func (c *ReminderController) GetUserReminders(w http.ResponseWriter, r *http.Req
 		return
 	}
 
-	// Extract user ID from query parameters or headers
-	userIDStr := r.URL.Query().Get("user_id")
+	// Extract user ID from path
+	userIDStr := r.PathValue("user_id")
 	if userIDStr == "" {
 		http.Error(w, "user_id parameter is required", http.StatusBadRequest)
 		return
@@ -77,9 +77,9 @@ func (c *ReminderController) DeleteReminder(w http.ResponseWriter, r *http.Reque
 		return
 	}
 
-	// Extract reminder ID and user ID from query parameters
-	reminderIDStr := r.URL.Query().Get("reminder_id")
-	userIDStr := r.URL.Query().Get("user_id")
+	// Extract reminder ID and user ID from path
+	reminderIDStr := r.PathValue("reminder_id")
+	userIDStr := r.PathValue("user_id")
 
 	if reminderIDStr == "" || userIDStr == "" {
 		http.Error(w, "reminder_id and user_id parameters are required", http.StatusBadRequest)
