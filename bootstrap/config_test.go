@@ -15,11 +15,14 @@ func resetViper() {
 func TestLoadConfig_WithDefaultsRequiresMandatoryEnv(t *testing.T) {
 	resetViper()
 
+	var expectedApiKey = "73086a67-5eac-4dff-9f34-71335d5a6244"
+
 	// Provide mandatory envs so validate() does not fatal
 	t.Setenv("BOT_TOKEN", "test-token")
 	t.Setenv("WEBHOOK_URL", "https://example.com/webhook")
 	// PORT is taken from PORT env variable
 	t.Setenv("PORT", "8081")
+	t.Setenv("API_KEY", expectedApiKey)
 
 	cfg := LoadConfig()
 	if cfg == nil {
@@ -38,6 +41,9 @@ func TestLoadConfig_WithDefaultsRequiresMandatoryEnv(t *testing.T) {
 	}
 	if cfg.GetTimezone() == "" {
 		t.Errorf("expected default timezone to be set")
+	}
+	if cfg.App.APIKey != expectedApiKey {
+		t.Errorf("expected %s api key", expectedApiKey)
 	}
 }
 

@@ -50,6 +50,7 @@ type AppConfig struct {
 	Environment string
 	LogLevel    string
 	Timezone    string
+	APIKey      string
 }
 
 // LoadConfig loads configuration from environment variables and config files
@@ -111,6 +112,7 @@ func (c *Config) setDefaults() {
 		Environment: "development",
 		LogLevel:    "info",
 		Timezone:    "UTC",
+		APIKey:      "",
 	}
 }
 
@@ -198,6 +200,9 @@ func (c *Config) loadAppConfig() {
 	}
 	if timezone := viper.GetString("TIMEZONE"); timezone != "" {
 		c.App.Timezone = timezone
+	}
+	if apiKey := viper.GetString("API_KEY"); apiKey != "" {
+		c.App.APIKey = apiKey
 	}
 }
 

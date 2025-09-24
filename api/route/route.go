@@ -18,6 +18,7 @@ func Setup(app *bootstrap.Application) {
 	// Apply middleware
 	handler := middleware.LoggingMiddleware(mux)
 	handler = middleware.CORSMiddleware(handler)
+	handler = middleware.APIKeyMiddleware(app, handler)
 	handler = middleware.RecoveryMiddleware(handler)
 
 	// Define the webhook endpoint that Telegram will send updates to
