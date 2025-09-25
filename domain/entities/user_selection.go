@@ -4,16 +4,16 @@ import "time"
 
 // UserSelection represents a user's current selection state for creating reminders
 type UserSelection struct {
-	RecurrenceType  RecurrenceType `json:"recurrenceType"`
-	WeekOptions     [7]bool        `json:"weekOptions"`
-	MonthOptions    [28]bool       `json:"monthOptions"`
-	SelectedDate    time.Time      `json:"selectedDate"`
-	SelectedTime    string         `json:"selectedTime"`
-	IntervalDays    int            `json:"intervalDays"`
-	ReminderMessage string         `json:"reminderMessage"`
-	CustomTime      bool           `json:"customTime"`
-	CustomText      bool           `json:"customText"`
-	CustomInterval  bool           `json:"customInterval"`
+	RecurrenceType  RecurrenceType `json:"recurrenceType" bson:"recurrenceType"`
+	WeekOptions     [7]bool        `json:"weekOptions" bson:"weekOptions"`
+	MonthOptions    [28]bool       `json:"monthOptions" bson:"monthOptions"`
+	SelectedDate    time.Time      `json:"selectedDate" bson:"selectedDate"`
+	SelectedTime    string         `json:"selectedTime" bson:"selectedTime"`
+	IntervalDays    int            `json:"intervalDays" bson:"intervalDays"`
+	ReminderMessage string         `json:"reminderMessage" bson:"reminderMessage"`
+	CustomTime      bool           `json:"customTime" bson:"customTime"`
+	CustomText      bool           `json:"customText" bson:"customText"`
+	CustomInterval  bool           `json:"customInterval" bson:"customInterval"`
 }
 
 // NewUserSelection creates a new user selection with default values

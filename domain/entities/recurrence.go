@@ -3,12 +3,12 @@ package entities
 import "time"
 
 type Recurrence struct {
-	Type       RecurrenceType `json:"type"`          // e.g., "once", "daily", "weekly", "monthly", "interval", "custom"
-	Interval   int            `json:"interval"`      // e.g., every N days/hours/minutes
-	Weekdays   []time.Weekday `json:"weekdays"`      // For weekly recurrence (e.g., [Tuesday, Thursday])
-	DayOfMonth []int          `json:"days_of_month"` // For monthly recurrence (e.g., [1, 15])
-	StartDate  *time.Time     `json:"start_date"`    // When recurrence begins (includes time)
-	EndDate    *time.Time     `json:"end_date"`      // When recurrence ends (optional)
+	Type       RecurrenceType `json:"type" bson:"type"`                   // e.g., "once", "daily", "weekly", "monthly", "interval", "custom"
+	Interval   int            `json:"interval" bson:"interval"`           // e.g., every N days/hours/minutes
+	Weekdays   []time.Weekday `json:"weekdays" bson:"weekdays"`           // For weekly recurrence (e.g., [Tuesday, Thursday])
+	DayOfMonth []int          `json:"days_of_month" bson:"days_of_month"` // For monthly recurrence (e.g., [1, 15])
+	StartDate  *time.Time     `json:"start_date" bson:"start_date"`       // When recurrence begins (includes time)
+	EndDate    *time.Time     `json:"end_date" bson:"end_date"`           // When recurrence ends (optional)
 }
 
 // WithStartDate adds a start date to a recurrence

@@ -103,7 +103,7 @@ func (r *MongoReminderRepository) GetReminders() ([]entities.Reminder, error) {
 func (r *MongoReminderRepository) GetRemindersByUser(userID int64) ([]entities.Reminder, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
-	cur, err := r.col.Find(ctx, map[string]any{"UserID": userID})
+	cur, err := r.col.Find(ctx, map[string]any{"userId": userID})
 	if err != nil {
 		return nil, err
 	}
@@ -123,7 +123,7 @@ func (r *MongoReminderRepository) GetReminder(reminderID int64) (*entities.Remin
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 	var rm entities.Reminder
-	err := r.col.FindOne(ctx, map[string]any{"ID": reminderID}).Decode(&rm)
+	err := r.col.FindOne(ctx, map[string]any{"id": reminderID}).Decode(&rm)
 	if err == mongo.ErrNoDocuments {
 		return nil, nil
 	}
@@ -136,28 +136,28 @@ func (r *MongoReminderRepository) GetReminder(reminderID int64) (*entities.Remin
 func (r *MongoReminderRepository) UpdateReminder(reminder *entities.Reminder) error {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
-	_, err := r.col.UpdateOne(ctx, map[string]any{"ID": reminder.ID}, map[string]any{"$set": reminder})
+	_, err := r.col.UpdateOne(ctx, map[string]any{"id": reminder.ID}, map[string]any{"$set": reminder})
 	return err
 }
 
 func (r *MongoReminderRepository) DeleteReminder(reminderID int64, userID int64) error {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
-	_, err := r.col.DeleteOne(ctx, map[string]any{"ID": reminderID, "UserID": userID})
+	_, err := r.col.DeleteOne(ctx, map[string]any{"id": reminderID, "userId": userID})
 	return err
 }
 
 func (r *MongoReminderRepository) DeactivateReminder(reminderID int64, userID int64) error {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
-	_, err := r.col.UpdateOne(ctx, map[string]any{"ID": reminderID, "UserID": userID}, map[string]any{"$set": map[string]any{"IsActive": false}})
+	_, err := r.col.UpdateOne(ctx, map[string]any{"id": reminderID, "userId": userID}, map[string]any{"$set": map[string]any{"isActive": false}})
 	return err
 }
 
 func (r *MongoReminderRepository) GetActiveReminders() ([]entities.Reminder, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
-	cur, err := r.col.Find(ctx, map[string]any{"IsActive": true})
+	cur, err := r.col.Find(ctx, map[string]any{"isActive": true})
 	if err != nil {
 		return nil, err
 	}
@@ -176,6 +176,6 @@ func (r *MongoReminderRepository) GetActiveReminders() ([]entities.Reminder, err
 func (r *MongoReminderRepository) UpdateNextTrigger(reminderID int64, nextTrigger time.Time) error {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
-	_, err := r.col.UpdateOne(ctx, map[string]any{"ID": reminderID}, map[string]any{"$set": map[string]any{"NextTrigger": nextTrigger}})
+	_, err := r.col.UpdateOne(ctx, map[string]any{"id": reminderID}, map[string]any{"$set": map[string]any{"nextTrigger": nextTrigger}})
 	return err
 }

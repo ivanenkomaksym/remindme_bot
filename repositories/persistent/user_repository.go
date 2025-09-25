@@ -55,7 +55,7 @@ func (r *MongoUserRepository) GetUser(userID int64) (*entities.User, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 	var u entities.User
-	err := r.usersCol.FindOne(ctx, map[string]any{"ID": userID}).Decode(&u)
+	err := r.usersCol.FindOne(ctx, map[string]any{"id": userID}).Decode(&u)
 	if err == mongo.ErrNoDocuments {
 		return nil, nil
 	}
@@ -71,7 +71,7 @@ func (r *MongoUserRepository) CreateOrUpdateUser(userID int64, userName, firstNa
 	now := time.Now()
 	u := entities.User{ID: userID, UserName: userName, FirstName: firstName, LastName: lastName, Language: language, UpdatedAt: now}
 	// Try update
-	res, err := r.usersCol.UpdateOne(ctx, map[string]any{"ID": userID}, map[string]any{"$set": u})
+	res, err := r.usersCol.UpdateOne(ctx, map[string]any{"id": userID}, map[string]any{"$set": u})
 	if err != nil {
 		return nil, err
 	}
@@ -87,14 +87,14 @@ func (r *MongoUserRepository) CreateOrUpdateUser(userID int64, userName, firstNa
 func (r *MongoUserRepository) UpdateUserLanguage(userID int64, language string) error {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
-	_, err := r.usersCol.UpdateOne(ctx, map[string]any{"ID": userID}, map[string]any{"$set": map[string]any{"Language": language, "UpdatedAt": time.Now()}})
+	_, err := r.usersCol.UpdateOne(ctx, map[string]any{"id": userID}, map[string]any{"$set": map[string]any{"language": language, "updatedAt": time.Now()}})
 	return err
 }
 
 func (r *MongoUserRepository) UpdateUserInfo(userID int64, userName, firstName, lastName string) error {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
-	_, err := r.usersCol.UpdateOne(ctx, map[string]any{"ID": userID}, map[string]any{"$set": map[string]any{"UserName": userName, "FirstName": firstName, "LastName": lastName, "UpdatedAt": time.Now()}})
+	_, err := r.usersCol.UpdateOne(ctx, map[string]any{"id": userID}, map[string]any{"$set": map[string]any{"userName": userName, "firstName": firstName, "lastName": lastName, "updatedAt": time.Now()}})
 	return err
 }
 
@@ -102,7 +102,7 @@ func (r *MongoUserRepository) GetUserSelection(userID int64) (*entities.UserSele
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 	var s entities.UserSelection
-	err := r.selectsCol.FindOne(ctx, map[string]any{"UserID": userID}).Decode(&s)
+	err := r.selectsCol.FindOne(ctx, map[string]any{"userId": userID}).Decode(&s)
 	if err == mongo.ErrNoDocuments {
 		return nil, nil
 	}
@@ -117,13 +117,13 @@ func (r *MongoUserRepository) SetUserSelection(userID int64, selection *entities
 	defer cancel()
 	// Attach user id to selection for storage
 	// Ensure CreatedAt/UpdatedAt semantics are preserved within selection struct itself
-	res, err := r.selectsCol.UpdateOne(ctx, map[string]any{"UserID": userID}, map[string]any{"$set": selection})
+	res, err := r.selectsCol.UpdateOne(ctx, map[string]any{"userId": userID}, map[string]any{"$set": selection})
 	if err != nil {
 		return err
 	}
 	if res.MatchedCount == 0 {
 		// Insert new selection document
-		if _, err := r.selectsCol.InsertOne(ctx, map[string]any{"UserID": userID, "Selection": selection}); err != nil {
+		if _, err := r.selectsCol.InsertOne(ctx, map[string]any{"userId": userID, "selection": selection}); err != nil {
 			return err
 		}
 	}
@@ -137,7 +137,7 @@ func (r *MongoUserRepository) UpdateUserSelection(userID int64, selection *entit
 func (r *MongoUserRepository) ClearUserSelection(userID int64) error {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
-	_, err := r.selectsCol.DeleteOne(ctx, map[string]any{"UserID": userID})
+	_, err := r.selectsCol.DeleteOne(ctx, map[string]any{"userId": userID})
 	return err
 }
 

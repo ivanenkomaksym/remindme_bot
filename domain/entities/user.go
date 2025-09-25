@@ -4,13 +4,13 @@ import "time"
 
 // User represents a user in the system
 type User struct {
-	ID        int64     `json:"id"`
-	UserName  string    `json:"userName"`
-	FirstName string    `json:"firstName"`
-	LastName  string    `json:"lastName"`
-	Language  string    `json:"language"`
-	CreatedAt time.Time `json:"createdAt"`
-	UpdatedAt time.Time `json:"updatedAt"`
+	ID        int64     `json:"id" bson:"id"`
+	UserName  string    `json:"userName" bson:"userName"`
+	FirstName string    `json:"firstName" bson:"firstName"`
+	LastName  string    `json:"lastName" bson:"lastName"`
+	Language  string    `json:"language" bson:"language"`
+	CreatedAt time.Time `json:"createdAt" bson:"createdAt"`
+	UpdatedAt time.Time `json:"updatedAt" bson:"updatedAt"`
 }
 
 // NewUser creates a new user entity
