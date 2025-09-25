@@ -29,13 +29,14 @@ type ServerConfig struct {
 
 // DatabaseConfig holds database-related configuration
 type DatabaseConfig struct {
-	Type     repositories.StorageType
-	Host     string
-	Port     int
-	Username string
-	Password string
-	Database string
-	SSLMode  string
+	Type             repositories.StorageType
+	Host             string
+	Port             int
+	Username         string
+	Password         string
+	Database         string
+	SSLMode          string
+	ConnectionString string
 }
 
 // BotConfig holds bot-related configuration
@@ -93,13 +94,14 @@ func (c *Config) setDefaults() {
 	}
 
 	c.Database = DatabaseConfig{
-		Type:     repositories.InMemory,
-		Host:     "localhost",
-		Port:     5432,
-		Username: "postgres",
-		Password: "",
-		Database: "remindme_bot",
-		SSLMode:  "disable",
+		Type:             repositories.InMemory,
+		Host:             "localhost",
+		Port:             5432,
+		Username:         "postgres",
+		Password:         "",
+		Database:         "remindme_bot",
+		SSLMode:          "disable",
+		ConnectionString: "",
 	}
 
 	c.Bot = BotConfig{
@@ -152,6 +154,9 @@ func (c *Config) loadDatabaseConfig() {
 		if storageType, err := repositories.ToStorageType(dbType); err == nil {
 			c.Database.Type = storageType
 		}
+	}
+	if conn := viper.GetString("DB_CONNECTION_STRING"); conn != "" {
+		c.Database.ConnectionString = conn
 	}
 	if host := viper.GetString("DB_HOST"); host != "" {
 		c.Database.Host = host

@@ -7,6 +7,7 @@ import (
 	"github.com/ivanenkomaksym/remindme_bot/domain/repositories"
 	"github.com/ivanenkomaksym/remindme_bot/domain/usecases"
 	"github.com/ivanenkomaksym/remindme_bot/repositories/inmemory"
+	"github.com/ivanenkomaksym/remindme_bot/repositories/persistent"
 
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 )
@@ -34,7 +35,7 @@ func NewContainer(app *Application) *Container {
 	container := &Container{}
 
 	// Initialize repositories
-	container.initRepositories(app.Env.StorageType)
+	container.initRepositories(app.Env)
 
 	// Initialize use cases
 	container.initUseCases()
@@ -46,13 +47,30 @@ func NewContainer(app *Application) *Container {
 }
 
 // initRepositories initializes all repositories
-func (c *Container) initRepositories(storageType repositories.StorageType) {
-	switch storageType {
+func (c *Container) initRepositories(env *Env) {
+	switch env.StorageType {
 	case repositories.InMemory:
 		c.UserRepo = inmemory.NewInMemoryUserRepository()
 		c.ReminderRepo = inmemory.NewInMemoryReminderRepository()
+	case repositories.Mongo:
+		// Expect connection string and database name from config
+		conn := env.Config.Database.ConnectionString
+		if conn == "" {
+			log.Fatalf("Missing database connection string")
+		}
+		dbName := env.Config.Database.Database
+		userRepo, err := persistent.NewMongoUserRepository(conn, dbName)
+		if err != nil {
+			log.Fatalf("Failed to init Mongo user repo: %v", err)
+		}
+		remRepo, err := persistent.NewMongoReminderRepository(conn, dbName)
+		if err != nil {
+			log.Fatalf("Failed to init Mongo reminder repo: %v", err)
+		}
+		c.UserRepo = userRepo
+		c.ReminderRepo = remRepo
 	default:
-		log.Fatalf("Unsupported storage type: %v", storageType)
+		log.Fatalf("Unsupported storage type: %v", env.StorageType)
 	}
 }
 
