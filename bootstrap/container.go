@@ -15,8 +15,9 @@ import (
 // Container holds all the dependencies
 type Container struct {
 	// Repositories
-	UserRepo     repositories.UserRepository
-	ReminderRepo repositories.ReminderRepository
+	UserRepo          repositories.UserRepository
+	ReminderRepo      repositories.ReminderRepository
+	UserSelectionRepo repositories.UserSelectionRepository
 
 	// Use Cases
 	UserUseCase     usecases.UserUseCase
@@ -52,6 +53,7 @@ func (c *Container) initRepositories(env *Env) {
 	case repositories.InMemory:
 		c.UserRepo = inmemory.NewInMemoryUserRepository()
 		c.ReminderRepo = inmemory.NewInMemoryReminderRepository()
+		c.UserSelectionRepo = inmemory.NewInMemoryUserSelectionRepository()
 	case repositories.Mongo:
 		// Expect connection string and database name from config
 		conn := env.Config.Database.ConnectionString
@@ -69,6 +71,8 @@ func (c *Container) initRepositories(env *Env) {
 		}
 		c.UserRepo = userRepo
 		c.ReminderRepo = remRepo
+		// User selections always in-memory
+		c.UserSelectionRepo = inmemory.NewInMemoryUserSelectionRepository()
 	default:
 		log.Fatalf("Unsupported storage type: %v", env.StorageType)
 	}
@@ -76,7 +80,7 @@ func (c *Container) initRepositories(env *Env) {
 
 // initUseCases initializes all use cases
 func (c *Container) initUseCases() {
-	c.UserUseCase = usecases.NewUserUseCase(c.UserRepo)
+	c.UserUseCase = usecases.NewUserUseCase(c.UserRepo, c.UserSelectionRepo)
 	c.ReminderUseCase = usecases.NewReminderUseCase(c.ReminderRepo, c.UserRepo)
 }
 

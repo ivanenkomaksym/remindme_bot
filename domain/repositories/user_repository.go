@@ -10,14 +10,12 @@ type UserRepository interface {
 	CreateOrUpdateUser(userID int64, userName, firstName, lastName, language string) (*entities.User, error)
 	UpdateUserLanguage(userID int64, language string) error
 	UpdateUserInfo(userID int64, userName, firstName, lastName string) error
+}
 
-	// User selection management
+// UserSelectionRepository defines the interface for managing in-memory user selections
+type UserSelectionRepository interface {
 	GetUserSelection(userID int64) (*entities.UserSelection, error)
 	SetUserSelection(userID int64, selection *entities.UserSelection) error
 	UpdateUserSelection(userID int64, selection *entities.UserSelection) error
 	ClearUserSelection(userID int64) error
-
-	// Combined operations
-	GetUserWithSelection(userID int64) (*entities.User, *entities.UserSelection, error)
-	CreateOrUpdateUserWithSelection(userID int64, userName, firstName, lastName, language string) (*entities.User, *entities.UserSelection, error)
 }

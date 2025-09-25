@@ -18,13 +18,15 @@ type UserUseCase interface {
 }
 
 type userUseCase struct {
-	userRepo repositories.UserRepository
+	userRepo      repositories.UserRepository
+	selectionRepo repositories.UserSelectionRepository
 }
 
 // NewUserUseCase creates a new user use case
-func NewUserUseCase(userRepo repositories.UserRepository) UserUseCase {
+func NewUserUseCase(userRepo repositories.UserRepository, selectionRepo repositories.UserSelectionRepository) UserUseCase {
 	return &userUseCase{
-		userRepo: userRepo,
+		userRepo:      userRepo,
+		selectionRepo: selectionRepo,
 	}
 }
 
@@ -74,7 +76,7 @@ func (u *userUseCase) GetUserSelection(userID int64) (*entities.UserSelection, e
 		return nil, errors.NewDomainError("INVALID_USER_ID", "User ID must be positive", nil)
 	}
 
-	selection, err := u.userRepo.GetUserSelection(userID)
+	selection, err := u.selectionRepo.GetUserSelection(userID)
 	if err != nil {
 		return nil, err
 	}
@@ -93,7 +95,7 @@ func (u *userUseCase) UpdateUserSelection(userID int64, selection *entities.User
 		return errors.NewDomainError("INVALID_SELECTION", "User selection cannot be nil", nil)
 	}
 
-	return u.userRepo.UpdateUserSelection(userID, selection)
+	return u.selectionRepo.UpdateUserSelection(userID, selection)
 }
 
 func (u *userUseCase) ClearUserSelection(userID int64) error {
@@ -101,5 +103,5 @@ func (u *userUseCase) ClearUserSelection(userID int64) error {
 		return errors.NewDomainError("INVALID_USER_ID", "User ID must be positive", nil)
 	}
 
-	return u.userRepo.ClearUserSelection(userID)
+	return u.selectionRepo.ClearUserSelection(userID)
 }

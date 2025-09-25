@@ -8,15 +8,13 @@ import (
 )
 
 type InMemoryUserRepository struct {
-	mu             sync.RWMutex
-	users          map[int64]*entities.User
-	userSelections map[int64]*entities.UserSelection
+	mu    sync.RWMutex
+	users map[int64]*entities.User
 }
 
 func NewInMemoryUserRepository() repositories.UserRepository {
 	return &InMemoryUserRepository{
-		users:          make(map[int64]*entities.User),
-		userSelections: make(map[int64]*entities.UserSelection),
+		users: make(map[int64]*entities.User),
 	}
 }
 
@@ -84,94 +82,4 @@ func (r *InMemoryUserRepository) UpdateUserInfo(userID int64, userName, firstNam
 
 	user.UpdateInfo(userName, firstName, lastName)
 	return nil
-}
-
-// User selection management methods
-func (r *InMemoryUserRepository) GetUserSelection(userID int64) (*entities.UserSelection, error) {
-	r.mu.RLock()
-	defer r.mu.RUnlock()
-
-	selection, exists := r.userSelections[userID]
-	if !exists {
-		return nil, nil
-	}
-
-	// Return a copy to prevent external modifications
-	selectionCopy := *selection
-	return &selectionCopy, nil
-}
-
-func (r *InMemoryUserRepository) SetUserSelection(userID int64, selection *entities.UserSelection) error {
-	r.mu.Lock()
-	defer r.mu.Unlock()
-
-	// Store a copy to prevent external modifications
-	selectionCopy := *selection
-	r.userSelections[userID] = &selectionCopy
-	return nil
-}
-
-func (r *InMemoryUserRepository) UpdateUserSelection(userID int64, selection *entities.UserSelection) error {
-	r.mu.Lock()
-	defer r.mu.Unlock()
-
-	// Store a copy to prevent external modifications
-	selectionCopy := *selection
-	r.userSelections[userID] = &selectionCopy
-	return nil
-}
-
-func (r *InMemoryUserRepository) ClearUserSelection(userID int64) error {
-	r.mu.Lock()
-	defer r.mu.Unlock()
-
-	if selection, exists := r.userSelections[userID]; exists {
-		selection.Clear()
-	}
-	return nil
-}
-
-// Combined operations
-func (r *InMemoryUserRepository) GetUserWithSelection(userID int64) (*entities.User, *entities.UserSelection, error) {
-	r.mu.RLock()
-	defer r.mu.RUnlock()
-
-	user, userExists := r.users[userID]
-	selection, selectionExists := r.userSelections[userID]
-
-	var userCopy *entities.User
-	var selectionCopy *entities.UserSelection
-
-	if userExists {
-		userCopyVal := *user
-		userCopy = &userCopyVal
-	}
-
-	if selectionExists {
-		selectionCopyVal := *selection
-		selectionCopy = &selectionCopyVal
-	}
-
-	return userCopy, selectionCopy, nil
-}
-
-func (r *InMemoryUserRepository) CreateOrUpdateUserWithSelection(userID int64, userName, firstName, lastName, language string) (*entities.User, *entities.UserSelection, error) {
-	r.mu.Lock()
-	defer r.mu.Unlock()
-
-	// Create or update user
-	user := entities.NewUser(userID, userName, firstName, lastName, language)
-	r.users[userID] = user
-
-	// Get or create user selection
-	selection, exists := r.userSelections[userID]
-	if !exists {
-		selection = entities.NewUserSelection()
-		r.userSelections[userID] = selection
-	}
-
-	// Return copies to prevent external modifications
-	userCopy := *user
-	selectionCopy := *selection
-	return &userCopy, &selectionCopy, nil
 }

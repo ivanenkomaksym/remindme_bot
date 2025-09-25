@@ -12,7 +12,7 @@ func HandleRecurrenceTypeSelection(callbackData string,
 		return nil, err
 	}
 
-	userSelection.RecurrenceType = recurrenceType
+	userSelection.SetRecurrenceType(recurrenceType)
 
 	s := T(user.Language)
 	switch recurrenceType {

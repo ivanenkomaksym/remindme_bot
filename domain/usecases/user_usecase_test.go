@@ -5,12 +5,14 @@ import (
 
 	"github.com/ivanenkomaksym/remindme_bot/domain/entities"
 	"github.com/ivanenkomaksym/remindme_bot/domain/mocks"
+	"github.com/ivanenkomaksym/remindme_bot/repositories/inmemory"
 	"github.com/stretchr/testify/assert"
 )
 
 func TestUserUseCase_GetUser(t *testing.T) {
 	mockRepo := mocks.NewMockUserRepository()
-	useCase := NewUserUseCase(mockRepo)
+	selRepo := inmemory.NewInMemoryUserSelectionRepository()
+	useCase := NewUserUseCase(mockRepo, selRepo)
 
 	// Test case: User exists
 	user := entities.NewUser(1, "testuser", "Test", "User", "en")
@@ -30,7 +32,8 @@ func TestUserUseCase_GetUser(t *testing.T) {
 
 func TestUserUseCase_CreateOrUpdateUser(t *testing.T) {
 	mockRepo := mocks.NewMockUserRepository()
-	useCase := NewUserUseCase(mockRepo)
+	selRepo := inmemory.NewInMemoryUserSelectionRepository()
+	useCase := NewUserUseCase(mockRepo, selRepo)
 
 	// Test case: Valid user creation
 	result, err := useCase.CreateOrUpdateUser(1, "testuser", "Test", "User", "en")
@@ -55,7 +58,8 @@ func TestUserUseCase_CreateOrUpdateUser(t *testing.T) {
 
 func TestUserUseCase_UpdateUserLanguage(t *testing.T) {
 	mockRepo := mocks.NewMockUserRepository()
-	useCase := NewUserUseCase(mockRepo)
+	selRepo := inmemory.NewInMemoryUserSelectionRepository()
+	useCase := NewUserUseCase(mockRepo, selRepo)
 
 	// Create a user first
 	user := entities.NewUser(1, "testuser", "Test", "User", "en")
@@ -77,12 +81,13 @@ func TestUserUseCase_UpdateUserLanguage(t *testing.T) {
 
 func TestUserUseCase_GetUserSelection(t *testing.T) {
 	mockRepo := mocks.NewMockUserRepository()
-	useCase := NewUserUseCase(mockRepo)
+	selRepo := inmemory.NewInMemoryUserSelectionRepository()
+	useCase := NewUserUseCase(mockRepo, selRepo)
 
 	// Test case: User selection exists
 	selection := entities.NewUserSelection()
 	selection.SetRecurrenceType(entities.Daily)
-	mockRepo.UserSelections[1] = selection
+	_ = selRepo.SetUserSelection(1, selection)
 
 	result, err := useCase.GetUserSelection(1)
 	assert.NoError(t, err)
@@ -103,7 +108,8 @@ func TestUserUseCase_GetUserSelection(t *testing.T) {
 
 func TestUserUseCase_UpdateUserSelection(t *testing.T) {
 	mockRepo := mocks.NewMockUserRepository()
-	useCase := NewUserUseCase(mockRepo)
+	selRepo := inmemory.NewInMemoryUserSelectionRepository()
+	useCase := NewUserUseCase(mockRepo, selRepo)
 
 	selection := entities.NewUserSelection()
 	selection.SetRecurrenceType(entities.Weekly)
@@ -123,12 +129,13 @@ func TestUserUseCase_UpdateUserSelection(t *testing.T) {
 
 func TestUserUseCase_ClearUserSelection(t *testing.T) {
 	mockRepo := mocks.NewMockUserRepository()
-	useCase := NewUserUseCase(mockRepo)
+	selRepo := inmemory.NewInMemoryUserSelectionRepository()
+	useCase := NewUserUseCase(mockRepo, selRepo)
 
 	// Create a user selection first
 	selection := entities.NewUserSelection()
 	selection.SetRecurrenceType(entities.Daily)
-	mockRepo.UserSelections[1] = selection
+	_ = selRepo.SetUserSelection(1, selection)
 
 	// Test case: Valid clear
 	err := useCase.ClearUserSelection(1)
