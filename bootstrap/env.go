@@ -3,16 +3,17 @@ package bootstrap
 import (
 	"log"
 
+	"github.com/ivanenkomaksym/remindme_bot/config"
 	"github.com/ivanenkomaksym/remindme_bot/domain/repositories"
 )
 
 type Env struct {
-	Config      *Config
+	Config      *config.Config
 	StorageType repositories.StorageType
 }
 
 func NewEnv() *Env {
-	config := LoadConfig()
+	config := config.LoadConfig()
 
 	env := &Env{
 		Config:      config,

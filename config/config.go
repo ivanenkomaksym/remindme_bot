@@ -1,4 +1,4 @@
-package bootstrap
+package config
 
 import (
 	"log"
@@ -41,9 +41,9 @@ type DatabaseConfig struct {
 
 // BotConfig holds bot-related configuration
 type BotConfig struct {
-	Token      string
-	Debug      bool
-	WebhookURL string
+	Token     string
+	Debug     bool
+	PublicURL string
 }
 
 // AppConfig holds application-related configuration
@@ -105,9 +105,9 @@ func (c *Config) setDefaults() {
 	}
 
 	c.Bot = BotConfig{
-		Token:      "",
-		Debug:      false,
-		WebhookURL: "",
+		Token:     "",
+		Debug:     false,
+		PublicURL: "",
 	}
 
 	c.App = AppConfig{
@@ -190,8 +190,8 @@ func (c *Config) loadBotConfig() {
 			c.Bot.Debug = d
 		}
 	}
-	if webhookURL := viper.GetString("WEBHOOK_URL"); webhookURL != "" {
-		c.Bot.WebhookURL = webhookURL
+	if publicURL := viper.GetString("PUBLIC_URL"); publicURL != "" {
+		c.Bot.PublicURL = publicURL
 	}
 }
 
@@ -216,8 +216,8 @@ func (c *Config) validate() {
 	if c.Bot.Token == "" {
 		log.Fatal("BOT_TOKEN is required")
 	}
-	if c.Bot.WebhookURL == "" {
-		log.Fatal("WEBHOOK_URL is required")
+	if c.Bot.PublicURL == "" {
+		log.Fatal("PUBLIC_URL is required")
 	}
 	if c.Server.Port == "" {
 		log.Fatal("Server port is required")

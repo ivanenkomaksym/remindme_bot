@@ -1,4 +1,4 @@
-package bootstrap
+package config
 
 import (
 	"testing"
@@ -19,7 +19,7 @@ func TestLoadConfig_WithDefaultsRequiresMandatoryEnv(t *testing.T) {
 
 	// Provide mandatory envs so validate() does not fatal
 	t.Setenv("BOT_TOKEN", "test-token")
-	t.Setenv("WEBHOOK_URL", "https://example.com/webhook")
+	t.Setenv("PUBLIC_URL", "https://example.com")
 	// PORT is taken from PORT env variable
 	t.Setenv("PORT", "8081")
 	t.Setenv("API_KEY", expectedApiKey)
@@ -52,7 +52,7 @@ func TestLoadConfig_OverridesDurations(t *testing.T) {
 
 	// Mandatory to pass validation
 	t.Setenv("BOT_TOKEN", "token")
-	t.Setenv("WEBHOOK_URL", "https://example.com/hook")
+	t.Setenv("PUBLIC_URL", "https://example.com")
 	t.Setenv("PORT", "9090")
 
 	// Duration overrides

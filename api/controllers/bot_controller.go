@@ -2,10 +2,13 @@ package controllers
 
 import (
 	"encoding/json"
+	"fmt"
 	"log"
 	"net/http"
 
+	"github.com/ivanenkomaksym/remindme_bot/config"
 	"github.com/ivanenkomaksym/remindme_bot/domain/usecases"
+	"github.com/ivanenkomaksym/remindme_bot/keyboards"
 
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 )
@@ -13,15 +16,19 @@ import (
 // BotController handles bot-related HTTP requests
 type BotController struct {
 	botUseCase  usecases.BotUseCase
+	userUsecase usecases.UserUseCase
 	dateUseCase usecases.DateUseCase
+	config      config.Config
 	bot         *tgbotapi.BotAPI
 }
 
 // NewBotController creates a new bot controller
-func NewBotController(botUseCase usecases.BotUseCase, dateUseCase usecases.DateUseCase, bot *tgbotapi.BotAPI) *BotController {
+func NewBotController(botUseCase usecases.BotUseCase, userUsecase usecases.UserUseCase, dateUseCase usecases.DateUseCase, config config.Config, bot *tgbotapi.BotAPI) *BotController {
 	return &BotController{
 		botUseCase:  botUseCase,
+		userUsecase: userUsecase,
 		dateUseCase: dateUseCase,
+		config:      config,
 		bot:         bot,
 	}
 }
@@ -94,7 +101,33 @@ func (c *BotController) processMessage(message *tgbotapi.Message) error {
 		"", // Text will be set later
 	)
 
-	response, err := c.botUseCase.ProcessUserInput(message)
+	user := message.From
+
+	// Create or get user
+	userEntity, err := c.userUsecase.GetOrCreateUser(
+		user.ID,
+		user.UserName,
+		user.FirstName,
+		user.LastName,
+		"",
+	)
+	if err != nil {
+		return err
+	}
+
+	var response *keyboards.SelectionResult
+
+	// Ask to set timezone if not set yet.
+	if userEntity.Timezone == "" {
+		url := fmt.Sprintf("%s/set-timezone?user_id=%d", c.config.Bot.PublicURL, user.ID)
+		response, err = c.botUseCase.ProcessTimezone(userEntity, url)
+		if err != nil {
+			log.Printf("Failed to process message: %v", err)
+			return err
+		}
+	}
+
+	response, err = c.botUseCase.ProcessUserInput(message)
 	if err != nil {
 		log.Printf("Failed to process message: %v", err)
 		return err

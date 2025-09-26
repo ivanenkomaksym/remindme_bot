@@ -1,6 +1,7 @@
 package bootstrap
 
 import (
+	"fmt"
 	"log"
 
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
@@ -14,7 +15,7 @@ func NewBot(env *Env) *tgbotapi.BotAPI {
 
 	bot.Debug = env.Config.Bot.Debug
 
-	wh, err := tgbotapi.NewWebhook(env.Config.Bot.WebhookURL)
+	wh, err := tgbotapi.NewWebhook(fmt.Sprintf("%s/telegram-webhook", env.Config.Bot.PublicURL))
 	if err != nil {
 		log.Fatalf("Failed to create webhook config: %v", err)
 	}

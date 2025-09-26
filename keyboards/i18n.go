@@ -37,9 +37,11 @@ type Strings struct {
 	// Date-related i18n
 	MsgSelectDate string
 	// Interval-related i18n
-	MsgIntervalPrompt string // e.g., "Every N days"
-	MsgEveryNDays     string // e.g., "Every %d days"
-	MsgParsingFailed  string
+	MsgIntervalPrompt          string // e.g., "Every N days"
+	MsgEveryNDays              string // e.g., "Every %d days"
+	MsgParsingFailed           string
+	MsgTimezoneAutoDetect      string
+	MsgTimezoneAutoDetectDescr string
 }
 
 var stringsByLang = map[string]Strings{
@@ -72,23 +74,25 @@ var stringsByLang = map[string]Strings{
 			"Drink some water",
 			"Stand up and stretch",
 			"Review your tasks"},
-		ReminderSet:         "Reminder Set",
-		Frequency:           "Frequency",
-		Days:                "Days",
-		NoneSelected:        "None selected",
-		Date:                "Date",
-		Time:                "Time",
-		Message:             "Message",
-		ReminderScheduled:   "Your reminder has been scheduled!",
-		At:                  "at",
-		WeekdayNames:        []string{"Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"},
-		MsgSelectWeekdays:   "Select weekdays:",
-		MsgSelectTimeWeekly: "Select time for weekly reminders:",
-		BtnSelect:           "Select",
-		MsgSelectDate:       "Select a date:",
-		MsgIntervalPrompt:   "Every N days",
-		MsgEveryNDays:       "Every %d days",
-		MsgParsingFailed:    "I didn't understand that. Please use the menu buttons.",
+		ReminderSet:                "Reminder Set",
+		Frequency:                  "Frequency",
+		Days:                       "Days",
+		NoneSelected:               "None selected",
+		Date:                       "Date",
+		Time:                       "Time",
+		Message:                    "Message",
+		ReminderScheduled:          "Your reminder has been scheduled!",
+		At:                         "at",
+		WeekdayNames:               []string{"Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"},
+		MsgSelectWeekdays:          "Select weekdays:",
+		MsgSelectTimeWeekly:        "Select time for weekly reminders:",
+		BtnSelect:                  "Select",
+		MsgSelectDate:              "Select a date:",
+		MsgIntervalPrompt:          "Every N days",
+		MsgEveryNDays:              "Every %d days",
+		MsgParsingFailed:           "I didn't understand that. Please use the menu buttons.",
+		MsgTimezoneAutoDetect:      "🌍 Set Timezone Automatically",
+		MsgTimezoneAutoDetectDescr: "Click the button to detect your timezone.",
 	},
 	LangUK: {
 		Welcome: "Ласкаво просимо до бота-нагадувача!",
@@ -119,23 +123,25 @@ var stringsByLang = map[string]Strings{
 			"Випийте трохи води",
 			"Встаньте і розімніться",
 			"Перегляньте свої завдання"},
-		ReminderSet:         "Нагадування встановлено",
-		Frequency:           "Частота",
-		Days:                "Дні",
-		NoneSelected:        "Нічого не вибрано",
-		Date:                "Дата",
-		Time:                "Час",
-		Message:             "Повідомлення",
-		ReminderScheduled:   "Ваше нагадування заплановано!",
-		At:                  "в",
-		WeekdayNames:        []string{"Понеділок", "Вівторок", "Середа", "Четвер", "П’ятниця", "Субота", "Неділя"},
-		MsgSelectWeekdays:   "Оберіть дні тижня:",
-		MsgSelectTimeWeekly: "Оберіть час для щотижневих нагадувань:",
-		BtnSelect:           "Обрати",
-		MsgSelectDate:       "Оберіть дату:",
-		MsgIntervalPrompt:   "Кожні N днів",
-		MsgEveryNDays:       "Кожні %d днів",
-		MsgParsingFailed:    "Я не зрозумів. Будь ласка, скористайтеся кнопками меню.",
+		ReminderSet:                "Нагадування встановлено",
+		Frequency:                  "Частота",
+		Days:                       "Дні",
+		NoneSelected:               "Нічого не вибрано",
+		Date:                       "Дата",
+		Time:                       "Час",
+		Message:                    "Повідомлення",
+		ReminderScheduled:          "Ваше нагадування заплановано!",
+		At:                         "в",
+		WeekdayNames:               []string{"Понеділок", "Вівторок", "Середа", "Четвер", "П’ятниця", "Субота", "Неділя"},
+		MsgSelectWeekdays:          "Оберіть дні тижня:",
+		MsgSelectTimeWeekly:        "Оберіть час для щотижневих нагадувань:",
+		BtnSelect:                  "Обрати",
+		MsgSelectDate:              "Оберіть дату:",
+		MsgIntervalPrompt:          "Кожні N днів",
+		MsgEveryNDays:              "Кожні %d днів",
+		MsgParsingFailed:           "Я не зрозумів. Будь ласка, скористайтеся кнопками меню.",
+		MsgTimezoneAutoDetect:      "🌍 Автоматично встановити часовий пояс",
+		MsgTimezoneAutoDetectDescr: "Натисніть кнопку, щоб визначити свій часовий пояс.",
 	},
 }
 

@@ -13,6 +13,7 @@ import (
 type userUseCaseMock struct {
 	usecases.UserUseCase
 	getUserFn            func(userID int64) (*entities.User, error)
+	getOrCreateUserFn    func(userID int64, userName, firstName, lastName, language string) (*entities.User, error)
 	updateUserLanguageFn func(userID int64, language string) error
 	getUserSelectionFn   func(userID int64) (*entities.UserSelection, error)
 	clearUserSelectionFn func(userID int64) error
@@ -24,6 +25,14 @@ func (m *userUseCaseMock) GetUser(userID int64) (*entities.User, error) {
 	}
 	return &entities.User{ID: userID}, nil
 }
+
+func (m *userUseCaseMock) GetOrCreateUser(userID int64, userName, firstName, lastName, language string) (*entities.User, error) {
+	if m.getOrCreateUserFn != nil {
+		return m.getOrCreateUserFn(userID, userName, firstName, lastName, language)
+	}
+	return &entities.User{ID: userID}, nil
+}
+
 func (m *userUseCaseMock) UpdateUserLanguage(userID int64, language string) error {
 	if m.updateUserLanguageFn != nil {
 		return m.updateUserLanguageFn(userID, language)

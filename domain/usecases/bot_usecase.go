@@ -17,6 +17,7 @@ type BotUseCase interface {
 	HandleTextMessage(user *tgbotapi.User, text string) (*keyboards.SelectionResult, error)
 	ProcessKeyboardSelection(callbackQuery *tgbotapi.CallbackQuery) (*keyboards.SelectionResult, error)
 	ProcessUserInput(message *tgbotapi.Message) (*keyboards.SelectionResult, error)
+	ProcessTimezone(user *entities.User, url string) (*keyboards.SelectionResult, error)
 }
 
 type botUseCase struct {
@@ -38,7 +39,7 @@ func NewBotUseCase(userUseCase UserUseCase, reminderUseCase ReminderUseCase, dat
 
 func (b *botUseCase) HandleStartCommand(user *tgbotapi.User) (*keyboards.SelectionResult, error) {
 	// Create or get user
-	userEntity, err := b.userUseCase.CreateOrUpdateUser(
+	userEntity, err := b.userUseCase.GetOrCreateUser(
 		user.ID,
 		user.UserName,
 		user.FirstName,
@@ -174,6 +175,10 @@ func (b *botUseCase) ProcessUserInput(message *tgbotapi.Message) (*keyboards.Sel
 	}
 
 	return &keyboards.SelectionResult{Text: "", Markup: nil}, nil
+}
+
+func (b *botUseCase) ProcessTimezone(user *entities.User, url string) (*keyboards.SelectionResult, error) {
+	return keyboards.HandleTimezoneSelection(user, url)
 }
 
 // Helper methods
