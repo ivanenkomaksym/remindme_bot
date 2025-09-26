@@ -2,6 +2,7 @@ package inmemory
 
 import (
 	"sync"
+	"time"
 
 	"github.com/ivanenkomaksym/remindme_bot/domain/entities"
 	"github.com/ivanenkomaksym/remindme_bot/domain/repositories"
@@ -46,7 +47,7 @@ func (r *InMemoryUserRepository) GetUser(userID int64) (*entities.User, error) {
 	return &userCopy, nil
 }
 
-func (r *InMemoryUserRepository) CreateOrUpdateUser(userID int64, userName, firstName, lastName, language string) (*entities.User, error) {
+func (r *InMemoryUserRepository) GetOrCreateUser(userID int64, userName, firstName, lastName, language string) (*entities.User, error) {
 	r.mu.Lock()
 	defer r.mu.Unlock()
 
@@ -68,6 +69,20 @@ func (r *InMemoryUserRepository) UpdateUserLanguage(userID int64, language strin
 	}
 
 	user.UpdateLanguage(language)
+	return nil
+}
+
+func (r *InMemoryUserRepository) UpdateUserTimezone(userID int64, timezone string) error {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+
+	user, exists := r.users[userID]
+	if !exists {
+		return nil
+	}
+
+	user.Timezone = timezone
+	user.UpdatedAt = time.Now()
 	return nil
 }
 

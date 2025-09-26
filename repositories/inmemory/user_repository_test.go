@@ -7,11 +7,11 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestInMemoryUserRepository_CreateOrUpdateUser(t *testing.T) {
+func TestInMemoryUserRepository_GetOrCreateUser(t *testing.T) {
 	repo := NewInMemoryUserRepository()
 
 	// Test case: Create new user
-	user, err := repo.CreateOrUpdateUser(1, "testuser", "Test", "User", "en")
+	user, err := repo.GetOrCreateUser(1, "testuser", "Test", "User", "en")
 	assert.NoError(t, err)
 	assert.NotNil(t, user)
 	assert.Equal(t, int64(1), user.ID)
@@ -21,7 +21,7 @@ func TestInMemoryUserRepository_CreateOrUpdateUser(t *testing.T) {
 	assert.Equal(t, "en", user.Language)
 
 	// Test case: Update existing user
-	user, err = repo.CreateOrUpdateUser(1, "updateduser", "Updated", "User", "es")
+	user, err = repo.GetOrCreateUser(1, "updateduser", "Updated", "User", "es")
 	assert.NoError(t, err)
 	assert.NotNil(t, user)
 	assert.Equal(t, "updateduser", user.UserName)
@@ -38,7 +38,7 @@ func TestInMemoryUserRepository_GetUser(t *testing.T) {
 	assert.Nil(t, user)
 
 	// Create a user
-	_, err = repo.CreateOrUpdateUser(1, "testuser", "Test", "User", "en")
+	_, err = repo.GetOrCreateUser(1, "testuser", "Test", "User", "en")
 	assert.NoError(t, err)
 
 	// Test case: User exists
@@ -53,7 +53,7 @@ func TestInMemoryUserRepository_UpdateUserLanguage(t *testing.T) {
 	repo := NewInMemoryUserRepository()
 
 	// Create a user
-	_, err := repo.CreateOrUpdateUser(1, "testuser", "Test", "User", "en")
+	_, err := repo.GetOrCreateUser(1, "testuser", "Test", "User", "en")
 	assert.NoError(t, err)
 
 	// Test case: Update language

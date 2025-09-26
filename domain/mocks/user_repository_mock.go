@@ -10,8 +10,9 @@ type MockUserRepository struct {
 	UserSelections          map[int64]*entities.UserSelection
 	GetUsersFunc            func() ([]*entities.User, error)
 	GetUserFunc             func(userID int64) (*entities.User, error)
-	CreateOrUpdateUserFunc  func(userID int64, userName, firstName, lastName, language string) (*entities.User, error)
+	GetOrCreateUserFunc     func(userID int64, userName, firstName, lastName, language string) (*entities.User, error)
 	UpdateUserLanguageFunc  func(userID int64, language string) error
+	UpdateUserTimezoneFunc  func(userID int64, timezone string) error
 	GetUserSelectionFunc    func(userID int64) (*entities.UserSelection, error)
 	UpdateUserSelectionFunc func(userID int64, selection *entities.UserSelection) error
 	ClearUserSelectionFunc  func(userID int64) error
@@ -46,9 +47,9 @@ func (m *MockUserRepository) GetUser(userID int64) (*entities.User, error) {
 	return &userCopy, nil
 }
 
-func (m *MockUserRepository) CreateOrUpdateUser(userID int64, userName, firstName, lastName, language string) (*entities.User, error) {
-	if m.CreateOrUpdateUserFunc != nil {
-		return m.CreateOrUpdateUserFunc(userID, userName, firstName, lastName, language)
+func (m *MockUserRepository) GetOrCreateUser(userID int64, userName, firstName, lastName, language string) (*entities.User, error) {
+	if m.GetOrCreateUserFunc != nil {
+		return m.GetOrCreateUserFunc(userID, userName, firstName, lastName, language)
 	}
 	user := entities.NewUser(userID, userName, firstName, lastName, language)
 	m.Users[userID] = user
@@ -62,6 +63,16 @@ func (m *MockUserRepository) UpdateUserLanguage(userID int64, language string) e
 	}
 	if user, exists := m.Users[userID]; exists {
 		user.UpdateLanguage(language)
+	}
+	return nil
+}
+
+func (m *MockUserRepository) UpdateUserTimezone(userID int64, timezone string) error {
+	if m.UpdateUserTimezoneFunc != nil {
+		return m.UpdateUserTimezoneFunc(userID, timezone)
+	}
+	if user, exists := m.Users[userID]; exists {
+		user.UpdateTimezone(timezone)
 	}
 	return nil
 }
@@ -122,8 +133,8 @@ func (m *MockUserRepository) GetUserWithSelection(userID int64) (*entities.User,
 	return user, selection, nil
 }
 
-func (m *MockUserRepository) CreateOrUpdateUserWithSelection(userID int64, userName, firstName, lastName, language string) (*entities.User, *entities.UserSelection, error) {
-	user, err := m.CreateOrUpdateUser(userID, userName, firstName, lastName, language)
+func (m *MockUserRepository) GetOrCreateUserWithSelection(userID int64, userName, firstName, lastName, language string) (*entities.User, *entities.UserSelection, error) {
+	user, err := m.GetOrCreateUser(userID, userName, firstName, lastName, language)
 	if err != nil {
 		return nil, nil, err
 	}

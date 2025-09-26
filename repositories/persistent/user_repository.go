@@ -63,22 +63,21 @@ func (r *MongoUserRepository) GetUser(userID int64) (*entities.User, error) {
 	return &u, nil
 }
 
-func (r *MongoUserRepository) CreateOrUpdateUser(userID int64, userName, firstName, lastName, language string) (*entities.User, error) {
+func (r *MongoUserRepository) GetOrCreateUser(userID int64, userName, firstName, lastName, language string) (*entities.User, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 	now := time.Now()
-	u := entities.User{ID: userID, UserName: userName, FirstName: firstName, LastName: lastName, Language: language, UpdatedAt: now}
-	// Try update
-	res, err := r.usersCol.UpdateOne(ctx, map[string]any{"id": userID}, map[string]any{"$set": u})
-	if err != nil {
-		return nil, err
-	}
-	if res.MatchedCount == 0 {
-		u.CreatedAt = now
+
+	var u entities.User
+	err := r.usersCol.FindOne(ctx, map[string]any{"id": userID}).Decode(&u)
+	if err == mongo.ErrNoDocuments {
+		u := entities.User{ID: userID, UserName: userName, FirstName: firstName, LastName: lastName, Language: language, CreatedAt: now}
 		if _, err := r.usersCol.InsertOne(ctx, &u); err != nil {
 			return nil, err
 		}
+		return &u, nil
 	}
+
 	return &u, nil
 }
 
@@ -93,5 +92,12 @@ func (r *MongoUserRepository) UpdateUserInfo(userID int64, userName, firstName, 
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 	_, err := r.usersCol.UpdateOne(ctx, map[string]any{"id": userID}, map[string]any{"$set": map[string]any{"userName": userName, "firstName": firstName, "lastName": lastName, "updatedAt": time.Now()}})
+	return err
+}
+
+func (r *MongoUserRepository) UpdateUserTimezone(userID int64, timezone string) error {
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+	_, err := r.usersCol.UpdateOne(ctx, map[string]any{"id": userID}, map[string]any{"$set": map[string]any{"timezone": timezone, "updatedAt": time.Now()}})
 	return err
 }

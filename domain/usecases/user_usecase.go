@@ -10,8 +10,9 @@ import (
 type UserUseCase interface {
 	GetUsers() ([]*entities.User, error)
 	GetUser(userID int64) (*entities.User, error)
-	CreateOrUpdateUser(userID int64, userName, firstName, lastName, language string) (*entities.User, error)
+	GetOrCreateUser(userID int64, userName, firstName, lastName, language string) (*entities.User, error)
 	UpdateUserLanguage(userID int64, language string) error
+	UpdateUserTimezone(userID int64, timezone string) error
 	GetUserSelection(userID int64) (*entities.UserSelection, error)
 	UpdateUserSelection(userID int64, selection *entities.UserSelection) error
 	ClearUserSelection(userID int64) error
@@ -45,7 +46,7 @@ func (u *userUseCase) GetUser(userID int64) (*entities.User, error) {
 	return user, nil
 }
 
-func (u *userUseCase) CreateOrUpdateUser(userID int64, userName, firstName, lastName, language string) (*entities.User, error) {
+func (u *userUseCase) GetOrCreateUser(userID int64, userName, firstName, lastName, language string) (*entities.User, error) {
 	if userID <= 0 {
 		return nil, errors.NewDomainError("INVALID_USER_ID", "User ID must be positive", nil)
 	}
@@ -53,7 +54,7 @@ func (u *userUseCase) CreateOrUpdateUser(userID int64, userName, firstName, last
 		return nil, errors.NewDomainError("INVALID_USER_DATA", "At least one name field must be provided", nil)
 	}
 
-	user, err := u.userRepo.CreateOrUpdateUser(userID, userName, firstName, lastName, language)
+	user, err := u.userRepo.GetOrCreateUser(userID, userName, firstName, lastName, language)
 	if err != nil {
 		return nil, err
 	}
@@ -69,6 +70,16 @@ func (u *userUseCase) UpdateUserLanguage(userID int64, language string) error {
 	}
 
 	return u.userRepo.UpdateUserLanguage(userID, language)
+}
+
+func (u *userUseCase) UpdateUserTimezone(userID int64, timezone string) error {
+	if userID <= 0 {
+		return errors.NewDomainError("INVALID_USER_ID", "User ID must be positive", nil)
+	}
+	if timezone == "" {
+		return errors.NewDomainError("INVALID_TIMEZONE", "Timezone cannot be empty", nil)
+	}
+	return u.userRepo.UpdateUserTimezone(userID, timezone)
 }
 
 func (u *userUseCase) GetUserSelection(userID int64) (*entities.UserSelection, error) {

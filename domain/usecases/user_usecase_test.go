@@ -30,13 +30,13 @@ func TestUserUseCase_GetUser(t *testing.T) {
 	assert.Nil(t, result)
 }
 
-func TestUserUseCase_CreateOrUpdateUser(t *testing.T) {
+func TestUserUseCase_GetOrCreateUser(t *testing.T) {
 	mockRepo := mocks.NewMockUserRepository()
 	selRepo := inmemory.NewInMemoryUserSelectionRepository()
 	useCase := NewUserUseCase(mockRepo, selRepo)
 
 	// Test case: Valid user creation
-	result, err := useCase.CreateOrUpdateUser(1, "testuser", "Test", "User", "en")
+	result, err := useCase.GetOrCreateUser(1, "testuser", "Test", "User", "en")
 	assert.NoError(t, err)
 	assert.NotNil(t, result)
 	assert.Equal(t, int64(1), result.ID)
@@ -46,12 +46,12 @@ func TestUserUseCase_CreateOrUpdateUser(t *testing.T) {
 	assert.Equal(t, "en", result.Language)
 
 	// Test case: Invalid user ID
-	result, err = useCase.CreateOrUpdateUser(0, "testuser", "Test", "User", "en")
+	result, err = useCase.GetOrCreateUser(0, "testuser", "Test", "User", "en")
 	assert.Error(t, err)
 	assert.Nil(t, result)
 
 	// Test case: Empty names
-	result, err = useCase.CreateOrUpdateUser(1, "", "", "", "en")
+	result, err = useCase.GetOrCreateUser(1, "", "", "", "en")
 	assert.Error(t, err)
 	assert.Nil(t, result)
 }

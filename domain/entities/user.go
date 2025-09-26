@@ -9,6 +9,7 @@ type User struct {
 	FirstName string    `json:"firstName" bson:"firstName"`
 	LastName  string    `json:"lastName" bson:"lastName"`
 	Language  string    `json:"language" bson:"language"`
+	Timezone  string    `json:"timezone" bson:"timezone"`
 	CreatedAt time.Time `json:"createdAt" bson:"createdAt"`
 	UpdatedAt time.Time `json:"updatedAt" bson:"updatedAt"`
 }
@@ -22,14 +23,19 @@ func NewUser(id int64, userName, firstName, lastName, language string) *User {
 		FirstName: firstName,
 		LastName:  lastName,
 		Language:  language,
+		Timezone:  time.Now().Location().String(),
 		CreatedAt: now,
 		UpdatedAt: now,
 	}
 }
 
-// UpdateLanguage updates the user's language
 func (u *User) UpdateLanguage(language string) {
 	u.Language = language
+	u.UpdatedAt = time.Now()
+}
+
+func (u *User) UpdateTimezone(timezone string) {
+	u.Timezone = timezone
 	u.UpdatedAt = time.Now()
 }
 

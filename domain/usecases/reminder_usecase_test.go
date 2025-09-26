@@ -19,7 +19,7 @@ func TestCreateReminder_ValidOnce(t *testing.T) {
 	uc := newReminderUC()
 	// seed user
 	userRepo := inmemory.NewInMemoryUserRepository()
-	userRepo.CreateOrUpdateUser(1, "u", "f", "l", "en")
+	userRepo.GetOrCreateUser(1, "u", "f", "l", "en")
 
 	// Build a new UC that shares the same user repo as above
 	remRepo := inmemory.NewInMemoryReminderRepository()
@@ -47,7 +47,7 @@ func TestCreateReminder_ValidDaily(t *testing.T) {
 	uc := newReminderUC()
 	// seed user
 	userRepo := inmemory.NewInMemoryUserRepository()
-	userRepo.CreateOrUpdateUser(1, "u", "f", "l", "en")
+	userRepo.GetOrCreateUser(1, "u", "f", "l", "en")
 
 	// Build a new UC that shares the same user repo as above
 	remRepo := inmemory.NewInMemoryReminderRepository()
