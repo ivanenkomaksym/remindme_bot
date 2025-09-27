@@ -95,9 +95,9 @@ func (r *MongoUserRepository) UpdateUserInfo(userID int64, userName, firstName, 
 	return err
 }
 
-func (r *MongoUserRepository) UpdateUserTimezone(userID int64, timezone string) error {
+func (r *MongoUserRepository) UpdateLocation(userID int64, location string) error {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
-	_, err := r.usersCol.UpdateOne(ctx, map[string]any{"id": userID}, map[string]any{"$set": map[string]any{"timezone": timezone, "updatedAt": time.Now()}})
+	_, err := r.usersCol.UpdateOne(ctx, map[string]any{"id": userID}, map[string]any{"$set": map[string]any{"location": location, "updatedAt": time.Now()}})
 	return err
 }

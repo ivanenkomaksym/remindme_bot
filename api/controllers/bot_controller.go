@@ -118,7 +118,7 @@ func (c *BotController) processMessage(message *tgbotapi.Message) error {
 	var response *keyboards.SelectionResult
 
 	// Ask to set timezone if not set yet.
-	if userEntity.Location == nil {
+	if userEntity.GetLocation() == nil {
 		url := fmt.Sprintf("%s/set-timezone?user_id=%d", c.config.Bot.PublicURL, user.ID)
 		response, err = c.botUseCase.ProcessTimezone(userEntity, url)
 		if err != nil {

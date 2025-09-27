@@ -12,7 +12,7 @@ type UserUseCase interface {
 	GetUser(userID int64) (*entities.User, error)
 	GetOrCreateUser(userID int64, userName, firstName, lastName, language string) (*entities.User, error)
 	UpdateUserLanguage(userID int64, language string) error
-	UpdateUserTimezone(userID int64, timezone string) error
+	UpdateLocation(userID int64, location string) error
 	GetUserSelection(userID int64) (*entities.UserSelection, error)
 	UpdateUserSelection(userID int64, selection *entities.UserSelection) error
 	ClearUserSelection(userID int64) error
@@ -72,14 +72,14 @@ func (u *userUseCase) UpdateUserLanguage(userID int64, language string) error {
 	return u.userRepo.UpdateUserLanguage(userID, language)
 }
 
-func (u *userUseCase) UpdateUserTimezone(userID int64, timezone string) error {
+func (u *userUseCase) UpdateLocation(userID int64, location string) error {
 	if userID <= 0 {
 		return errors.NewDomainError("INVALID_USER_ID", "User ID must be positive", nil)
 	}
-	if timezone == "" {
-		return errors.NewDomainError("INVALID_TIMEZONE", "Timezone cannot be empty", nil)
+	if location == "" {
+		return errors.NewDomainError("INVALID_LOCATION", "Location cannot be empty", nil)
 	}
-	return u.userRepo.UpdateUserTimezone(userID, timezone)
+	return u.userRepo.UpdateLocation(userID, location)
 }
 
 func (u *userUseCase) GetUserSelection(userID int64) (*entities.UserSelection, error) {

@@ -106,7 +106,7 @@ func (c *TimezoneController) Callback(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	_ = c.userUseCase.UpdateUserTimezone(userID, timezone)
+	_ = c.userUseCase.UpdateLocation(userID, timezone)
 
 	// Redirect to bot; optional start parameter to return user to chat
 	botUser := c.bot.Self.UserName

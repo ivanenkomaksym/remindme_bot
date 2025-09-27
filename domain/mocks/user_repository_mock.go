@@ -1,6 +1,8 @@
 package mocks
 
 import (
+	"time"
+
 	"github.com/ivanenkomaksym/remindme_bot/domain/entities"
 )
 
@@ -12,7 +14,7 @@ type MockUserRepository struct {
 	GetUserFunc             func(userID int64) (*entities.User, error)
 	GetOrCreateUserFunc     func(userID int64, userName, firstName, lastName, language string) (*entities.User, error)
 	UpdateUserLanguageFunc  func(userID int64, language string) error
-	UpdateUserTimezoneFunc  func(userID int64, timezone string) error
+	UpdateLocationFunc      func(userID int64, location string) error
 	GetUserSelectionFunc    func(userID int64) (*entities.UserSelection, error)
 	UpdateUserSelectionFunc func(userID int64, selection *entities.UserSelection) error
 	ClearUserSelectionFunc  func(userID int64) error
@@ -67,12 +69,13 @@ func (m *MockUserRepository) UpdateUserLanguage(userID int64, language string) e
 	return nil
 }
 
-func (m *MockUserRepository) UpdateUserTimezone(userID int64, timezone string) error {
-	if m.UpdateUserTimezoneFunc != nil {
-		return m.UpdateUserTimezoneFunc(userID, timezone)
+func (m *MockUserRepository) UpdateLocation(userID int64, location string) error {
+	if m.UpdateLocationFunc != nil {
+		return m.UpdateLocationFunc(userID, location)
 	}
+	loc, _ := time.LoadLocation(location)
 	if user, exists := m.Users[userID]; exists {
-		user.UpdateTimezone(timezone)
+		user.SetLocation(loc)
 	}
 	return nil
 }

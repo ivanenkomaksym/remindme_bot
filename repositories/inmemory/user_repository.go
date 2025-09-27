@@ -72,7 +72,7 @@ func (r *InMemoryUserRepository) UpdateUserLanguage(userID int64, language strin
 	return nil
 }
 
-func (r *InMemoryUserRepository) UpdateUserTimezone(userID int64, timezone string) error {
+func (r *InMemoryUserRepository) UpdateLocation(userID int64, timezone string) error {
 	r.mu.Lock()
 	defer r.mu.Unlock()
 
@@ -85,7 +85,7 @@ func (r *InMemoryUserRepository) UpdateUserTimezone(userID int64, timezone strin
 	if err != nil {
 		return nil
 	}
-	user.Location = location
+	user.SetLocation(location)
 	user.UpdatedAt = time.Now()
 	return nil
 }

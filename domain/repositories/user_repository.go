@@ -9,7 +9,7 @@ type UserRepository interface {
 	GetUser(userID int64) (*entities.User, error)
 	GetOrCreateUser(userID int64, userName, firstName, lastName, language string) (*entities.User, error)
 	UpdateUserLanguage(userID int64, language string) error
-	UpdateUserTimezone(userID int64, timezone string) error
+	UpdateLocation(userID int64, location string) error
 	UpdateUserInfo(userID int64, userName, firstName, lastName string) error
 }
 

@@ -27,7 +27,7 @@ func (r *InMemoryReminderRepository) CreateOnceReminder(date time.Time, timeStr 
 	r.mu.Lock()
 	defer r.mu.Unlock()
 
-	recurrence := entities.OnceAt(date, timeStr, user.Location)
+	recurrence := entities.OnceAt(date, timeStr, user.GetLocation())
 	nextTrigger := *recurrence.StartDate
 	reminder := entities.NewReminder(r.nextID, user.ID, message, recurrence, &nextTrigger)
 	r.nextID++
@@ -41,9 +41,9 @@ func (r *InMemoryReminderRepository) CreateDailyReminder(timeStr string, user *e
 	defer r.mu.Unlock()
 
 	now := time.Now()
-	next := scheduler.NextDailyTrigger(now, timeStr, user.Location)
+	next := scheduler.NextDailyTrigger(now, timeStr, user.GetLocation())
 
-	recurrence := entities.DailyAt(timeStr, user.Location)
+	recurrence := entities.DailyAt(timeStr, user.GetLocation())
 	reminder := entities.NewReminder(r.nextID, user.ID, message, recurrence, &next)
 	r.nextID++
 	r.reminders = append(r.reminders, *reminder)
@@ -56,9 +56,9 @@ func (r *InMemoryReminderRepository) CreateWeeklyReminder(daysOfWeek []time.Week
 	defer r.mu.Unlock()
 
 	now := time.Now()
-	next := scheduler.NextWeeklyTrigger(now, daysOfWeek, timeStr, user.Location)
+	next := scheduler.NextWeeklyTrigger(now, daysOfWeek, timeStr, user.GetLocation())
 	// TODO: calculate next during creation of the reminder
-	recurrence := entities.CustomWeekly(daysOfWeek, timeStr, user.Location)
+	recurrence := entities.CustomWeekly(daysOfWeek, timeStr, user.GetLocation())
 	reminder := entities.NewReminder(r.nextID, user.ID, message, recurrence, &next)
 	r.nextID++
 	r.reminders = append(r.reminders, *reminder)
@@ -71,9 +71,9 @@ func (r *InMemoryReminderRepository) CreateMonthlyReminder(daysOfMonth []int, ti
 	defer r.mu.Unlock()
 
 	now := time.Now()
-	next := scheduler.NextMonthlyTrigger(now, daysOfMonth, timeStr, user.Location)
+	next := scheduler.NextMonthlyTrigger(now, daysOfMonth, timeStr, user.GetLocation())
 
-	recurrence := entities.MonthlyOnDay(daysOfMonth, timeStr, user.Location)
+	recurrence := entities.MonthlyOnDay(daysOfMonth, timeStr, user.GetLocation())
 	reminder := entities.NewReminder(r.nextID, user.ID, message, recurrence, &next)
 	r.nextID++
 	r.reminders = append(r.reminders, *reminder)
@@ -87,10 +87,10 @@ func (r *InMemoryReminderRepository) CreateIntervalReminder(intervalDays int, ti
 
 	now := time.Now()
 	// Next trigger is N days from now at specified time
-	base := scheduler.NextDailyTrigger(now, timeStr, user.Location)
+	base := scheduler.NextDailyTrigger(now, timeStr, user.GetLocation())
 	next := base.Add(time.Duration(intervalDays-1) * 24 * time.Hour)
 
-	recurrence := entities.IntervalEveryDays(intervalDays, timeStr, user.Location)
+	recurrence := entities.IntervalEveryDays(intervalDays, timeStr, user.GetLocation())
 	reminder := entities.NewReminder(r.nextID, user.ID, message, recurrence, &next)
 	r.nextID++
 	r.reminders = append(r.reminders, *reminder)
