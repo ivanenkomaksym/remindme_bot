@@ -24,6 +24,10 @@ func Setup(app *bootstrap.Application) {
 	// Define the webhook endpoint that Telegram will send updates to
 	mux.HandleFunc("/telegram-webhook", app.Container.BotController.HandleWebhook)
 
+	// Public endpoints for timezone capture
+	mux.HandleFunc("/set-timezone", app.Container.TimezoneController.ServePage)
+	mux.HandleFunc("/set-timezone/callback", app.Container.TimezoneController.Callback)
+
 	// API endpoints
 	mux.HandleFunc("/api/users", app.Container.UserController.GetUsers)
 	mux.HandleFunc("/api/users/{user_id}", app.Container.UserController.GetUser)

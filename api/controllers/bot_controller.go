@@ -125,6 +125,8 @@ func (c *BotController) processMessage(message *tgbotapi.Message) error {
 			log.Printf("Failed to process message: %v", err)
 			return err
 		}
+
+		return c.processResponse(msg, response)
 	}
 
 	response, err = c.botUseCase.ProcessUserInput(message)
@@ -133,13 +135,15 @@ func (c *BotController) processMessage(message *tgbotapi.Message) error {
 		return err
 	}
 
-	if response != nil {
-		log.Printf("Message response: %+v", response)
-		msg.Text = response.Text
-		msg.ReplyMarkup = response.Markup
-		msg.ParseMode = "HTML"
-		c.bot.Send(msg)
-	}
+	return c.processResponse(msg, response)
+}
+
+func (c *BotController) processResponse(msg tgbotapi.MessageConfig, response *keyboards.SelectionResult) error {
+	log.Printf("Message response: %+v", response)
+	msg.Text = response.Text
+	msg.ReplyMarkup = response.Markup
+	msg.ParseMode = "HTML"
+	c.bot.Send(msg)
 
 	return nil
 }

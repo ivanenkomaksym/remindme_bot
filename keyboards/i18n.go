@@ -42,6 +42,7 @@ type Strings struct {
 	MsgParsingFailed           string
 	MsgTimezoneAutoDetect      string
 	MsgTimezoneAutoDetectDescr string
+	MsgTimezoneSet             string
 }
 
 var stringsByLang = map[string]Strings{
@@ -93,6 +94,7 @@ var stringsByLang = map[string]Strings{
 		MsgParsingFailed:           "I didn't understand that. Please use the menu buttons.",
 		MsgTimezoneAutoDetect:      "🌍 Set Timezone Automatically",
 		MsgTimezoneAutoDetectDescr: "Click the button to detect your timezone.",
+		MsgTimezoneSet:             "✅ Your timezone is set to",
 	},
 	LangUK: {
 		Welcome: "Ласкаво просимо до бота-нагадувача!",
@@ -142,6 +144,7 @@ var stringsByLang = map[string]Strings{
 		MsgParsingFailed:           "Я не зрозумів. Будь ласка, скористайтеся кнопками меню.",
 		MsgTimezoneAutoDetect:      "🌍 Автоматично встановити часовий пояс",
 		MsgTimezoneAutoDetectDescr: "Натисніть кнопку, щоб визначити свій часовий пояс.",
+		MsgTimezoneSet:             "✅ Часовий пояс встановлено на",
 	},
 }
 
