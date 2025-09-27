@@ -87,7 +87,10 @@ func TestHandleWebhook_ValidUpdate(t *testing.T) {
 	body, _ := json.Marshal(update)
 
 	// Return nil selection to avoid calling Send on real bot
-	mockUC := &botUseCaseMock{processUserInputFn: func(msg *tgbotapi.Message) (*keyboards.SelectionResult, error) { return nil, nil }}
+	mockUC := &botUseCaseMock{processUserInputFn: func(msg *tgbotapi.Message) (*keyboards.SelectionResult, error) { return nil, nil },
+		ProcessTimezoneFn: func(user *entities.User, url string) (*keyboards.SelectionResult, error) {
+			return &keyboards.SelectionResult{}, nil
+		}}
 	ctrl := NewBotController(mockUC, &userUseCaseMock{}, &dateUseCaseMock{}, config.Config{}, &tgbotapi.BotAPI{})
 	req := httptest.NewRequest(http.MethodPost, "/webhook", bytes.NewReader(body))
 	rw := httptest.NewRecorder()

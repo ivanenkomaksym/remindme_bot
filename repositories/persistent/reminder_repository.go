@@ -32,37 +32,38 @@ func NewMongoReminderRepository(connectionString string, database string) (repos
 }
 
 func (r *MongoReminderRepository) CreateOnceReminder(date time.Time, timeStr string, user *entities.User, message string) (*entities.Reminder, error) {
-	nextTrigger := *entities.OnceAt(date, timeStr).StartDate
-	rem := entities.NewReminder(0, user.ID, message, entities.OnceAt(date, timeStr), &nextTrigger)
+	recurrence := entities.OnceAt(date, timeStr, user.Location)
+	rem := entities.NewReminder(0, user.ID, message, recurrence, recurrence.StartDate)
 	return r.insertAndReturn(rem)
 }
 
 func (r *MongoReminderRepository) CreateDailyReminder(timeStr string, user *entities.User, message string) (*entities.Reminder, error) {
 	now := time.Now()
-	next := scheduler.NextDailyTrigger(now, timeStr)
-	rem := entities.NewReminder(0, user.ID, message, entities.DailyAt(timeStr), &next)
+	recurrence := entities.DailyAt(timeStr, user.Location)
+	next := scheduler.NextDailyTrigger(now, timeStr, user.Location)
+	rem := entities.NewReminder(0, user.ID, message, recurrence, &next)
 	return r.insertAndReturn(rem)
 }
 
 func (r *MongoReminderRepository) CreateWeeklyReminder(daysOfWeek []time.Weekday, timeStr string, user *entities.User, message string) (*entities.Reminder, error) {
 	now := time.Now()
-	next := scheduler.NextWeeklyTrigger(now, daysOfWeek, timeStr)
-	rem := entities.NewReminder(0, user.ID, message, entities.CustomWeekly(daysOfWeek, timeStr), &next)
+	next := scheduler.NextWeeklyTrigger(now, daysOfWeek, timeStr, user.Location)
+	rem := entities.NewReminder(0, user.ID, message, entities.CustomWeekly(daysOfWeek, timeStr, user.Location), &next)
 	return r.insertAndReturn(rem)
 }
 
 func (r *MongoReminderRepository) CreateMonthlyReminder(daysOfMonth []int, timeStr string, user *entities.User, message string) (*entities.Reminder, error) {
 	now := time.Now()
-	next := scheduler.NextMonthlyTrigger(now, daysOfMonth, timeStr)
-	rem := entities.NewReminder(0, user.ID, message, entities.MonthlyOnDay(daysOfMonth, timeStr), &next)
+	next := scheduler.NextMonthlyTrigger(now, daysOfMonth, timeStr, user.Location)
+	rem := entities.NewReminder(0, user.ID, message, entities.MonthlyOnDay(daysOfMonth, timeStr, user.Location), &next)
 	return r.insertAndReturn(rem)
 }
 
 func (r *MongoReminderRepository) CreateIntervalReminder(intervalDays int, timeStr string, user *entities.User, message string) (*entities.Reminder, error) {
 	now := time.Now()
-	base := scheduler.NextDailyTrigger(now, timeStr)
+	base := scheduler.NextDailyTrigger(now, timeStr, user.Location)
 	next := base.Add(time.Duration(intervalDays-1) * 24 * time.Hour)
-	rem := entities.NewReminder(0, user.ID, message, entities.IntervalEveryDays(intervalDays, timeStr), &next)
+	rem := entities.NewReminder(0, user.ID, message, entities.IntervalEveryDays(intervalDays, timeStr, user.Location), &next)
 	return r.insertAndReturn(rem)
 }
 

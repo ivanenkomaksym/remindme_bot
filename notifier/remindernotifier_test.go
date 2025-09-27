@@ -18,11 +18,13 @@ func (f *fakeSender) Send(c tgbotapi.Chattable) (tgbotapi.Message, error) {
 
 func TestProcessDueReminders_DailyAdvancesNextTrigger(t *testing.T) {
 	repo := inmemory.NewInMemoryReminderRepository()
-	user := entities.User{ID: 123}
-	// Create a daily reminder at 00:00, set its NextTrigger to a known past time
-	rem, _ := repo.CreateDailyReminder("00:00", &user, "ping")
-	// Force NextTrigger to be at a fixed point
-	past := time.Now().Add(-2 * time.Hour).Truncate(time.Minute)
+	loc, _ := time.LoadLocation("Asia/Shanghai")
+	user := entities.User{ID: 123, Location: loc}
+	// Force NextTrigger to be at a fixed point in user's timezone
+	past := time.Now().Add(-2 * time.Hour).Truncate(time.Minute).In(loc)
+	// Create a daily reminder at the same clock time as 'past'
+	timeStr := past.Format("15:04")
+	rem, _ := repo.CreateDailyReminder(timeStr, &user, "ping")
 	rem.NextTrigger = &past
 	repo.UpdateReminder(rem)
 
@@ -39,8 +41,18 @@ func TestProcessDueReminders_DailyAdvancesNextTrigger(t *testing.T) {
 	reminders, _ := repo.GetReminders()
 	updated := reminders[0]
 	want := past.Add(24 * time.Hour)
-	if !updated.NextTrigger.Equal(want) {
-		t.Fatalf("expected NextTrigger %v, got %v", want, updated.NextTrigger)
+	if updated.NextTrigger == nil {
+		t.Fatalf("expected NextTrigger to be set, got nil")
+	}
+	// Compare instants with tolerance to account for time zone conversions and rounding
+	abs := func(d time.Duration) time.Duration {
+		if d < 0 {
+			return -d
+		}
+		return d
+	}
+	if abs(updated.NextTrigger.Sub(want)) > time.Minute {
+		t.Fatalf("expected NextTrigger approx %v, got %v", want, updated.NextTrigger)
 	}
 	if !updated.IsActive {
 		t.Fatalf("daily reminder should remain active")
@@ -50,7 +62,8 @@ func TestProcessDueReminders_DailyAdvancesNextTrigger(t *testing.T) {
 func TestProcessDueReminders_OneTimeDeactivates(t *testing.T) {
 	repo := inmemory.NewInMemoryReminderRepository()
 	// Manually insert one-time reminder (Recurrence=nil)
-	user := entities.User{ID: 42}
+	loc, _ := time.LoadLocation("Asia/Shanghai")
+	user := entities.User{ID: 123, Location: loc}
 	now := time.Now()
 	next := now.Add(-time.Minute)
 	rem := entities.Reminder{

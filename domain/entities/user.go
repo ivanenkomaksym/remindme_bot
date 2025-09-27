@@ -1,17 +1,20 @@
 package entities
 
-import "time"
+import (
+	"log"
+	"time"
+)
 
 // User represents a user in the system
 type User struct {
-	ID        int64     `json:"id" bson:"id"`
-	UserName  string    `json:"userName" bson:"userName"`
-	FirstName string    `json:"firstName" bson:"firstName"`
-	LastName  string    `json:"lastName" bson:"lastName"`
-	Language  string    `json:"language" bson:"language"`
-	Timezone  string    `json:"timezone" bson:"timezone"`
-	CreatedAt time.Time `json:"createdAt" bson:"createdAt"`
-	UpdatedAt time.Time `json:"updatedAt" bson:"updatedAt"`
+	ID        int64          `json:"id" bson:"id"`
+	UserName  string         `json:"userName" bson:"userName"`
+	FirstName string         `json:"firstName" bson:"firstName"`
+	LastName  string         `json:"lastName" bson:"lastName"`
+	Language  string         `json:"language" bson:"language"`
+	Location  *time.Location `json:"location" bson:"location"`
+	CreatedAt time.Time      `json:"createdAt" bson:"createdAt"`
+	UpdatedAt time.Time      `json:"updatedAt" bson:"updatedAt"`
 }
 
 // NewUser creates a new user entity
@@ -23,7 +26,7 @@ func NewUser(id int64, userName, firstName, lastName, language string) *User {
 		FirstName: firstName,
 		LastName:  lastName,
 		Language:  language,
-		Timezone:  time.Now().Location().String(),
+		Location:  time.Now().Location(),
 		CreatedAt: now,
 		UpdatedAt: now,
 	}
@@ -35,7 +38,11 @@ func (u *User) UpdateLanguage(language string) {
 }
 
 func (u *User) UpdateTimezone(timezone string) {
-	u.Timezone = timezone
+	location, err := time.LoadLocation(timezone)
+	if err != nil {
+		log.Fatalf("Error loading location")
+	}
+	u.Location = location
 	u.UpdatedAt = time.Now()
 }
 

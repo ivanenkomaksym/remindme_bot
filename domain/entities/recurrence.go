@@ -8,19 +8,8 @@ type Recurrence struct {
 	Weekdays   []time.Weekday `json:"weekdays" bson:"weekdays"`           // For weekly recurrence (e.g., [Tuesday, Thursday])
 	DayOfMonth []int          `json:"days_of_month" bson:"days_of_month"` // For monthly recurrence (e.g., [1, 15])
 	StartDate  *time.Time     `json:"start_date" bson:"start_date"`       // When recurrence begins (includes time)
+	Location   *time.Location `json:"location" bson:"location"`           // Where recurrence happens, determines the timezone
 	EndDate    *time.Time     `json:"end_date" bson:"end_date"`           // When recurrence ends (optional)
-}
-
-// WithStartDate adds a start date to a recurrence
-func (r *Recurrence) WithStartDate(startDate time.Time) *Recurrence {
-	r.StartDate = &startDate
-	return r
-}
-
-// WithEndDate adds an end date to a recurrence
-func (r *Recurrence) WithEndDate(endDate time.Time) *Recurrence {
-	r.EndDate = &endDate
-	return r
 }
 
 // GetTimeOfDay returns the time of day in "HH:MM" format from StartDate
@@ -31,33 +20,25 @@ func (r *Recurrence) GetTimeOfDay() string {
 	return r.StartDate.Format("15:04")
 }
 
-// GetTimeOfDayAsTime returns the time portion of StartDate
-func (r *Recurrence) GetTimeOfDayAsTime() time.Time {
-	if r.StartDate == nil {
-		return time.Time{}
-	}
-	hour, minute, second := r.StartDate.Clock()
-	return time.Date(0, 1, 1, hour, minute, second, 0, time.UTC)
-}
-
 // CustomWeekly creates a custom weekly recurrence on specific weekdays
-func CustomWeekly(weekdays []time.Weekday, timeOfDay string) *Recurrence {
+func CustomWeekly(weekdays []time.Weekday, timeOfDay string, location *time.Location) *Recurrence {
 	now := time.Now()
-	startDate := time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, now.Location())
+	startDate := time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, location)
 
 	// Parse time and set it to startDate
 	if hour, minute, ok := parseTimeOfDay(timeOfDay); ok {
-		startDate = time.Date(now.Year(), now.Month(), now.Day(), hour, minute, 0, 0, now.Location())
+		startDate = time.Date(now.Year(), now.Month(), now.Day(), hour, minute, 0, 0, location)
 	}
 
 	return &Recurrence{
 		Type:      Weekly,
 		Weekdays:  weekdays,
 		StartDate: &startDate,
+		Location:  location,
 	}
 }
 
-func OnceAt(date time.Time, timeOfDay string) *Recurrence {
+func OnceAt(date time.Time, timeOfDay string, location *time.Location) *Recurrence {
 	// Parse time and set it to the provided date
 	startDate := date
 	if hour, minute, ok := parseTimeOfDay(timeOfDay); ok {
@@ -67,11 +48,12 @@ func OnceAt(date time.Time, timeOfDay string) *Recurrence {
 	return &Recurrence{
 		Type:      Once,
 		StartDate: &startDate,
+		Location:  location,
 	}
 }
 
 // DailyAt creates a daily recurrence at a specific time
-func DailyAt(timeOfDay string) *Recurrence {
+func DailyAt(timeOfDay string, location *time.Location) *Recurrence {
 	now := time.Now()
 	startDate := time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, now.Location())
 
@@ -83,11 +65,12 @@ func DailyAt(timeOfDay string) *Recurrence {
 	return &Recurrence{
 		Type:      Daily,
 		StartDate: &startDate,
+		Location:  location,
 	}
 }
 
 // IntervalEveryDays creates a recurrence that triggers every N days at a specific time
-func IntervalEveryDays(intervalDays int, timeOfDay string) *Recurrence {
+func IntervalEveryDays(intervalDays int, timeOfDay string, location *time.Location) *Recurrence {
 	now := time.Now()
 	startDate := time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, now.Location())
 
@@ -100,11 +83,12 @@ func IntervalEveryDays(intervalDays int, timeOfDay string) *Recurrence {
 		Type:      Interval,
 		Interval:  intervalDays,
 		StartDate: &startDate,
+		Location:  location,
 	}
 }
 
 // MonthlyOnDay creates a monthly recurrence on a specific day of the month
-func MonthlyOnDay(daysOfMonth []int, timeOfDay string) *Recurrence {
+func MonthlyOnDay(daysOfMonth []int, timeOfDay string, location *time.Location) *Recurrence {
 	now := time.Now()
 	startDate := time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, now.Location())
 
@@ -117,6 +101,7 @@ func MonthlyOnDay(daysOfMonth []int, timeOfDay string) *Recurrence {
 		Type:       Monthly,
 		DayOfMonth: daysOfMonth,
 		StartDate:  &startDate,
+		Location:   location,
 	}
 }
 

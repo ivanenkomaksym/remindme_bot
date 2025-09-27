@@ -26,22 +26,25 @@ func ParseHourMinute(timeStr string) (int, int, bool) {
 }
 
 // NextDailyTrigger returns the next occurrence of the provided HH:MM from the reference time.
-func NextDailyTrigger(from time.Time, timeStr string) time.Time {
+func NextDailyTrigger(from time.Time, timeStr string, location *time.Location) time.Time {
 	hour, minute, ok := ParseHourMinute(timeStr)
 	if !ok {
 		return from
 	}
-	candidate := time.Date(from.Year(), from.Month(), from.Day(), hour, minute, 0, 0, from.Location())
-	if !candidate.After(from) {
+	fromInTz := from.In(location)
+	candidate := time.Date(from.Year(), from.Month(), from.Day(), hour, minute, 0, 0, location)
+	if !candidate.After(fromInTz) {
 		candidate = candidate.Add(24 * time.Hour)
 	}
-	return candidate
+
+	// Convert back to UTC for storage
+	return candidate.UTC()
 }
 
 // NextWeeklyTrigger returns the next occurrence on any of the provided weekdays at HH:MM.
-func NextWeeklyTrigger(from time.Time, days []time.Weekday, timeStr string) time.Time {
+func NextWeeklyTrigger(from time.Time, days []time.Weekday, timeStr string, location *time.Location) time.Time {
 	if len(days) == 0 {
-		return NextDailyTrigger(from, timeStr)
+		return NextDailyTrigger(from, timeStr, location)
 	}
 	hour, minute, ok := ParseHourMinute(timeStr)
 	if !ok {
@@ -56,22 +59,26 @@ func NextWeeklyTrigger(from time.Time, days []time.Weekday, timeStr string) time
 		}
 	}
 
+	fromInTz := from.In(location)
+
 	best := time.Time{}
 	for i := range 7 {
-		day := from.Add(time.Duration(i) * 24 * time.Hour)
+		day := fromInTz.Add(time.Duration(i) * 24 * time.Hour)
 		for _, d := range uniqueDays {
 			if day.Weekday() == d {
-				candidate := time.Date(day.Year(), day.Month(), day.Day(), hour, minute, 0, 0, from.Location())
-				if candidate.After(from) && (best.IsZero() || candidate.Before(best)) {
+				candidate := time.Date(day.Year(), day.Month(), day.Day(), hour, minute, 0, 0, location)
+				if candidate.After(fromInTz) && (best.IsZero() || candidate.Before(best)) {
 					best = candidate
 				}
 			}
 		}
 	}
 	if best.IsZero() {
-		return NextWeeklyTrigger(from.Add(7*24*time.Hour), uniqueDays, timeStr)
+		return NextWeeklyTrigger(from.Add(7*24*time.Hour), uniqueDays, timeStr, location)
 	}
-	return best
+
+	// Convert back to UTC for storage
+	return best.UTC()
 }
 
 func daysIn(month time.Month, year int) int {
@@ -79,9 +86,9 @@ func daysIn(month time.Month, year int) int {
 }
 
 // NextMonthlyTrigger returns the next occurrence on any of the provided days-of-month at HH:MM.
-func NextMonthlyTrigger(from time.Time, daysOfMonth []int, timeStr string) time.Time {
+func NextMonthlyTrigger(from time.Time, daysOfMonth []int, timeStr string, location *time.Location) time.Time {
 	if len(daysOfMonth) == 0 {
-		return NextDailyTrigger(from, timeStr)
+		return NextDailyTrigger(from, timeStr, location)
 	}
 	hour, minute, ok := ParseHourMinute(timeStr)
 	if !ok {
@@ -98,20 +105,22 @@ func NextMonthlyTrigger(from time.Time, daysOfMonth []int, timeStr string) time.
 		}
 	}
 	if len(days) == 0 {
-		return NextDailyTrigger(from, timeStr)
+		return NextDailyTrigger(from, timeStr, location)
 	}
 	sort.Ints(days)
 
+	fromInTz := from.In(location)
+
 	best := time.Time{}
 	for m := 0; m < 3; m++ {
-		t := from.AddDate(0, m, 0)
+		t := fromInTz.AddDate(0, m, 0)
 		dim := daysIn(t.Month(), t.Year())
 		for _, d := range days {
 			if d > dim {
 				continue
 			}
-			candidate := time.Date(t.Year(), t.Month(), d, hour, minute, 0, 0, from.Location())
-			if candidate.After(from) && (best.IsZero() || candidate.Before(best)) {
+			candidate := time.Date(t.Year(), t.Month(), d, hour, minute, 0, 0, location)
+			if candidate.After(fromInTz) && (best.IsZero() || candidate.Before(best)) {
 				best = candidate
 			}
 		}
@@ -122,7 +131,9 @@ func NextMonthlyTrigger(from time.Time, daysOfMonth []int, timeStr string) time.
 	if best.IsZero() {
 		best = from.Add(24 * time.Hour)
 	}
-	return best
+
+	// Convert back to UTC for storage
+	return best.UTC()
 }
 
 // NextForRecurrence advances from last trigger according to the recurrence configuration.
@@ -132,24 +143,30 @@ func NextForRecurrence(last time.Time, rec *entities.Recurrence) *time.Time {
 		return nil
 	case entities.Daily:
 		// Maintain the same clock time as last trigger, add 24h
-		result := last.Add(24 * time.Hour)
+		result := NextDailyTrigger(last, rec.GetTimeOfDay(), rec.Location)
 		return &result
 	case entities.Weekly:
-		result := NextWeeklyTrigger(last, rec.Weekdays, rec.GetTimeOfDay())
+		result := NextWeeklyTrigger(last, rec.Weekdays, rec.GetTimeOfDay(), rec.Location)
 		return &result
 	case entities.Monthly:
-		result := NextMonthlyTrigger(last, rec.DayOfMonth, rec.GetTimeOfDay())
+		result := NextMonthlyTrigger(last, rec.DayOfMonth, rec.GetTimeOfDay(), rec.Location)
 		return &result
 	case entities.Interval:
+		// For interval reminders, we need to calculate the next trigger in the user's timezone
+		// Convert last trigger to user's timezone
+		lastInTz := last.In(rec.Location)
+
 		// Advance by configured number of days, retain time of day
 		days := rec.Interval
 		if days <= 0 {
 			days = 1
 		}
-		result := last.Add(time.Duration(days) * 24 * time.Hour)
+		// Convert back to UTC for storage
+		result := lastInTz.Add(time.Duration(days) * 24 * time.Hour).UTC()
+
 		return &result
 	default:
-		result := last.Add(24 * time.Hour)
+		result := NextDailyTrigger(last, rec.GetTimeOfDay(), rec.Location)
 		return &result
 	}
 }

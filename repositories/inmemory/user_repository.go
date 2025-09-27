@@ -81,7 +81,11 @@ func (r *InMemoryUserRepository) UpdateUserTimezone(userID int64, timezone strin
 		return nil
 	}
 
-	user.Timezone = timezone
+	location, err := time.LoadLocation(timezone)
+	if err != nil {
+		return nil
+	}
+	user.Location = location
 	user.UpdatedAt = time.Now()
 	return nil
 }
