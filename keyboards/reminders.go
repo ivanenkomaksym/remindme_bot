@@ -90,7 +90,7 @@ func formatLabel(reminder entities.Reminder, lang string, includeMessage bool) s
 			if i > 0 {
 				daysStr.WriteString(", ")
 			}
-			daysStr.WriteString(fmt.Sprintf("%d", d))
+			daysStr.WriteString(fmt.Sprintf("%s", s.WeekdayNamesShort[d]))
 		}
 		reminderTime = fmt.Sprintf("%s • %s", daysStr.String(), reminderTime)
 	case entities.Monthly:

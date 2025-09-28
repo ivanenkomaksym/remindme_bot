@@ -31,6 +31,7 @@ type Strings struct {
 	At                       string
 	// Week-related i18n
 	WeekdayNames        []string
+	WeekdayNamesShort   []string
 	MsgSelectWeekdays   string
 	MsgSelectTimeWeekly string
 	BtnSelect           string
@@ -85,6 +86,7 @@ var stringsByLang = map[string]Strings{
 		ReminderScheduled:          "Your reminder has been scheduled!",
 		At:                         "at",
 		WeekdayNames:               []string{"Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"},
+		WeekdayNamesShort:          []string{"Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"},
 		MsgSelectWeekdays:          "Select weekdays:",
 		MsgSelectTimeWeekly:        "Select time for weekly reminders:",
 		BtnSelect:                  "Select",
@@ -135,6 +137,7 @@ var stringsByLang = map[string]Strings{
 		ReminderScheduled:          "Ваше нагадування заплановано!",
 		At:                         "в",
 		WeekdayNames:               []string{"Понеділок", "Вівторок", "Середа", "Четвер", "П’ятниця", "Субота", "Неділя"},
+		WeekdayNamesShort:          []string{"Пн", "Вт", "Ср", "Чт", "Пт", "Сб", "Нд"},
 		MsgSelectWeekdays:          "Оберіть дні тижня:",
 		MsgSelectTimeWeekly:        "Оберіть час для щотижневих нагадувань:",
 		BtnSelect:                  "Обрати",
