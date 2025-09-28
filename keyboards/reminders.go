@@ -30,36 +30,7 @@ func GetRemindersListMarkup(reminders []entities.Reminder, lang string) *tgbotap
 	}
 
 	for _, r := range reminders {
-		// Add indicator for active/inactive status
-		status := "❌" // inactive by default
-		if r.IsActive {
-			status = "✅" // active
-		}
-
-		label := fmt.Sprintf("%s %s", status, RecurrenceTypeLabel(lang, r.Recurrence.Type))
-		// Add extra detail for monthly recurrences
-		if r.Recurrence.IsMonthly() {
-			// format days like: 1, 5, 12
-			if len(r.Recurrence.DayOfMonth) > 0 {
-				var daysStr strings.Builder
-				for i, d := range r.Recurrence.DayOfMonth {
-					if i > 0 {
-						daysStr.WriteString(", ")
-					}
-					daysStr.WriteString(fmt.Sprintf("%d", d))
-				}
-				label = fmt.Sprintf("%s • %s", label, daysStr.String())
-			}
-		}
-		// Extra detail for interval recurrences
-		if r.Recurrence.IsInterval() {
-			if r.Recurrence.Interval > 0 {
-				s := T(lang)
-				label = fmt.Sprintf("%s • "+s.MsgEveryNDays, label, r.Recurrence.Interval)
-			}
-		}
-		// Always append time of day (or full date for once below)
-		label = fmt.Sprintf("%s • %s", label, r.Recurrence.GetTimeOfDay())
+		label := formatLabel(r, lang, false)
 		btn := tgbotapi.NewInlineKeyboardButtonData(
 			s.BtnDelete,
 			fmt.Sprintf("%s%d", CallbackReminderDeletePrefix, r.ID),
@@ -88,22 +59,61 @@ func FormatRemindersListText(reminders []entities.Reminder, lang string) string 
 	var b strings.Builder
 	b.WriteString(s.YourReminders)
 	for _, r := range reminders {
-		// Add indicator for active/inactive status
-		status := "❌" // inactive by default
-		if r.IsActive {
-			status = "✅" // active
-		}
-
-		recurrenceType := RecurrenceTypeLabel(lang, r.Recurrence.Type)
-
-		reminderTime := r.Recurrence.GetTimeOfDay()
-		if r.Recurrence.Type == entities.Once {
-			reminderTime = r.Recurrence.StartDate.Format("2006-01-02T15:04:05")
-		}
-
-		b.WriteString(fmt.Sprintf("%s • %s %s %s — %s (ID %d)\n", status, recurrenceType, s.At, reminderTime, r.Message, r.ID))
+		label := formatLabel(r, lang, true)
+		b.WriteString(fmt.Sprintf("%s\n", label))
 	}
 	return b.String()
+}
+
+func formatLabel(reminder entities.Reminder, lang string, includeMessage bool) string {
+	s := T(lang)
+
+	// Add indicator for active/inactive status
+	status := "❌" // inactive by default
+	if reminder.IsActive {
+		status = "✅" // active
+	}
+
+	var label string
+	recurrenceType := RecurrenceTypeLabel(lang, reminder.Recurrence.Type)
+	reminderTime := reminder.Recurrence.GetTimeOfDay()
+
+	switch reminder.Recurrence.Type {
+	case entities.Once:
+		reminderTime = reminder.Recurrence.StartDate.In(reminder.Recurrence.Location).Format("2006-01-02T15:04:05")
+	case entities.Daily:
+		break
+	case entities.Weekly:
+		// format days like: 1, 5, 12
+		var daysStr strings.Builder
+		for i, d := range reminder.Recurrence.Weekdays {
+			if i > 0 {
+				daysStr.WriteString(", ")
+			}
+			daysStr.WriteString(fmt.Sprintf("%d", d))
+		}
+		reminderTime = fmt.Sprintf("%s • %s", daysStr.String(), reminderTime)
+	case entities.Monthly:
+		// format days like: 1, 5, 12
+		var daysStr strings.Builder
+		for i, d := range reminder.Recurrence.DayOfMonth {
+			if i > 0 {
+				daysStr.WriteString(", ")
+			}
+			daysStr.WriteString(fmt.Sprintf("%d", d))
+		}
+		reminderTime = fmt.Sprintf("%s • %s", daysStr.String(), reminderTime)
+	case entities.Interval:
+		reminderTime = fmt.Sprintf(s.MsgEveryNDays, reminder.Recurrence.Interval)
+	}
+
+	label = fmt.Sprintf("%s %s %s %s", status, recurrenceType, s.At, reminderTime)
+
+	if includeMessage {
+		label = fmt.Sprintf("%s — %s", label, reminder.Message)
+	}
+
+	return label
 }
 
 func ParseDeleteReminderID(callbackData string) (int64, bool) {
