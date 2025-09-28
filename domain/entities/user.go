@@ -12,7 +12,7 @@ type User struct {
 	LastName     string         `json:"lastName" bson:"lastName"`
 	Language     string         `json:"language" bson:"language"`
 	LocationName string         `json:"location" bson:"location"`
-	Location     *time.Location `bson:"-"` // Ignore by mongo
+	Location     *time.Location `json:"-" bson:"-"` // Ignore
 	CreatedAt    time.Time      `json:"createdAt" bson:"createdAt"`
 	UpdatedAt    time.Time      `json:"updatedAt" bson:"updatedAt"`
 }

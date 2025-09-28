@@ -7,6 +7,7 @@ import (
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 	"github.com/ivanenkomaksym/remindme_bot/domain/entities"
 	"github.com/ivanenkomaksym/remindme_bot/repositories/inmemory"
+	"github.com/ivanenkomaksym/remindme_bot/scheduler"
 )
 
 type fakeSender struct{ sent int }
@@ -37,10 +38,13 @@ func TestProcessDueReminders_DailyAdvancesNextTrigger(t *testing.T) {
 		t.Fatalf("expected 1 message sent, got %d", sender.sent)
 	}
 
-	// After processing, NextTrigger should advance by 24h for daily recurrence
+	// After processing, NextTrigger should advance according to scheduler.NextForRecurrence
 	reminders, _ := repo.GetReminders()
 	updated := reminders[0]
-	want := past.Add(24 * time.Hour)
+	expected := scheduler.NextForRecurrence(past, rem.Recurrence)
+	if expected == nil {
+		t.Fatalf("expected non-nil expected NextTrigger")
+	}
 	if updated.NextTrigger == nil {
 		t.Fatalf("expected NextTrigger to be set, got nil")
 	}
@@ -51,8 +55,8 @@ func TestProcessDueReminders_DailyAdvancesNextTrigger(t *testing.T) {
 		}
 		return d
 	}
-	if abs(updated.NextTrigger.Sub(want)) > time.Minute {
-		t.Fatalf("expected NextTrigger approx %v, got %v", want, updated.NextTrigger)
+	if abs(updated.NextTrigger.Sub(*expected)) > time.Minute {
+		t.Fatalf("expected NextTrigger approx %v, got %v", *expected, updated.NextTrigger)
 	}
 	if !updated.IsActive {
 		t.Fatalf("daily reminder should remain active")

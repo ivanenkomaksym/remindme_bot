@@ -1,6 +1,9 @@
 package entities
 
-import "time"
+import (
+	"fmt"
+	"time"
+)
 
 type Recurrence struct {
 	Type         RecurrenceType `json:"type" bson:"type"`                   // e.g., "once", "daily", "weekly", "monthly", "interval", "custom"
@@ -9,7 +12,7 @@ type Recurrence struct {
 	DayOfMonth   []int          `json:"days_of_month" bson:"days_of_month"` // For monthly recurrence (e.g., [1, 15])
 	StartDate    *time.Time     `json:"start_date" bson:"start_date"`       // When recurrence begins (includes time)
 	LocationName string         `json:"location" bson:"location"`
-	Location     *time.Location `bson:"-"`                        // Ignore by mongo
+	Location     *time.Location `json:"-" bson:"-"`               // Ignore
 	EndDate      *time.Time     `json:"end_date" bson:"end_date"` // When recurrence ends (optional)
 }
 
@@ -82,8 +85,8 @@ func CustomWeekly(weekdays []time.Weekday, timeOfDay string, location *time.Loca
 	startDate := time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, location)
 
 	// Parse time and set it to startDate
-	if hour, minute, ok := parseTimeOfDay(timeOfDay); ok {
-		startDate = time.Date(now.Year(), now.Month(), now.Day(), hour, minute, 0, 0, location)
+	if timeOfDay, err := parseTimeOfDay(timeOfDay); err == nil {
+		startDate = time.Date(now.Year(), now.Month(), now.Day(), timeOfDay.Hour(), timeOfDay.Minute(), 0, 0, location)
 	}
 
 	return New(Weekly, &startDate, location, WithWeekdays(weekdays))
@@ -92,8 +95,8 @@ func CustomWeekly(weekdays []time.Weekday, timeOfDay string, location *time.Loca
 func OnceAt(date time.Time, timeOfDay string, location *time.Location) *Recurrence {
 	// Parse time and set it to the provided date
 	startDate := date
-	if hour, minute, ok := parseTimeOfDay(timeOfDay); ok {
-		startDate = time.Date(date.Year(), date.Month(), date.Day(), hour, minute, 0, 0, date.Location())
+	if timeOfDay, err := parseTimeOfDay(timeOfDay); err == nil {
+		startDate = time.Date(date.Year(), date.Month(), date.Day(), timeOfDay.Hour(), timeOfDay.Minute(), 0, 0, location)
 	}
 
 	return New(Once, &startDate, location)
@@ -102,11 +105,11 @@ func OnceAt(date time.Time, timeOfDay string, location *time.Location) *Recurren
 // DailyAt creates a daily recurrence at a specific time
 func DailyAt(timeOfDay string, location *time.Location) *Recurrence {
 	now := time.Now()
-	startDate := time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, now.Location())
+	startDate := time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, location)
 
 	// Parse time and set it to startDate
-	if hour, minute, ok := parseTimeOfDay(timeOfDay); ok {
-		startDate = time.Date(now.Year(), now.Month(), now.Day(), hour, minute, 0, 0, now.Location())
+	if timeOfDay, err := parseTimeOfDay(timeOfDay); err == nil {
+		startDate = time.Date(now.Year(), now.Month(), now.Day(), timeOfDay.Hour(), timeOfDay.Minute(), 0, 0, location)
 	}
 
 	return New(Daily, &startDate, location)
@@ -115,11 +118,11 @@ func DailyAt(timeOfDay string, location *time.Location) *Recurrence {
 // IntervalEveryDays creates a recurrence that triggers every N days at a specific time
 func IntervalEveryDays(intervalDays int, timeOfDay string, location *time.Location) *Recurrence {
 	now := time.Now()
-	startDate := time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, now.Location())
+	startDate := time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, location)
 
 	// Parse time and set it to startDate
-	if hour, minute, ok := parseTimeOfDay(timeOfDay); ok {
-		startDate = time.Date(now.Year(), now.Month(), now.Day(), hour, minute, 0, 0, now.Location())
+	if timeOfDay, err := parseTimeOfDay(timeOfDay); err == nil {
+		startDate = time.Date(now.Year(), now.Month(), now.Day(), timeOfDay.Hour(), timeOfDay.Minute(), 0, 0, location)
 	}
 
 	return New(Interval, &startDate, location, WithInterval(intervalDays))
@@ -128,32 +131,33 @@ func IntervalEveryDays(intervalDays int, timeOfDay string, location *time.Locati
 // MonthlyOnDay creates a monthly recurrence on a specific day of the month
 func MonthlyOnDay(daysOfMonth []int, timeOfDay string, location *time.Location) *Recurrence {
 	now := time.Now()
-	startDate := time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, now.Location())
+	startDate := time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, location)
 
 	// Parse time and set it to startDate
-	if hour, minute, ok := parseTimeOfDay(timeOfDay); ok {
-		startDate = time.Date(now.Year(), now.Month(), now.Day(), hour, minute, 0, 0, now.Location())
+	if timeOfDay, err := parseTimeOfDay(timeOfDay); err == nil {
+		startDate = time.Date(now.Year(), now.Month(), now.Day(), timeOfDay.Hour(), timeOfDay.Minute(), 0, 0, location)
 	}
 
 	return New(Monthly, &startDate, location, WithDaysOfMonth(daysOfMonth))
 }
 
 // parseTimeOfDay parses a time string in "HH:MM" format
-func parseTimeOfDay(timeStr string) (hour, minute int, ok bool) {
-	if len(timeStr) != 5 || timeStr[2] != ':' {
-		return 0, 0, false
+func parseTimeOfDay(timeString string) (time.Time, error) {
+	// Define the time formats to try using the Go reference date layout: Mon Jan 2 15:04:05 MST 2006.
+	// 1. "15:04": Standard 24-hour clock (e.g., "12:59", "09:59"). The '15' handles 00-23.
+	// 2. "3:04": Non-padded hour (e.g., "9:59"). The '3' handles non-zero-padded hours.
+	formats := []string{"15:04", "3:04"}
+
+	for _, format := range formats {
+		t, err := time.Parse(format, timeString)
+		if err == nil {
+			// Successful parse. Return the time object.
+			return t, nil
+		}
 	}
 
-	hourStr := timeStr[:2]
-	minuteStr := timeStr[3:]
-
-	if h, err := time.Parse("15", hourStr); err != nil {
-		return 0, 0, false
-	} else if m, err := time.Parse("04", minuteStr); err != nil {
-		return 0, 0, false
-	} else {
-		return h.Hour(), m.Minute(), true
-	}
+	// If all formats fail, return an error indicating the expected format.
+	return time.Time{}, fmt.Errorf("invalid time format: expected \"HH:MM\" or \"H:MM\", got \"%s\"", timeString)
 }
 
 func (r *Recurrence) IsWeekly() bool {
