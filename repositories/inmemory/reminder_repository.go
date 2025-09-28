@@ -98,6 +98,21 @@ func (r *InMemoryReminderRepository) CreateIntervalReminder(intervalDays int, ti
 	return &r.reminders[len(r.reminders)-1], nil
 }
 
+func (r *InMemoryReminderRepository) CreateSpaceBasedRepetitionReminder(timeStr string, user *entities.User, message string) (*entities.Reminder, error) {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+
+	now := time.Now()
+	recurrence := entities.SpacedBasedRepetitionInterval(timeStr, user.GetLocation())
+	next := scheduler.NextForSpacedBasedRepetition(now, timeStr, recurrence)
+
+	reminder := entities.NewReminder(r.nextID, user.ID, message, recurrence, next)
+	r.nextID++
+	r.reminders = append(r.reminders, *reminder)
+
+	return &r.reminders[len(r.reminders)-1], nil
+}
+
 // Reminder retrieval methods
 func (r *InMemoryReminderRepository) GetReminders() ([]entities.Reminder, error) {
 	r.mu.RLock()

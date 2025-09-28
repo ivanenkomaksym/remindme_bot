@@ -40,6 +40,7 @@ type Strings struct {
 	// Interval-related i18n
 	MsgIntervalPrompt          string // e.g., "Every N days"
 	MsgEveryNDays              string // e.g., "Every %d days"
+	MsgEveryNDaysSpaced        string // e.g., "Every %s days"
 	MsgParsingFailed           string
 	MsgTimezoneAutoDetect      string
 	MsgTimezoneAutoDetectDescr string
@@ -50,11 +51,12 @@ var stringsByLang = map[string]Strings{
 	LangEN: {
 		Welcome: "Welcome to the Reminder Bot!",
 		RecurrenceTypes: map[entities.RecurrenceType]string{
-			entities.Once:     "Once",
-			entities.Daily:    "Daily",
-			entities.Weekly:   "Weekly",
-			entities.Monthly:  "Monthly",
-			entities.Interval: "Interval",
+			entities.Once:                  "Once",
+			entities.Daily:                 "Daily",
+			entities.Weekly:                "Weekly",
+			entities.Monthly:               "Monthly",
+			entities.Interval:              "Interval",
+			entities.SpacedBasedRepetition: "Spaced Repetition",
 		},
 		BtnBack:                  "← Back",
 		BtnCustomTime:            "Custom",
@@ -93,6 +95,7 @@ var stringsByLang = map[string]Strings{
 		MsgSelectDate:              "Select a date:",
 		MsgIntervalPrompt:          "Every N days",
 		MsgEveryNDays:              "Every %d days",
+		MsgEveryNDaysSpaced:        "Every %s days",
 		MsgParsingFailed:           "I didn't understand that. Please use the menu buttons.",
 		MsgTimezoneAutoDetect:      "🌍 Set Timezone Automatically",
 		MsgTimezoneAutoDetectDescr: "Click the button to detect your timezone.",
@@ -101,11 +104,12 @@ var stringsByLang = map[string]Strings{
 	LangUK: {
 		Welcome: "Ласкаво просимо до бота-нагадувача!",
 		RecurrenceTypes: map[entities.RecurrenceType]string{
-			entities.Once:     "Один раз",
-			entities.Daily:    "Щодня",
-			entities.Weekly:   "Щотижня",
-			entities.Monthly:  "Щомісяця",
-			entities.Interval: "Інтервал",
+			entities.Once:                  "Один раз",
+			entities.Daily:                 "Щодня",
+			entities.Weekly:                "Щотижня",
+			entities.Monthly:               "Щомісяця",
+			entities.Interval:              "Інтервал",
+			entities.SpacedBasedRepetition: "Інтервал з повторенням",
 		},
 		BtnBack:                  "← Назад",
 		BtnCustomTime:            "Свій час",
@@ -144,6 +148,7 @@ var stringsByLang = map[string]Strings{
 		MsgSelectDate:              "Оберіть дату:",
 		MsgIntervalPrompt:          "Кожні N днів",
 		MsgEveryNDays:              "Кожні %d днів",
+		MsgEveryNDaysSpaced:        "Кожні %s днів",
 		MsgParsingFailed:           "Я не зрозумів. Будь ласка, скористайтеся кнопками меню.",
 		MsgTimezoneAutoDetect:      "🌍 Автоматично встановити часовий пояс",
 		MsgTimezoneAutoDetectDescr: "Натисніть кнопку, щоб визначити свій часовий пояс.",

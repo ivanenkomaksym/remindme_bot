@@ -46,4 +46,10 @@ func TestHandleRecurrenceTypeSelection(t *testing.T) {
 	if err != nil || res == nil {
 		t.Fatalf("interval should return result")
 	}
+
+	// SpacedBasedRepetition
+	res, err = HandleRecurrenceTypeSelection(entities.SpacedBasedRepetition.String(), user, userSelection)
+	if err != nil || res == nil {
+		t.Fatalf("spaced based repetition should return result")
+	}
 }

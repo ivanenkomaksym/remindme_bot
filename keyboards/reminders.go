@@ -105,6 +105,14 @@ func formatLabel(reminder entities.Reminder, lang string, includeMessage bool) s
 		reminderTime = fmt.Sprintf("%s • %s", daysStr.String(), reminderTime)
 	case entities.Interval:
 		reminderTime = fmt.Sprintf(s.MsgEveryNDays, reminder.Recurrence.Interval)
+	case entities.SpacedBasedRepetition:
+		var days []string
+		for _, d := range reminder.Recurrence.SpacedBasedRepetitionDays {
+			days = append(days, fmt.Sprintf("%d", d))
+		}
+		reminderTime = fmt.Sprintf(s.MsgEveryNDaysSpaced, strings.Join(days, ", "))
+	default:
+		reminderTime = reminder.Recurrence.GetTimeOfDay()
 	}
 
 	label = fmt.Sprintf("%s %s %s %s", status, recurrenceType, s.At, reminderTime)

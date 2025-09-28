@@ -136,6 +136,21 @@ func NextMonthlyTrigger(from time.Time, daysOfMonth []int, timeStr string, locat
 	return best.UTC()
 }
 
+func NextForSpacedBasedRepetition(last time.Time, timeStr string, rec *entities.Recurrence) *time.Time {
+	if rec.Type != entities.SpacedBasedRepetition || len(rec.SpacedBasedRepetitionDays) == 0 {
+		return nil
+	}
+
+	next := NextDailyTrigger(last, timeStr, rec.Location)
+
+	var nextInterval = rec.SpacedBasedRepetitionDays[0]
+	rec.SpacedBasedRepetitionDays = rec.SpacedBasedRepetitionDays[1:]
+
+	// Advance by the next interval, retain time of day
+	result := next.Add(time.Duration(nextInterval) * 24 * time.Hour).UTC()
+	return &result
+}
+
 // NextForRecurrence advances from last trigger according to the recurrence configuration.
 func NextForRecurrence(last time.Time, rec *entities.Recurrence) *time.Time {
 	switch rec.Type {
@@ -165,6 +180,8 @@ func NextForRecurrence(last time.Time, rec *entities.Recurrence) *time.Time {
 		result := lastInTz.Add(time.Duration(days) * 24 * time.Hour).UTC()
 
 		return &result
+	case entities.SpacedBasedRepetition:
+		return NextForSpacedBasedRepetition(last, rec.GetTimeOfDay(), rec)
 	default:
 		result := NextDailyTrigger(last, rec.GetTimeOfDay(), rec.Location)
 		return &result

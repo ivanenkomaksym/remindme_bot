@@ -14,6 +14,7 @@ const (
 	Weekly
 	Monthly
 	Interval
+	SpacedBasedRepetition
 )
 
 var RecurrenceTypeValues = []RecurrenceType{
@@ -22,6 +23,7 @@ var RecurrenceTypeValues = []RecurrenceType{
 	Weekly,
 	Monthly,
 	Interval,
+	SpacedBasedRepetition,
 }
 
 func (r RecurrenceType) String() string {
@@ -36,6 +38,8 @@ func (r RecurrenceType) String() string {
 		return "Monthly"
 	case Interval:
 		return "Interval"
+	case SpacedBasedRepetition:
+		return "SpacedBasedRepetition"
 	default:
 		return "unknown"
 	}
@@ -53,6 +57,8 @@ func ToRecurrenceType(s string) (RecurrenceType, error) {
 		return Monthly, nil
 	case "Interval":
 		return Interval, nil
+	case "SpacedBasedRepetition":
+		return SpacedBasedRepetition, nil
 	default:
 		return 0, errors.New("invalid recurrence type")
 	}

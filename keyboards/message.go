@@ -123,6 +123,18 @@ func FormatReminderConfirmation(user *entities.User, userSelection *entities.Use
 		}
 	}
 
+	if userSelection.RecurrenceType == entities.SpacedBasedRepetition {
+		var days string
+		// TODO: make this more flexible in the future and reuse recurrence parsing logic
+		for i, c := range []int{1, 2, 3, 5, 7, 7, 7} {
+			if i > 0 {
+				days += ", "
+			}
+			days += fmt.Sprintf("%d", c)
+		}
+		confirmation += "📆 " + fmt.Sprintf(s.MsgEveryNDaysSpaced, days) + "\n"
+	}
+
 	confirmation += "⏰ " + s.Time + ": " + userSelection.SelectedTime + "\n"
 	confirmation += "💬 " + s.Message + ": " + userSelection.ReminderMessage + "\n\n"
 	confirmation += s.ReminderScheduled

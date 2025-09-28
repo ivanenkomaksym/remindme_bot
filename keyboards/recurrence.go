@@ -26,6 +26,8 @@ func HandleRecurrenceTypeSelection(callbackData string,
 		return &SelectionResult{Text: s.MsgSelectDate, Markup: GetMonthRangeMarkup(userSelection.MonthOptions, user.Language)}, nil
 	case entities.Interval:
 		return &SelectionResult{Text: s.MsgIntervalPrompt, Markup: GetIntervalPrompt(userSelection, user.Language)}, nil
+	case entities.SpacedBasedRepetition:
+		return &SelectionResult{Text: s.MsgSelectTime, Markup: GetHourRangeMarkup(user.Language)}, nil
 	}
 
 	return nil, nil

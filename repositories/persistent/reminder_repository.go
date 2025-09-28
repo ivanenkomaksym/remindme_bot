@@ -67,6 +67,15 @@ func (r *MongoReminderRepository) CreateIntervalReminder(intervalDays int, timeS
 	return r.insertAndReturn(rem)
 }
 
+func (r *MongoReminderRepository) CreateSpaceBasedRepetitionReminder(timeStr string, user *entities.User, message string) (*entities.Reminder, error) {
+	now := time.Now()
+	recurrence := entities.SpacedBasedRepetitionInterval(timeStr, user.GetLocation())
+	next := scheduler.NextForSpacedBasedRepetition(now, timeStr, recurrence)
+
+	rem := entities.NewReminder(0, user.ID, message, recurrence, next)
+	return r.insertAndReturn(rem)
+}
+
 func (r *MongoReminderRepository) insertAndReturn(rem *entities.Reminder) (*entities.Reminder, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()

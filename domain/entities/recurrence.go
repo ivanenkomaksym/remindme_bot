@@ -6,14 +6,15 @@ import (
 )
 
 type Recurrence struct {
-	Type         RecurrenceType `json:"type" bson:"type"`                   // e.g., "once", "daily", "weekly", "monthly", "interval", "custom"
-	Interval     int            `json:"interval" bson:"interval"`           // e.g., every N days/hours/minutes
-	Weekdays     []time.Weekday `json:"weekdays" bson:"weekdays"`           // For weekly recurrence (e.g., [Tuesday, Thursday])
-	DayOfMonth   []int          `json:"days_of_month" bson:"days_of_month"` // For monthly recurrence (e.g., [1, 15])
-	StartDate    *time.Time     `json:"start_date" bson:"start_date"`       // When recurrence begins (includes time)
-	LocationName string         `json:"location" bson:"location"`
-	Location     *time.Location `json:"-" bson:"-"`               // Ignore
-	EndDate      *time.Time     `json:"end_date" bson:"end_date"` // When recurrence ends (optional)
+	Type                      RecurrenceType `json:"type" bson:"type"`                   // e.g., "once", "daily", "weekly", "monthly", "interval", "custom"
+	Interval                  int            `json:"interval" bson:"interval"`           // e.g., every N days/hours/minutes
+	Weekdays                  []time.Weekday `json:"weekdays" bson:"weekdays"`           // For weekly recurrence (e.g., [Tuesday, Thursday])
+	DayOfMonth                []int          `json:"days_of_month" bson:"days_of_month"` // For monthly recurrence (e.g., [1, 15])
+	StartDate                 *time.Time     `json:"start_date" bson:"start_date"`       // When recurrence begins (includes time)
+	LocationName              string         `json:"location" bson:"location"`
+	Location                  *time.Location `json:"-" bson:"-"`                                                       // Ignore
+	EndDate                   *time.Time     `json:"end_date" bson:"end_date"`                                         // When recurrence ends (optional)
+	SpacedBasedRepetitionDays []int          `json:"spaced_based_repetition_days" bson:"spaced_based_repetition_days"` // For spaced-based repetition (e.g., [1, 3, 7, 14])
 }
 
 type Option func(dp *Recurrence)
@@ -33,6 +34,12 @@ func WithWeekdays(weekdays []time.Weekday) Option {
 func WithDaysOfMonth(daysOfMonth []int) Option {
 	return func(r *Recurrence) {
 		r.DayOfMonth = daysOfMonth
+	}
+}
+
+func WithSpacedBasedRepetition() Option {
+	return func(r *Recurrence) {
+		r.SpacedBasedRepetitionDays = []int{0, 1, 2, 3, 5, 7, 7, 7}
 	}
 }
 
@@ -139,6 +146,18 @@ func MonthlyOnDay(daysOfMonth []int, timeOfDay string, location *time.Location) 
 	}
 
 	return New(Monthly, &startDate, location, WithDaysOfMonth(daysOfMonth))
+}
+
+func SpacedBasedRepetitionInterval(timeOfDay string, location *time.Location) *Recurrence {
+	now := time.Now()
+	startDate := time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, location)
+
+	// Parse time and set it to startDate
+	if timeOfDay, err := parseTimeOfDay(timeOfDay); err == nil {
+		startDate = time.Date(now.Year(), now.Month(), now.Day(), timeOfDay.Hour(), timeOfDay.Minute(), 0, 0, location)
+	}
+
+	return New(SpacedBasedRepetition, &startDate, location, WithSpacedBasedRepetition())
 }
 
 // parseTimeOfDay parses a time string in "HH:MM" format

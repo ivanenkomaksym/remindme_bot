@@ -14,6 +14,7 @@ type ReminderRepository interface {
 	CreateWeeklyReminder(daysOfWeek []time.Weekday, timeStr string, user *entities.User, message string) (*entities.Reminder, error)
 	CreateMonthlyReminder(daysOfMonth []int, timeStr string, user *entities.User, message string) (*entities.Reminder, error)
 	CreateIntervalReminder(intervalDays int, timeStr string, user *entities.User, message string) (*entities.Reminder, error)
+	CreateSpaceBasedRepetitionReminder(timeStr string, user *entities.User, message string) (*entities.Reminder, error)
 
 	// Reminder retrieval
 	GetReminders() ([]entities.Reminder, error)

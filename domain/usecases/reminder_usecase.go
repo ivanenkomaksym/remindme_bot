@@ -66,6 +66,8 @@ func (r *reminderUseCase) CreateReminder(userID int64, selection *entities.UserS
 		return r.createMonthlyReminder(user, selection)
 	case entities.Interval:
 		return r.createIntervalReminder(user, selection)
+	case entities.SpacedBasedRepetition:
+		return r.createSpaceBasedRepetitionReminder(user, selection)
 	default:
 		return nil, errors.ErrInvalidRecurrenceType
 	}
@@ -131,6 +133,14 @@ func (r *reminderUseCase) createIntervalReminder(user *entities.User, selection 
 		return nil, errors.NewDomainError("INVALID_INTERVAL", "Interval must be a positive number of days", nil)
 	}
 	reminder, err := r.reminderRepo.CreateIntervalReminder(selection.IntervalDays, selection.SelectedTime, user, selection.ReminderMessage)
+	if err != nil {
+		return nil, err
+	}
+	return reminder, nil
+}
+
+func (r *reminderUseCase) createSpaceBasedRepetitionReminder(user *entities.User, selection *entities.UserSelection) (*entities.Reminder, error) {
+	reminder, err := r.reminderRepo.CreateSpaceBasedRepetitionReminder(selection.SelectedTime, user, selection.ReminderMessage)
 	if err != nil {
 		return nil, err
 	}
