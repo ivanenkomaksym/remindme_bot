@@ -5,6 +5,7 @@ import (
 	"time"
 
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
+	"github.com/ivanenkomaksym/remindme_bot/config"
 	"github.com/ivanenkomaksym/remindme_bot/domain/entities"
 	"github.com/ivanenkomaksym/remindme_bot/domain/repositories"
 	"github.com/ivanenkomaksym/remindme_bot/scheduler"
@@ -16,10 +17,10 @@ type BotSender interface {
 }
 
 // startReminderNotifier runs a loop that checks for due reminders and notifies users
-func StartReminderNotifier(reminderRepo repositories.ReminderRepository, bot *tgbotapi.BotAPI) {
+func StartReminderNotifier(reminderRepo repositories.ReminderRepository, appConfig config.AppConfig, bot *tgbotapi.BotAPI) {
 	for {
 		ProcessDueReminders(time.Now(), reminderRepo, bot)
-		time.Sleep(time.Minute) // Check every minute
+		time.Sleep(appConfig.NotifierTimeout)
 	}
 }
 

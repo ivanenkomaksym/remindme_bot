@@ -23,6 +23,7 @@ func TestLoadConfig_WithDefaultsRequiresMandatoryEnv(t *testing.T) {
 	// PORT is taken from PORT env variable
 	t.Setenv("PORT", "8081")
 	t.Setenv("API_KEY", expectedApiKey)
+	t.Setenv("NOTIFIER_TIMEOUT", "15m")
 
 	cfg := LoadConfig()
 	if cfg == nil {
@@ -44,6 +45,9 @@ func TestLoadConfig_WithDefaultsRequiresMandatoryEnv(t *testing.T) {
 	}
 	if cfg.App.APIKey != expectedApiKey {
 		t.Errorf("expected %s api key", expectedApiKey)
+	}
+	if cfg.App.NotifierTimeout != 15*time.Minute {
+		t.Errorf("expected NotifierTimeout 15m, got %v", cfg.App.NotifierTimeout)
 	}
 }
 
