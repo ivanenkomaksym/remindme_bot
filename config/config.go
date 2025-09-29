@@ -48,10 +48,11 @@ type BotConfig struct {
 
 // AppConfig holds application-related configuration
 type AppConfig struct {
-	Environment string
-	LogLevel    string
-	Timezone    string
-	APIKey      string
+	Environment     string
+	LogLevel        string
+	Timezone        string
+	APIKey          string
+	NotifierTimeout time.Duration
 }
 
 // LoadConfig loads configuration from environment variables and config files
@@ -111,10 +112,11 @@ func (c *Config) setDefaults() {
 	}
 
 	c.App = AppConfig{
-		Environment: "development",
-		LogLevel:    "info",
-		Timezone:    "UTC",
-		APIKey:      "",
+		Environment:     "development",
+		LogLevel:        "info",
+		Timezone:        "UTC",
+		APIKey:          "",
+		NotifierTimeout: 1 * time.Minute,
 	}
 }
 
@@ -208,6 +210,11 @@ func (c *Config) loadAppConfig() {
 	}
 	if apiKey := viper.GetString("API_KEY"); apiKey != "" {
 		c.App.APIKey = apiKey
+	}
+	if notifierTimeout := viper.GetString("NOTIFIER_TIMEOUT"); notifierTimeout != "" {
+		if duration, err := time.ParseDuration(notifierTimeout); err == nil {
+			c.App.NotifierTimeout = duration
+		}
 	}
 }
 

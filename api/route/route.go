@@ -46,7 +46,7 @@ func Setup(app *bootstrap.Application) {
 		w.Write([]byte("OK"))
 	})
 
-	go notifier.StartReminderNotifier(app.Container.ReminderRepo, app.Bot)
+	go notifier.StartReminderNotifier(app.Container.ReminderRepo, app.Env.Config.App, app.Bot)
 
 	log.Printf("Starting HTTP server on %s", addr)
 	// Start the HTTP server. This will block indefinitely, serving requests.
