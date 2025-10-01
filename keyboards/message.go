@@ -81,11 +81,8 @@ func FormatReminderConfirmation(user *entities.User, userSelection *entities.Use
 	if userSelection.RecurrenceType == entities.Weekly {
 		confirmation += "📆 " + s.Days + ": "
 		days := []string{}
-		weekdayNames := s.WeekdayNames
-		for i, selected := range userSelection.WeekOptions {
-			if selected {
-				days = append(days, weekdayNames[i])
-			}
+		for _, weekday := range userSelection.WeekOptions {
+			days = append(days, s.WeekdayNames[weekday])
 		}
 		if len(days) > 0 {
 			confirmation += strings.Join(days, ", ")

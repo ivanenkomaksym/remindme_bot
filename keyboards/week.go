@@ -2,6 +2,8 @@ package keyboards
 
 import (
 	"fmt"
+	"slices"
+	"time"
 
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 )
@@ -22,15 +24,20 @@ func IsWeekSelectionCallback(callbackData string) bool {
 	return false
 }
 
-func GetWeekRangeMarkup(currentOptions [7]bool, lang string) *tgbotapi.InlineKeyboardMarkup {
+func GetWeekRangeMarkup(weekdays []time.Weekday, lang string) *tgbotapi.InlineKeyboardMarkup {
 	var inlineKeyboard [][]tgbotapi.InlineKeyboardButton
 	s := T(lang)
 	weekdayNames := s.WeekdayNames
 
-	for idx, day := range weekdayNames {
-		callback := fmt.Sprintf("%s%d", CallbackWeekDay, idx)
+	keys := T("en").WeekdayNamesShort
+
+	for i := 1; i < 8; i++ {
+		weekday := time.Weekday(i % 7)
+		name := weekdayNames[weekday]
+		key := keys[weekday]
+		callback := fmt.Sprintf("%s%s", CallbackWeekDay, key)
 		inlineKeyboard = append(inlineKeyboard, tgbotapi.NewInlineKeyboardRow(
-			tgbotapi.NewInlineKeyboardButtonData(buttonText(day, currentOptions[idx]), callback)))
+			tgbotapi.NewInlineKeyboardButtonData(buttonText(name, slices.Contains(weekdays, weekday)), callback)))
 	}
 	inlineKeyboard = append(inlineKeyboard, tgbotapi.NewInlineKeyboardRow(
 		tgbotapi.NewInlineKeyboardButtonData(s.BtnSelect, CallbackWeekSelect)))
@@ -40,19 +47,29 @@ func GetWeekRangeMarkup(currentOptions [7]bool, lang string) *tgbotapi.InlineKey
 	return &tgbotapi.InlineKeyboardMarkup{InlineKeyboard: inlineKeyboard}
 }
 
-func HandleWeekSelection(callbackData string, currentOptions *[7]bool, lang string) *SelectionResult {
+func HandleWeekSelection(callbackData string, weekdays *[]time.Weekday, lang string) *SelectionResult {
 	if stringsHasPrefix(callbackData, CallbackWeekDay) {
-		var idx int
-		_, _ = fmt.Sscanf(callbackData[len(CallbackWeekDay):], "%d", &idx)
-		if idx >= 0 && idx < 7 {
-			currentOptions[idx] = !currentOptions[idx]
+		var weekdayStr string
+		_, _ = fmt.Sscanf(callbackData[len(CallbackWeekDay):], "%s", &weekdayStr)
+		weekday, ok := WeekdayNameToKeyMap[weekdayStr]
+		if !ok {
+			return nil
+		}
+
+		if slices.Contains(*weekdays, weekday) {
+			// Remove
+			*weekdays = slices.Delete(*weekdays, slices.Index(*weekdays, weekday), slices.Index(*weekdays, weekday)+1)
+		} else {
+			// Add
+			*weekdays = append(*weekdays, weekday)
+			slices.Sort(*weekdays)
 		}
 	}
 	s := T(lang)
 	if callbackData == CallbackWeekSelect {
 		return &SelectionResult{Text: s.MsgSelectTimeWeekly, Markup: GetHourRangeMarkup(lang)}
 	}
-	return &SelectionResult{Text: s.MsgSelectWeekdays, Markup: GetWeekRangeMarkup(*currentOptions, lang)}
+	return &SelectionResult{Text: s.MsgSelectWeekdays, Markup: GetWeekRangeMarkup(*weekdays, lang)}
 }
 
 func buttonText(text string, opt bool) string {

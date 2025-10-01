@@ -5,7 +5,7 @@ import "time"
 // UserSelection represents a user's current selection state for creating reminders
 type UserSelection struct {
 	RecurrenceType  RecurrenceType `json:"recurrenceType" bson:"recurrenceType"`
-	WeekOptions     [7]bool        `json:"weekOptions" bson:"weekOptions"`
+	WeekOptions     []time.Weekday `json:"weekOptions" bson:"weekOptions"`
 	MonthOptions    [28]bool       `json:"monthOptions" bson:"monthOptions"`
 	SelectedDate    time.Time      `json:"selectedDate" bson:"selectedDate"`
 	SelectedTime    string         `json:"selectedTime" bson:"selectedTime"`
@@ -19,7 +19,7 @@ type UserSelection struct {
 // NewUserSelection creates a new user selection with default values
 func NewUserSelection() *UserSelection {
 	return &UserSelection{
-		WeekOptions: [7]bool{false, false, false, false, false, false, false},
+		WeekOptions: []time.Weekday{},
 		MonthOptions: [28]bool{
 			false, false, false, false, false, false, false,
 			false, false, false, false, false, false, false,
@@ -32,13 +32,6 @@ func NewUserSelection() *UserSelection {
 // SetRecurrenceType sets the recurrence type and updates weekly flag
 func (us *UserSelection) SetRecurrenceType(recurrenceType RecurrenceType) {
 	us.RecurrenceType = recurrenceType
-}
-
-// SetWeekOption sets a specific day of the week
-func (us *UserSelection) SetWeekOption(day int, selected bool) {
-	if day >= 0 && day < 7 {
-		us.WeekOptions[day] = selected
-	}
 }
 
 // SetSelectedTime sets the selected time

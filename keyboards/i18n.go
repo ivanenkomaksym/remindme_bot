@@ -1,6 +1,20 @@
 package keyboards
 
-import "github.com/ivanenkomaksym/remindme_bot/domain/entities"
+import (
+	"time"
+
+	"github.com/ivanenkomaksym/remindme_bot/domain/entities"
+)
+
+var WeekdayNameToKeyMap = map[string]time.Weekday{
+	"Mon": time.Monday,
+	"Tue": time.Tuesday,
+	"Wed": time.Wednesday,
+	"Thu": time.Thursday,
+	"Fri": time.Friday,
+	"Sat": time.Saturday,
+	"Sun": time.Sunday,
+}
 
 type Strings struct {
 	Welcome                  string
@@ -30,8 +44,8 @@ type Strings struct {
 	ReminderScheduled        string
 	At                       string
 	// Week-related i18n
-	WeekdayNames        []string
-	WeekdayNamesShort   []string
+	WeekdayNames        map[time.Weekday]string
+	WeekdayNamesShort   map[time.Weekday]string
 	MsgSelectWeekdays   string
 	MsgSelectTimeWeekly string
 	BtnSelect           string
@@ -78,17 +92,33 @@ var stringsByLang = map[string]Strings{
 			"Drink some water",
 			"Stand up and stretch",
 			"Review your tasks"},
-		ReminderSet:                "Reminder Set",
-		Frequency:                  "Frequency",
-		Days:                       "Days",
-		NoneSelected:               "None selected",
-		Date:                       "Date",
-		Time:                       "Time",
-		Message:                    "Message",
-		ReminderScheduled:          "Your reminder has been scheduled!",
-		At:                         "at",
-		WeekdayNames:               []string{"Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"},
-		WeekdayNamesShort:          []string{"Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"},
+		ReminderSet:       "Reminder Set",
+		Frequency:         "Frequency",
+		Days:              "Days",
+		NoneSelected:      "None selected",
+		Date:              "Date",
+		Time:              "Time",
+		Message:           "Message",
+		ReminderScheduled: "Your reminder has been scheduled!",
+		At:                "at",
+		WeekdayNames: map[time.Weekday]string{
+			time.Monday:    "Monday",
+			time.Tuesday:   "Tuesday",
+			time.Wednesday: "Wednesday",
+			time.Thursday:  "Thursday",
+			time.Friday:    "Friday",
+			time.Saturday:  "Saturday",
+			time.Sunday:    "Sunday",
+		},
+		WeekdayNamesShort: map[time.Weekday]string{
+			time.Monday:    "Mon",
+			time.Tuesday:   "Tue",
+			time.Wednesday: "Wed",
+			time.Thursday:  "Thu",
+			time.Friday:    "Fri",
+			time.Saturday:  "Sat",
+			time.Sunday:    "Sun",
+		},
 		MsgSelectWeekdays:          "Select weekdays:",
 		MsgSelectTimeWeekly:        "Select time for weekly reminders:",
 		BtnSelect:                  "Select",
@@ -131,17 +161,33 @@ var stringsByLang = map[string]Strings{
 			"Випийте трохи води",
 			"Встаньте і розімніться",
 			"Перегляньте свої завдання"},
-		ReminderSet:                "Нагадування встановлено",
-		Frequency:                  "Частота",
-		Days:                       "Дні",
-		NoneSelected:               "Нічого не вибрано",
-		Date:                       "Дата",
-		Time:                       "Час",
-		Message:                    "Повідомлення",
-		ReminderScheduled:          "Ваше нагадування заплановано!",
-		At:                         "в",
-		WeekdayNames:               []string{"Понеділок", "Вівторок", "Середа", "Четвер", "П’ятниця", "Субота", "Неділя"},
-		WeekdayNamesShort:          []string{"Пн", "Вт", "Ср", "Чт", "Пт", "Сб", "Нд"},
+		ReminderSet:       "Нагадування встановлено",
+		Frequency:         "Частота",
+		Days:              "Дні",
+		NoneSelected:      "Нічого не вибрано",
+		Date:              "Дата",
+		Time:              "Час",
+		Message:           "Повідомлення",
+		ReminderScheduled: "Ваше нагадування заплановано!",
+		At:                "в",
+		WeekdayNames: map[time.Weekday]string{
+			time.Monday:    "Понеділок",
+			time.Tuesday:   "Вівторок",
+			time.Wednesday: "Середа",
+			time.Thursday:  "Четвер",
+			time.Friday:    "П'ятниця",
+			time.Saturday:  "Субота",
+			time.Sunday:    "Неділя",
+		},
+		WeekdayNamesShort: map[time.Weekday]string{
+			time.Monday:    "Пн",
+			time.Tuesday:   "Вт",
+			time.Wednesday: "Ср",
+			time.Thursday:  "Чт",
+			time.Friday:    "Пт",
+			time.Saturday:  "Сб",
+			time.Sunday:    "Нд",
+		},
 		MsgSelectWeekdays:          "Оберіть дні тижня:",
 		MsgSelectTimeWeekly:        "Оберіть час для щотижневих нагадувань:",
 		BtnSelect:                  "Обрати",

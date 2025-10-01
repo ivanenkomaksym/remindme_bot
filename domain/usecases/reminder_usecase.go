@@ -114,19 +114,11 @@ func (r *reminderUseCase) createDailyReminder(user *entities.User, selection *en
 }
 
 func (r *reminderUseCase) createWeeklyReminder(user *entities.User, selection *entities.UserSelection, timeOfDay time.Time) (*entities.Reminder, error) {
-	// Convert week options to time.Weekday slice
-	var daysOfWeek []time.Weekday
-	for i, selected := range selection.WeekOptions {
-		if selected {
-			daysOfWeek = append(daysOfWeek, time.Weekday(i))
-		}
-	}
-
-	if len(daysOfWeek) == 0 {
+	if len(selection.WeekOptions) == 0 {
 		return nil, errors.NewDomainError("NO_WEEKDAYS_SELECTED", "At least one weekday must be selected", nil)
 	}
 
-	reminder, err := r.reminderRepo.CreateWeeklyReminder(daysOfWeek, timeOfDay, user, selection.ReminderMessage)
+	reminder, err := r.reminderRepo.CreateWeeklyReminder(selection.WeekOptions, timeOfDay, user, selection.ReminderMessage)
 	if err != nil {
 		return nil, err
 	}

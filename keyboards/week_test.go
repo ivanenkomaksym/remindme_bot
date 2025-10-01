@@ -2,6 +2,7 @@ package keyboards
 
 import (
 	"testing"
+	"time"
 )
 
 func TestIsWeekSelectionCallback(t *testing.T) {
@@ -17,8 +18,8 @@ func TestIsWeekSelectionCallback(t *testing.T) {
 }
 
 func TestGetWeekRangeMarkup(t *testing.T) {
-	var opts [7]bool
-	m := GetWeekRangeMarkup(opts, LangEN)
+	var weekdays []time.Weekday
+	m := GetWeekRangeMarkup(weekdays, LangEN)
 	// 7 day rows + select + back
 	if len(m.InlineKeyboard) != 9 {
 		t.Fatalf("expected 9 rows, got %d", len(m.InlineKeyboard))
@@ -31,11 +32,11 @@ func TestGetWeekRangeMarkup(t *testing.T) {
 }
 
 func TestHandleWeekSelection_ToggleAndSelect(t *testing.T) {
-	opts := [7]bool{}
+	var weekdays []time.Weekday
 
 	// Toggle Monday (index 0)
-	res := HandleWeekSelection(CallbackWeekDay+"0", &opts, LangEN)
-	if res == nil || !opts[0] {
+	res := HandleWeekSelection(CallbackWeekDay+"Mon", &weekdays, LangEN)
+	if res == nil || weekdays[0] != time.Monday {
 		t.Fatalf("monday should be toggled on")
 	}
 	if res.Markup == nil || len(res.Markup.InlineKeyboard) != 9 {
@@ -43,7 +44,7 @@ func TestHandleWeekSelection_ToggleAndSelect(t *testing.T) {
 	}
 
 	// Confirm selection
-	res = HandleWeekSelection(CallbackWeekSelect, &opts, LangEN)
+	res = HandleWeekSelection(CallbackWeekSelect, &weekdays, LangEN)
 	if res == nil || res.Markup == nil {
 		t.Fatalf("expected markup on select")
 	}
