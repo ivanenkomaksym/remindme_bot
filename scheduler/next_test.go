@@ -24,7 +24,8 @@ func TestNextDailyTrigger(t *testing.T) {
 	wantLocal := time.Date(2025, 1, 10, 23, 0, 0, 0, loc)
 	wantUTC := wantLocal.UTC()
 
-	gotUTC := NextDailyTrigger(from, "23:00", loc)
+	timeOfDay := time.Date(2025, 1, 10, 23, 0, 0, 0, loc)
+	gotUTC := NextDailyTrigger(from, timeOfDay, loc)
 	if !gotUTC.Equal(wantUTC) {
 		t.Fatalf("expected %v, got %v", wantUTC, gotUTC)
 	}
@@ -33,7 +34,8 @@ func TestNextDailyTrigger(t *testing.T) {
 	wantLocal = time.Date(2025, 1, 11, 9, 45, 0, 0, loc)
 	wantUTC = wantLocal.UTC()
 
-	gotUTC = NextDailyTrigger(from, "09:45", loc)
+	timeOfDay = time.Date(2025, 1, 10, 9, 45, 0, 0, loc)
+	gotUTC = NextDailyTrigger(from, timeOfDay, loc)
 	if !gotUTC.Equal(wantUTC) {
 		t.Fatalf("expected %v, got %v", wantUTC, gotUTC)
 	}
@@ -49,7 +51,8 @@ func TestNextWeeklyTrigger(t *testing.T) {
 	wantLocal := time.Date(2025, 1, 10, 11, 0, 0, 0, loc)
 	wantUTC := wantLocal.UTC()
 
-	gotUTC := NextWeeklyTrigger(from, []time.Weekday{time.Monday, time.Friday}, "11:00", loc)
+	timeOfDay := time.Date(2025, 1, 10, 11, 00, 0, 0, loc)
+	gotUTC := NextWeeklyTrigger(from, []time.Weekday{time.Monday, time.Friday}, timeOfDay, loc)
 	if !gotUTC.Equal(wantUTC) {
 		t.Fatalf("expected %v, got %v", wantUTC, gotUTC)
 	}
@@ -57,7 +60,8 @@ func TestNextWeeklyTrigger(t *testing.T) {
 	wantLocal = time.Date(2025, 1, 13, 9, 0, 0, 0, loc)
 	wantUTC = wantLocal.UTC()
 
-	gotUTC = NextWeeklyTrigger(from, []time.Weekday{time.Monday}, "09:00", loc)
+	timeOfDay = time.Date(2025, 1, 10, 9, 00, 0, 0, loc)
+	gotUTC = NextWeeklyTrigger(from, []time.Weekday{time.Monday}, timeOfDay, loc)
 	if !gotUTC.Equal(wantUTC) {
 		t.Fatalf("expected %v, got %v", wantUTC, gotUTC)
 	}
@@ -72,7 +76,8 @@ func TestNextMonthlyTrigger(t *testing.T) {
 	wantLocal := time.Date(2025, 1, 15, 9, 0, 0, 0, loc)
 	wantUTC := wantLocal.UTC()
 
-	gotUTC := NextMonthlyTrigger(from, []int{15}, "09:00", loc)
+	timeOfDay := time.Date(2025, 1, 10, 9, 00, 0, 0, loc)
+	gotUTC := NextMonthlyTrigger(from, []int{15}, timeOfDay, loc)
 	if !gotUTC.Equal(wantUTC) {
 		t.Fatalf("expected %v, got %v", wantUTC, gotUTC)
 	}
@@ -81,7 +86,7 @@ func TestNextMonthlyTrigger(t *testing.T) {
 	wantLocal = time.Date(2025, 2, 1, 9, 0, 0, 0, loc)
 	wantUTC = wantLocal.UTC()
 
-	gotUTC = NextMonthlyTrigger(from, []int{1}, "09:00", loc)
+	gotUTC = NextMonthlyTrigger(from, []int{1}, timeOfDay, loc)
 	if !gotUTC.Equal(wantUTC) {
 		t.Fatalf("expected %v, got %v", wantUTC, gotUTC)
 	}
@@ -94,14 +99,15 @@ func TestNextForRecurrence(t *testing.T) {
 	var wantLocal time.Time
 	var wantUTC time.Time
 
-	recOnce := entities.OnceAt(from, "10:30", loc)
+	timeOfDay := time.Date(2025, 1, 10, 10, 30, 0, 0, loc)
+	recOnce := entities.OnceAt(timeOfDay, loc)
 	gotUTC := NextForRecurrence(from, recOnce)
 	if gotUTC != nil {
 		t.Fatalf("daily: expected %v, got %v", nil, gotUTC)
 	}
 
 	// Daily advances to the next local 10:30 -> compute expected candidate in loc and compare in UTC
-	recDaily := entities.DailyAt("10:30", loc)
+	recDaily := entities.DailyAt(timeOfDay, loc)
 	gotUTC = NextForRecurrence(from, recDaily)
 	candidate := time.Date(from.Year(), from.Month(), from.Day(), 10, 30, 0, 0, loc)
 	if !candidate.After(from) {
@@ -112,7 +118,8 @@ func TestNextForRecurrence(t *testing.T) {
 		t.Fatalf("daily: expected %v, got %v", wantUTC, gotUTC)
 	}
 	// Weekly Monday at 09:00 from Friday -> next Monday at 09:00
-	recWeekly := entities.CustomWeekly([]time.Weekday{time.Monday}, "09:00", loc)
+	timeOfDay = time.Date(2025, 1, 10, 9, 0, 0, 0, loc)
+	recWeekly := entities.CustomWeekly([]time.Weekday{time.Monday}, timeOfDay, loc)
 	gotUTC = NextForRecurrence(from, recWeekly)
 
 	wantLocal = time.Date(2025, 1, 13, 9, 0, 0, 0, loc)
@@ -121,7 +128,7 @@ func TestNextForRecurrence(t *testing.T) {
 		t.Fatalf("weekly: expected %v, got %v", wantUTC, gotUTC)
 	}
 	// Monthly 15th 09:00
-	recMonthly := entities.MonthlyOnDay([]int{15}, "09:00", loc)
+	recMonthly := entities.MonthlyOnDay([]int{15}, timeOfDay, loc)
 	gotUTC = NextForRecurrence(from, recMonthly)
 	wantLocal = time.Date(2025, 1, 15, 9, 0, 0, 0, loc)
 	wantUTC = wantLocal.UTC()

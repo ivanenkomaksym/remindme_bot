@@ -6,6 +6,7 @@ import (
 	"github.com/ivanenkomaksym/remindme_bot/domain/entities"
 	"github.com/ivanenkomaksym/remindme_bot/domain/errors"
 	"github.com/ivanenkomaksym/remindme_bot/domain/repositories"
+	"github.com/ivanenkomaksym/remindme_bot/scheduler"
 )
 
 // ReminderUseCase defines the interface for reminder business logic
@@ -31,7 +32,31 @@ func NewReminderUseCase(reminderRepo repositories.ReminderRepository, userRepo r
 	}
 }
 
+// helper: merge a selected date and time string into a time.Time in user's location
+func buildDateTimeFromSelection(date time.Time, selectedTime string, loc *time.Location) (time.Time, error) {
+	if loc == nil {
+		loc = time.UTC
+	}
+	date = date.In(loc)
+	hour, minute, ok := scheduler.ParseHourMinute(selectedTime)
+	if !ok {
+		return time.Time{}, errors.ErrInvalidTimeFormat
+	}
+	return time.Date(date.Year(), date.Month(), date.Day(), hour, minute, 0, 0, loc), nil
+}
+
 func (r *reminderUseCase) CreateReminder(userID int64, selection *entities.UserSelection) (*entities.Reminder, error) {
+	// Get user to ensure they exist
+	user, err := r.userRepo.GetUser(userID)
+	if err != nil {
+		return nil, err
+	}
+	if user == nil {
+		return nil, errors.ErrUserNotFound
+	}
+
+	timeOfDay := time.Time{}
+
 	if userID <= 0 {
 		return nil, errors.NewDomainError("INVALID_USER_ID", "User ID must be positive", nil)
 	}
@@ -43,38 +68,35 @@ func (r *reminderUseCase) CreateReminder(userID int64, selection *entities.UserS
 	}
 	if selection.SelectedTime == "" {
 		return nil, errors.ErrInvalidTimeFormat
-	}
-
-	// Get user to ensure they exist
-	user, err := r.userRepo.GetUser(userID)
-	if err != nil {
-		return nil, err
-	}
-	if user == nil {
-		return nil, errors.ErrUserNotFound
+	} else {
+		loc := user.GetLocation()
+		timeOfDay, err = buildDateTimeFromSelection(selection.SelectedDate, selection.SelectedTime, loc)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	// Create reminder based on recurrence type
 	switch selection.RecurrenceType {
 	case entities.Once:
-		return r.createOnceReminder(user, selection)
+		return r.createOnceReminder(user, selection, timeOfDay)
 	case entities.Daily:
-		return r.createDailyReminder(user, selection)
+		return r.createDailyReminder(user, selection, timeOfDay)
 	case entities.Weekly:
-		return r.createWeeklyReminder(user, selection)
+		return r.createWeeklyReminder(user, selection, timeOfDay)
 	case entities.Monthly:
-		return r.createMonthlyReminder(user, selection)
+		return r.createMonthlyReminder(user, selection, timeOfDay)
 	case entities.Interval:
-		return r.createIntervalReminder(user, selection)
+		return r.createIntervalReminder(user, selection, timeOfDay)
 	case entities.SpacedBasedRepetition:
-		return r.createSpaceBasedRepetitionReminder(user, selection)
+		return r.createSpaceBasedRepetitionReminder(user, selection, timeOfDay)
 	default:
 		return nil, errors.ErrInvalidRecurrenceType
 	}
 }
 
-func (r *reminderUseCase) createOnceReminder(user *entities.User, selection *entities.UserSelection) (*entities.Reminder, error) {
-	reminder, err := r.reminderRepo.CreateOnceReminder(selection.SelectedDate, selection.SelectedTime, user, selection.ReminderMessage)
+func (r *reminderUseCase) createOnceReminder(user *entities.User, selection *entities.UserSelection, timeOfDay time.Time) (*entities.Reminder, error) {
+	reminder, err := r.reminderRepo.CreateOnceReminder(timeOfDay, user, selection.ReminderMessage)
 	if err != nil {
 		return nil, err
 	}
@@ -82,8 +104,8 @@ func (r *reminderUseCase) createOnceReminder(user *entities.User, selection *ent
 	return reminder, nil
 }
 
-func (r *reminderUseCase) createDailyReminder(user *entities.User, selection *entities.UserSelection) (*entities.Reminder, error) {
-	reminder, err := r.reminderRepo.CreateDailyReminder(selection.SelectedTime, user, selection.ReminderMessage)
+func (r *reminderUseCase) createDailyReminder(user *entities.User, selection *entities.UserSelection, timeOfDay time.Time) (*entities.Reminder, error) {
+	reminder, err := r.reminderRepo.CreateDailyReminder(timeOfDay, user, selection.ReminderMessage)
 	if err != nil {
 		return nil, err
 	}
@@ -91,7 +113,7 @@ func (r *reminderUseCase) createDailyReminder(user *entities.User, selection *en
 	return reminder, nil
 }
 
-func (r *reminderUseCase) createWeeklyReminder(user *entities.User, selection *entities.UserSelection) (*entities.Reminder, error) {
+func (r *reminderUseCase) createWeeklyReminder(user *entities.User, selection *entities.UserSelection, timeOfDay time.Time) (*entities.Reminder, error) {
 	// Convert week options to time.Weekday slice
 	var daysOfWeek []time.Weekday
 	for i, selected := range selection.WeekOptions {
@@ -104,7 +126,7 @@ func (r *reminderUseCase) createWeeklyReminder(user *entities.User, selection *e
 		return nil, errors.NewDomainError("NO_WEEKDAYS_SELECTED", "At least one weekday must be selected", nil)
 	}
 
-	reminder, err := r.reminderRepo.CreateWeeklyReminder(daysOfWeek, selection.SelectedTime, user, selection.ReminderMessage)
+	reminder, err := r.reminderRepo.CreateWeeklyReminder(daysOfWeek, timeOfDay, user, selection.ReminderMessage)
 	if err != nil {
 		return nil, err
 	}
@@ -112,7 +134,7 @@ func (r *reminderUseCase) createWeeklyReminder(user *entities.User, selection *e
 	return reminder, nil
 }
 
-func (r *reminderUseCase) createMonthlyReminder(user *entities.User, selection *entities.UserSelection) (*entities.Reminder, error) {
+func (r *reminderUseCase) createMonthlyReminder(user *entities.User, selection *entities.UserSelection, timeOfDay time.Time) (*entities.Reminder, error) {
 	daysOfMonth := []int{}
 	for idx, day := range selection.MonthOptions {
 		if day {
@@ -120,7 +142,7 @@ func (r *reminderUseCase) createMonthlyReminder(user *entities.User, selection *
 		}
 	}
 
-	reminder, err := r.reminderRepo.CreateMonthlyReminder(daysOfMonth, selection.SelectedTime, user, selection.ReminderMessage)
+	reminder, err := r.reminderRepo.CreateMonthlyReminder(daysOfMonth, timeOfDay, user, selection.ReminderMessage)
 	if err != nil {
 		return nil, err
 	}
@@ -128,19 +150,19 @@ func (r *reminderUseCase) createMonthlyReminder(user *entities.User, selection *
 	return reminder, nil
 }
 
-func (r *reminderUseCase) createIntervalReminder(user *entities.User, selection *entities.UserSelection) (*entities.Reminder, error) {
+func (r *reminderUseCase) createIntervalReminder(user *entities.User, selection *entities.UserSelection, timeOfDay time.Time) (*entities.Reminder, error) {
 	if selection.IntervalDays <= 0 {
 		return nil, errors.NewDomainError("INVALID_INTERVAL", "Interval must be a positive number of days", nil)
 	}
-	reminder, err := r.reminderRepo.CreateIntervalReminder(selection.IntervalDays, selection.SelectedTime, user, selection.ReminderMessage)
+	reminder, err := r.reminderRepo.CreateIntervalReminder(selection.IntervalDays, timeOfDay, user, selection.ReminderMessage)
 	if err != nil {
 		return nil, err
 	}
 	return reminder, nil
 }
 
-func (r *reminderUseCase) createSpaceBasedRepetitionReminder(user *entities.User, selection *entities.UserSelection) (*entities.Reminder, error) {
-	reminder, err := r.reminderRepo.CreateSpaceBasedRepetitionReminder(selection.SelectedTime, user, selection.ReminderMessage)
+func (r *reminderUseCase) createSpaceBasedRepetitionReminder(user *entities.User, selection *entities.UserSelection, timeOfDay time.Time) (*entities.Reminder, error) {
+	reminder, err := r.reminderRepo.CreateSpaceBasedRepetitionReminder(timeOfDay, user, selection.ReminderMessage)
 	if err != nil {
 		return nil, err
 	}

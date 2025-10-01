@@ -12,7 +12,8 @@ func TestCreateDailyReminder_Happy(t *testing.T) {
 	repo := NewInMemoryReminderRepository()
 	loc, _ := time.LoadLocation("Asia/Shanghai")
 	user := entities.User{ID: 1, UserName: "tester", Location: loc}
-	rem, _ := repo.CreateDailyReminder("23:15", &user, "daily msg")
+	tod, _ := time.ParseInLocation("15:04", "23:15", loc)
+	rem, _ := repo.CreateDailyReminder(tod, &user, "daily msg")
 
 	if rem == nil {
 		t.Fatalf("expected reminder, got nil")
@@ -37,29 +38,13 @@ func TestCreateDailyReminder_Happy(t *testing.T) {
 	}
 }
 
-func TestCreateDailyReminder_InvalidTime(t *testing.T) {
-	repo := NewInMemoryReminderRepository()
-	loc, _ := time.LoadLocation("Asia/Shanghai")
-	user := entities.User{ID: 2, UserName: "tester", Location: loc}
-	rem, _ := repo.CreateDailyReminder("bad", &user, "daily bad")
-
-	if rem == nil {
-		t.Fatalf("expected reminder, got nil")
-	}
-	if !rem.NextTrigger.Equal(rem.CreatedAt) {
-		t.Errorf("expected NextTrigger == CreatedAt on invalid time; got %v vs %v", rem.NextTrigger, rem.CreatedAt)
-	}
-	if !rem.Recurrence.IsDaily() {
-		t.Errorf("expected daily recurrence even for invalid time string")
-	}
-}
-
 func TestCreateWeeklyReminder_Happy(t *testing.T) {
 	repo := NewInMemoryReminderRepository()
 	loc, _ := time.LoadLocation("Asia/Shanghai")
 	user := entities.User{ID: 3, UserName: "tester", Location: loc}
 	days := []time.Weekday{time.Wednesday, time.Friday}
-	rem, _ := repo.CreateWeeklyReminder(days, "00:01", &user, "weekly msg")
+	todW, _ := time.ParseInLocation("15:04", "00:01", loc)
+	rem, _ := repo.CreateWeeklyReminder(days, todW, &user, "weekly msg")
 
 	if rem == nil {
 		t.Fatalf("expected reminder, got nil")
@@ -83,7 +68,8 @@ func TestCreateWeeklyReminder_EmptyDaysFallbackDaily(t *testing.T) {
 	repo := NewInMemoryReminderRepository()
 	loc, _ := time.LoadLocation("Asia/Shanghai")
 	user := entities.User{ID: 4, UserName: "tester", Location: loc}
-	rem, _ := repo.CreateWeeklyReminder([]time.Weekday{}, "06:30", &user, "weekly empty")
+	todEmpty, _ := time.ParseInLocation("15:04", "06:30", loc)
+	rem, _ := repo.CreateWeeklyReminder([]time.Weekday{}, todEmpty, &user, "weekly empty")
 
 	if rem == nil {
 		t.Fatalf("expected reminder, got nil")
@@ -103,7 +89,8 @@ func TestCreateMonthlyReminder_Happy(t *testing.T) {
 	loc, _ := time.LoadLocation("Asia/Shanghai")
 	user := entities.User{ID: 5, UserName: "tester", Location: loc}
 	days := []int{5, 20}
-	rem, _ := repo.CreateMonthlyReminder(days, "07:45", &user, "monthly msg")
+	todM, _ := time.ParseInLocation("15:04", "07:45", loc)
+	rem, _ := repo.CreateMonthlyReminder(days, todM, &user, "monthly msg")
 	if rem == nil {
 		t.Fatalf("expected reminder, got nil")
 	}
@@ -126,7 +113,8 @@ func TestCreateMonthlyReminder_InvalidDaysFallbackDaily(t *testing.T) {
 	repo := NewInMemoryReminderRepository()
 	loc, _ := time.LoadLocation("Asia/Shanghai")
 	user := entities.User{ID: 6, UserName: "tester", Location: loc}
-	rem, _ := repo.CreateMonthlyReminder([]int{0, 35}, "09:00", &user, "monthly invalid")
+	todInvalid, _ := time.ParseInLocation("15:04", "09:00", loc)
+	rem, _ := repo.CreateMonthlyReminder([]int{0, 35}, todInvalid, &user, "monthly invalid")
 	if rem == nil {
 		t.Fatalf("expected reminder, got nil")
 	}
@@ -144,7 +132,8 @@ func TestCreateIntervalReminder_Happy(t *testing.T) {
 	loc, _ := time.LoadLocation("Asia/Shanghai")
 	user := entities.User{ID: 7, UserName: "tester", Location: loc}
 	intervalDays := 3
-	rem, _ := repo.CreateIntervalReminder(intervalDays, "08:20", &user, "interval msg")
+	todI, _ := time.ParseInLocation("15:04", "08:20", loc)
+	rem, _ := repo.CreateIntervalReminder(intervalDays, todI, &user, "interval msg")
 
 	if rem == nil {
 		t.Fatalf("expected reminder, got nil")
@@ -169,7 +158,8 @@ func TestCreateIntervalReminder_OneDayBehavesDaily(t *testing.T) {
 	repo := NewInMemoryReminderRepository()
 	loc, _ := time.LoadLocation("Asia/Shanghai")
 	user := entities.User{ID: 8, UserName: "tester", Location: loc}
-	rem, _ := repo.CreateIntervalReminder(1, "05:05", &user, "interval 1d")
+	tod1, _ := time.ParseInLocation("15:04", "05:05", loc)
+	rem, _ := repo.CreateIntervalReminder(1, tod1, &user, "interval 1d")
 	if rem == nil {
 		t.Fatalf("expected reminder, got nil")
 	}
@@ -189,7 +179,8 @@ func TestGetReminders_ReturnsCopy(t *testing.T) {
 	repo := NewInMemoryReminderRepository()
 	loc, _ := time.LoadLocation("Asia/Shanghai")
 	user := entities.User{ID: 9, UserName: "tester", Location: loc}
-	_, _ = repo.CreateDailyReminder("10:00", &user, "original")
+	todOrig, _ := time.ParseInLocation("15:04", "10:00", loc)
+	_, _ = repo.CreateDailyReminder(todOrig, &user, "original")
 	list1, _ := repo.GetReminders()
 	if len(list1) != 1 {
 		t.Fatalf("expected 1 reminder, got %d", len(list1))
@@ -206,7 +197,8 @@ func TestUpdateReminder_Happy(t *testing.T) {
 	repo := NewInMemoryReminderRepository()
 	loc, _ := time.LoadLocation("Asia/Shanghai")
 	user := entities.User{ID: 10, UserName: "tester", Location: loc}
-	rem, _ := repo.CreateDailyReminder("12:00", &user, "original message")
+	tod12, _ := time.ParseInLocation("15:04", "12:00", loc)
+	rem, _ := repo.CreateDailyReminder(tod12, &user, "original message")
 	rem.Message = "updated message"
 	rem.IsActive = false
 	ok := repo.UpdateReminder(rem)

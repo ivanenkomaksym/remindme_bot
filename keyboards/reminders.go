@@ -80,7 +80,7 @@ func formatLabel(reminder entities.Reminder, lang string, includeMessage bool) s
 
 	switch reminder.Recurrence.Type {
 	case entities.Once:
-		reminderTime = reminder.Recurrence.StartDate.In(reminder.Recurrence.Location).Format("2006-01-02T15:04:05")
+		reminderTime = reminder.Recurrence.StartDate.In(reminder.Recurrence.GetLocation()).Format("2006-01-02T15:04:05")
 	case entities.Daily:
 		break
 	case entities.Weekly:

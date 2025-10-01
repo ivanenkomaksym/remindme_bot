@@ -24,8 +24,8 @@ func TestProcessDueReminders_DailyAdvancesNextTrigger(t *testing.T) {
 	// Force NextTrigger to be at a fixed point in user's timezone
 	past := time.Now().Add(-2 * time.Hour).Truncate(time.Minute).In(loc)
 	// Create a daily reminder at the same clock time as 'past'
-	timeStr := past.Format("15:04")
-	rem, _ := repo.CreateDailyReminder(timeStr, &user, "ping")
+	tod := past
+	rem, _ := repo.CreateDailyReminder(tod, &user, "ping")
 	rem.NextTrigger = &past
 	repo.UpdateReminder(rem)
 
@@ -81,7 +81,8 @@ func TestProcessDueReminders_OneTimeDeactivates(t *testing.T) {
 	}
 	// Inject into repo via UpdateReminder path after appending
 	// Use repository's internal behavior by creating a daily and replacing it
-	junk, _ := repo.CreateDailyReminder("00:00", &user, "junk")
+	todJunk, _ := time.ParseInLocation("15:04", "00:00", loc)
+	junk, _ := repo.CreateDailyReminder(todJunk, &user, "junk")
 	rem.ID = junk.ID
 	repo.UpdateReminder(&rem)
 

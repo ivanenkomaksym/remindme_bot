@@ -9,12 +9,12 @@ import (
 // ReminderRepository defines the interface for reminder data operations
 type ReminderRepository interface {
 	// Reminder creation
-	CreateOnceReminder(date time.Time, timeStr string, user *entities.User, message string) (*entities.Reminder, error)
-	CreateDailyReminder(timeStr string, user *entities.User, message string) (*entities.Reminder, error)
-	CreateWeeklyReminder(daysOfWeek []time.Weekday, timeStr string, user *entities.User, message string) (*entities.Reminder, error)
-	CreateMonthlyReminder(daysOfMonth []int, timeStr string, user *entities.User, message string) (*entities.Reminder, error)
-	CreateIntervalReminder(intervalDays int, timeStr string, user *entities.User, message string) (*entities.Reminder, error)
-	CreateSpaceBasedRepetitionReminder(timeStr string, user *entities.User, message string) (*entities.Reminder, error)
+	CreateOnceReminder(dateTime time.Time, user *entities.User, message string) (*entities.Reminder, error)
+	CreateDailyReminder(timeOfDay time.Time, user *entities.User, message string) (*entities.Reminder, error)
+	CreateWeeklyReminder(daysOfWeek []time.Weekday, timeOfDay time.Time, user *entities.User, message string) (*entities.Reminder, error)
+	CreateMonthlyReminder(daysOfMonth []int, timeOfDay time.Time, user *entities.User, message string) (*entities.Reminder, error)
+	CreateIntervalReminder(intervalDays int, timeOfDay time.Time, user *entities.User, message string) (*entities.Reminder, error)
+	CreateSpaceBasedRepetitionReminder(timeOfDay time.Time, user *entities.User, message string) (*entities.Reminder, error)
 
 	// Reminder retrieval
 	GetReminders() ([]entities.Reminder, error)

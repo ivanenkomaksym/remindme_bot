@@ -5,36 +5,10 @@ import (
 	"time"
 )
 
-func TestParseTimeOfDay_ValidAndInvalid(t *testing.T) {
-	// valid padded
-	tm, err := parseTimeOfDay("09:05")
-	if err != nil {
-		t.Fatalf("expected parse success, got err: %v", err)
-	}
-	if tm.Hour() != 9 || tm.Minute() != 5 {
-		t.Fatalf("expected 09:05, got %02d:%02d", tm.Hour(), tm.Minute())
-	}
-
-	// valid non-padded
-	tm, err = parseTimeOfDay("9:05")
-	if err != nil {
-		t.Fatalf("expected parse success, got err: %v", err)
-	}
-	if tm.Hour() != 9 || tm.Minute() != 5 {
-		t.Fatalf("expected 09:05, got %02d:%02d", tm.Hour(), tm.Minute())
-	}
-
-	// invalid
-	_, err = parseTimeOfDay("bad")
-	if err == nil {
-		t.Fatalf("expected parse error for invalid string")
-	}
-}
-
 func TestOnceAt_GetTimeOfDayAndLocation(t *testing.T) {
 	loc, _ := time.LoadLocation("Asia/Shanghai")
-	date := time.Date(2025, 1, 10, 0, 0, 0, 0, time.UTC)
-	rec := OnceAt(date, "07:30", loc)
+	date := time.Date(2025, 1, 10, 7, 30, 0, 0, loc)
+	rec := OnceAt(date, loc)
 	if rec == nil {
 		t.Fatalf("expected recurrence")
 	}
@@ -55,7 +29,8 @@ func TestCustomWeeklyAndDailyAndMonthlyAndInterval(t *testing.T) {
 	loc, _ := time.LoadLocation("Asia/Shanghai")
 
 	// Custom weekly
-	recW := CustomWeekly([]time.Weekday{time.Monday, time.Wednesday}, "08:20", loc)
+	timeOfDay := time.Date(2025, 1, 10, 8, 20, 0, 0, loc)
+	recW := CustomWeekly([]time.Weekday{time.Monday, time.Wednesday}, timeOfDay, loc)
 	if !recW.IsWeekly() {
 		t.Fatalf("expected weekly recurrence")
 	}
@@ -64,13 +39,15 @@ func TestCustomWeeklyAndDailyAndMonthlyAndInterval(t *testing.T) {
 	}
 
 	// Daily
-	recD := DailyAt("14:45", loc)
+	timeOfDay = time.Date(2025, 1, 10, 14, 45, 0, 0, loc)
+	recD := DailyAt(timeOfDay, loc)
 	if !recD.IsDaily() {
 		t.Fatalf("expected daily recurrence")
 	}
 
 	// Monthly
-	recM := MonthlyOnDay([]int{1, 15}, "06:00", loc)
+	timeOfDay = time.Date(2025, 1, 10, 6, 0, 0, 0, loc)
+	recM := MonthlyOnDay([]int{1, 15}, timeOfDay, loc)
 	if !recM.IsMonthly() {
 		t.Fatalf("expected monthly recurrence")
 	}
@@ -79,7 +56,8 @@ func TestCustomWeeklyAndDailyAndMonthlyAndInterval(t *testing.T) {
 	}
 
 	// Interval
-	recI := IntervalEveryDays(3, "05:05", loc)
+	timeOfDay = time.Date(2025, 1, 10, 5, 5, 0, 0, loc)
+	recI := IntervalEveryDays(3, timeOfDay, loc)
 	if !recI.IsInterval() {
 		t.Fatalf("expected interval recurrence")
 	}
