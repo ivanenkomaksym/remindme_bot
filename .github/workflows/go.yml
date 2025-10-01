@@ -8,10 +8,24 @@ on:
     branches: [ "main" ]
   pull_request:
     branches: [ "main" ]
+  workflow_dispatch: # Allows manual triggering from the GitHub Actions UI
+
+env:
+  AWS_REGION: eu-central-1
+  ECR_REPOSITORY: remindmebot
+  APP_RUNNER_SERVICE_ARN: arn:aws:apprunner:eu-central-1:861276125075:service/remindmebot/52395a313e234e52b68c38db60dee09a
+
+  BOT_TOKEN: ${{ secrets.BOT_TOKEN }}
+  PUBLIC_URL: ${{ secrets.PUBLIC_URL }}
+  API_KEY: ${{ secrets.API_KEY }}
+  DB_CONNECTION_STRING: ${{ secrets.DB_CONNECTION_STRING }}
+  
+  NOTIFIER_TIMEOUT: 15m
 
 jobs:
 
   build:
+    name: Build and Test
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v4
@@ -19,10 +33,77 @@ jobs:
     - name: Set up Go
       uses: actions/setup-go@v4
       with:
-        go-version: '1.20'
+        go-version: '1.24.4'
+        check-latest: true
 
     - name: Build
       run: go build -v ./...
 
     - name: Test
       run: go test -v ./...
+      
+  deploy:
+    name: Build and Deploy to AWS App Runner
+    runs-on: ubuntu-latest
+    needs: build
+    if: success()
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          # Using Access Keys stored in GitHub Secrets
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Build, tag, and push image to Amazon ECR
+        id: build-image
+        env:
+          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          IMAGE_TAG: 1.0
+        run: |
+          # Build the docker image and push it to ECR with a unique tag (the git commit SHA)
+          docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
+          docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
+          # Set the image URL as an output for the next step
+          echo "image=$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG" >> $GITHUB_OUTPUT
+
+      - name: Deploy new image to AWS App Runner
+        run: |
+          # The AWS CLI requires a JSON object for the source configuration.
+          # We build this JSON safely in a variable using printf and pass it directly.
+          SOURCE_CONFIG=$(printf '{
+            "ImageRepository": {
+              "ImageIdentifier": "%s",
+              "ImageRepositoryType": "ECR",
+              "ImageConfiguration": {
+                "RuntimeEnvironmentVariables": {
+                  "BOT_TOKEN": "%s",
+                  "PUBLIC_URL": "%s",
+                  "API_KEY": "%s",
+                  "STORAGE": "mongo",
+                  "DB_CONNECTION_STRING": "%s",
+                  "NOTIFIER_TIMEOUT": "%s"
+                }
+              }
+            }
+          }' \
+          "${{ steps.build-image.outputs.image }}" \
+          "$BOT_TOKEN" \
+          "$PUBLIC_URL" \
+          "$API_KEY" \
+          "$DB_CONNECTION_STRING" \
+          "$NOTIFIER_TIMEOUT" \
+          )
+
+          # Update the App Runner service using the generated JSON configuration.
+          aws apprunner update-service \
+            --service-arn ${{ env.APP_RUNNER_SERVICE_ARN }} \
+            --source-configuration "$SOURCE_CONFIG"
