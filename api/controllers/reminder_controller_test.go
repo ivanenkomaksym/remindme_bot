@@ -3,7 +3,9 @@ package controllers
 import (
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"testing"
+	"time"
 
 	"github.com/ivanenkomaksym/remindme_bot/domain/entities"
 	"github.com/ivanenkomaksym/remindme_bot/domain/usecases"
@@ -11,10 +13,18 @@ import (
 
 type reminderUseCaseMock struct {
 	usecases.ReminderUseCase
+	createReminderFn     func(userID int64, selection *entities.UserSelection) (*entities.Reminder, error)
 	getUserRemindersFn   func(userID int64) ([]entities.Reminder, error)
 	getAllRemindersFn    func() ([]entities.Reminder, error)
 	deleteReminderFn     func(reminderID, userID int64) error
 	getActiveRemindersFn func() ([]entities.Reminder, error)
+}
+
+func (m *reminderUseCaseMock) CreateReminder(userID int64, selection *entities.UserSelection) (*entities.Reminder, error) {
+	if m.createReminderFn != nil {
+		return m.createReminderFn(userID, selection)
+	}
+	return &entities.Reminder{}, nil
 }
 
 func (m *reminderUseCaseMock) GetUserReminders(userID int64) ([]entities.Reminder, error) {
@@ -47,8 +57,9 @@ func TestReminderController_MethodGuards(t *testing.T) {
 
 	// Wrong method for GetUserReminders
 	rw := httptest.NewRecorder()
-	req := httptest.NewRequest(http.MethodPost, "/reminders/1", nil)
-	c.GetUserReminders(rw, req)
+	req := httptest.NewRequest(http.MethodPatch, "/reminders/1", nil)
+	req.SetPathValue("user_id", "123")
+	c.ProcessUserReminders(rw, req)
 	if rw.Code != http.StatusMethodNotAllowed {
 		t.Fatalf("expected 405, got %d", rw.Code)
 	}
@@ -78,13 +89,13 @@ func TestReminderController_MethodGuards(t *testing.T) {
 	}
 }
 
-func TestReminderController_GetUserReminders_Validation(t *testing.T) {
+func TestReminderController_ProcessUserReminders_Validation(t *testing.T) {
 	c := NewReminderController(&reminderUseCaseMock{})
 
 	// missing user_id
 	rw := httptest.NewRecorder()
 	req := httptest.NewRequest(http.MethodGet, "/reminders", nil)
-	c.GetUserReminders(rw, req)
+	c.ProcessUserReminders(rw, req)
 	if rw.Code != http.StatusBadRequest {
 		t.Fatalf("expected 400, got %d", rw.Code)
 	}
@@ -93,7 +104,7 @@ func TestReminderController_GetUserReminders_Validation(t *testing.T) {
 	rw = httptest.NewRecorder()
 	req = httptest.NewRequest(http.MethodGet, "/reminders/abc", nil)
 	req.SetPathValue("user_id", "abc")
-	c.GetUserReminders(rw, req)
+	c.ProcessUserReminders(rw, req)
 	if rw.Code != http.StatusBadRequest {
 		t.Fatalf("expected 400, got %d", rw.Code)
 	}
@@ -128,5 +139,183 @@ func TestReminderController_DeleteReminder_Validation(t *testing.T) {
 	c.DeleteReminder(rw, req)
 	if rw.Code != http.StatusBadRequest {
 		t.Fatalf("expected 400, got %d", rw.Code)
+	}
+}
+
+func TestReminderController_GetUserReminders_Success(t *testing.T) {
+	// Setup mock reminder with expected data
+	expectedReminders := []entities.Reminder{
+		{
+			ID:      1,
+			UserID:  123,
+			Message: "Test reminder 1",
+		},
+		{
+			ID:      2,
+			UserID:  123,
+			Message: "Test reminder 2",
+		},
+	}
+
+	mock := &reminderUseCaseMock{
+		getUserRemindersFn: func(userID int64) ([]entities.Reminder, error) {
+			if userID == 123 {
+				return expectedReminders, nil
+			}
+			return nil, nil
+		},
+	}
+
+	c := NewReminderController(mock)
+
+	// Test successful retrieval
+	rw := httptest.NewRecorder()
+	req := httptest.NewRequest(http.MethodGet, "/reminders/123", nil)
+	req.SetPathValue("user_id", "123")
+
+	c.ProcessUserReminders(rw, req)
+
+	if rw.Code != http.StatusOK {
+		t.Fatalf("expected 200, got %d", rw.Code)
+	}
+}
+
+func TestReminderController_CreateUserReminder_Success(t *testing.T) {
+	// Setup mock reminder with expected data
+	expectedReminder := &entities.Reminder{
+		ID:        1,
+		UserID:    123,
+		Message:   "Test reminder message",
+		CreatedAt: time.Now(),
+	}
+
+	mock := &reminderUseCaseMock{
+		createReminderFn: func(userID int64, selection *entities.UserSelection) (*entities.Reminder, error) {
+			if userID == 123 && selection != nil {
+				// Verify the selection data matches what we sent
+				if selection.RecurrenceType != entities.Daily ||
+					selection.ReminderMessage != "Test reminder message" ||
+					selection.SelectedTime != "10:00" {
+					t.Fatalf("received unexpected selection data")
+				}
+				return expectedReminder, nil
+			}
+			return nil, nil
+		},
+	}
+
+	c := NewReminderController(mock)
+
+	// Create request body with user selection data
+	body := `{
+		"recurrenceType": "Daily",
+		"selectedTime": "10:00",
+		"reminderMessage": "Test reminder message"
+	}`
+
+	// Test successful creation
+	rw := httptest.NewRecorder()
+	req := httptest.NewRequest(http.MethodPost, "/reminders/123", strings.NewReader(body))
+	req.Header.Set("Content-Type", "application/json")
+	req.SetPathValue("user_id", "123")
+
+	c.ProcessUserReminders(rw, req)
+
+	if rw.Code != http.StatusOK {
+		t.Fatalf("expected 200, got %d", rw.Code)
+	}
+}
+
+func TestReminderController_GetAllReminders_Success(t *testing.T) {
+	expectedReminders := []entities.Reminder{
+		{
+			ID:      1,
+			UserID:  123,
+			Message: "Test reminder 1",
+		},
+		{
+			ID:      2,
+			UserID:  456,
+			Message: "Test reminder 2",
+		},
+	}
+
+	mock := &reminderUseCaseMock{
+		getAllRemindersFn: func() ([]entities.Reminder, error) {
+			return expectedReminders, nil
+		},
+	}
+
+	c := NewReminderController(mock)
+
+	rw := httptest.NewRecorder()
+	req := httptest.NewRequest(http.MethodGet, "/reminders/all", nil)
+
+	c.GetAllReminders(rw, req)
+
+	if rw.Code != http.StatusOK {
+		t.Fatalf("expected 200, got %d", rw.Code)
+	}
+}
+
+func TestReminderController_GetActiveReminders_Success(t *testing.T) {
+	expectedReminders := []entities.Reminder{
+		{
+			ID:      1,
+			UserID:  123,
+			Message: "Active reminder 1",
+		},
+		{
+			ID:      2,
+			UserID:  456,
+			Message: "Active reminder 2",
+		},
+	}
+
+	mock := &reminderUseCaseMock{
+		getActiveRemindersFn: func() ([]entities.Reminder, error) {
+			return expectedReminders, nil
+		},
+	}
+
+	c := NewReminderController(mock)
+
+	rw := httptest.NewRecorder()
+	req := httptest.NewRequest(http.MethodGet, "/reminders/active", nil)
+
+	c.GetActiveReminders(rw, req)
+
+	if rw.Code != http.StatusOK {
+		t.Fatalf("expected 200, got %d", rw.Code)
+	}
+}
+
+func TestReminderController_DeleteReminder_Success(t *testing.T) {
+	deleteCount := 0
+	mock := &reminderUseCaseMock{
+		deleteReminderFn: func(reminderID, userID int64) error {
+			if reminderID == 1 && userID == 123 {
+				deleteCount++
+				return nil
+			}
+			return nil
+		},
+	}
+
+	c := NewReminderController(mock)
+
+	rw := httptest.NewRecorder()
+	req := httptest.NewRequest(http.MethodDelete, "/reminders/123/1", nil)
+	req.SetPathValue("user_id", "123")
+	req.SetPathValue("reminder_id", "1")
+
+	c.DeleteReminder(rw, req)
+
+	if rw.Code != http.StatusOK {
+		t.Fatalf("expected 200, got %d", rw.Code)
+	}
+
+	if deleteCount != 1 {
+		t.Fatalf("expected delete to be called once, got %d", deleteCount)
 	}
 }
