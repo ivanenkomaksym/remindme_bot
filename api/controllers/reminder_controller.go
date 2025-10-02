@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"strconv"
 
+	"github.com/ivanenkomaksym/remindme_bot/domain/entities"
 	"github.com/ivanenkomaksym/remindme_bot/domain/usecases"
 )
 
@@ -21,13 +22,8 @@ func NewReminderController(reminderUseCase usecases.ReminderUseCase) *ReminderCo
 	}
 }
 
-// GetUserReminders returns all reminders for a specific user
-func (c *ReminderController) GetUserReminders(w http.ResponseWriter, r *http.Request) {
-	if r.Method != http.MethodGet {
-		http.Error(w, "Only GET requests are allowed", http.StatusMethodNotAllowed)
-		return
-	}
-
+// ProcessUserReminders returns all reminders for a specific user or creates a new reminder
+func (c *ReminderController) ProcessUserReminders(w http.ResponseWriter, r *http.Request) {
 	// Extract user ID from path
 	userIDStr := r.PathValue("user_id")
 	if userIDStr == "" {
@@ -41,15 +37,39 @@ func (c *ReminderController) GetUserReminders(w http.ResponseWriter, r *http.Req
 		return
 	}
 
-	reminders, err := c.reminderUseCase.GetUserReminders(userID)
-	if err != nil {
-		log.Printf("Failed to get user reminders: %v", err)
-		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+	if r.Method == http.MethodPost {
+		var userSelection entities.UserSelection
+		if err := json.NewDecoder(r.Body).Decode(&userSelection); err != nil {
+			http.Error(w, "Invalid request body", http.StatusBadRequest)
+			return
+		}
+
+		reminder, err := c.reminderUseCase.CreateReminder(userID, &userSelection)
+		if err != nil {
+			log.Printf("Failed to create reminder: %v", err)
+			http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+			return
+		}
+		w.Header().Set("Content-Type", "application/json")
+		json.NewEncoder(w).Encode(reminder)
 		return
 	}
 
-	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(reminders)
+	if r.Method == http.MethodGet {
+		reminders, err := c.reminderUseCase.GetUserReminders(userID)
+		if err != nil {
+			log.Printf("Failed to get user reminders: %v", err)
+			http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+			return
+		}
+
+		w.Header().Set("Content-Type", "application/json")
+		json.NewEncoder(w).Encode(reminders)
+		return
+	}
+
+	http.Error(w, "Only GET and POST requests are allowed", http.StatusMethodNotAllowed)
+	return
 }
 
 // GetAllReminders returns all reminders (admin endpoint)

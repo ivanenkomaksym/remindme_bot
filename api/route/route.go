@@ -36,7 +36,7 @@ func Setup(app *bootstrap.Application) {
 	mux.HandleFunc("/api/users/{user_id}/selection/clear", app.Container.UserController.ClearUserSelection)
 
 	mux.HandleFunc("/api/reminders", app.Container.ReminderController.GetAllReminders)
-	mux.HandleFunc("/api/reminders/{user_id}", app.Container.ReminderController.GetUserReminders)
+	mux.HandleFunc("/api/reminders/{user_id}", app.Container.ReminderController.ProcessUserReminders)
 	mux.HandleFunc("/api/reminders/{user_id}/active", app.Container.ReminderController.GetActiveReminders)
 	mux.HandleFunc("/api/reminders/{user_id}/delete/{reminder_id}", app.Container.ReminderController.DeleteReminder)
 
