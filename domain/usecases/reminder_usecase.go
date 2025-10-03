@@ -230,8 +230,8 @@ func (r *reminderUseCase) GetReminder(userID, reminderID int64) (*entities.Remin
 	return reminder, nil
 }
 
-func (r *reminderUseCase) UpdateReminder(userID, reminderID int64, reminder *entities.Reminder) (*entities.Reminder, error) {
-	if reminder == nil {
+func (r *reminderUseCase) UpdateReminder(userID, reminderID int64, updatedFields *entities.Reminder) (*entities.Reminder, error) {
+	if updatedFields == nil {
 		return nil, errors.NewDomainError("INVALID_REMINDER", "Reminder cannot be nil", nil)
 	}
 	if reminderID <= 0 {
@@ -241,7 +241,7 @@ func (r *reminderUseCase) UpdateReminder(userID, reminderID int64, reminder *ent
 		return nil, errors.NewDomainError("INVALID_USER_ID", "User ID must be positive", nil)
 	}
 
-	// Get existing reminder to verify ownership
+	// Get existing reminder to verify ownership and use as base for update
 	existingReminder, err := r.reminderRepo.GetReminder(reminderID)
 	if err != nil {
 		return nil, err
@@ -253,17 +253,34 @@ func (r *reminderUseCase) UpdateReminder(userID, reminderID int64, reminder *ent
 		return nil, errors.ErrUnauthorized
 	}
 
-	// Update reminder ID and user ID to ensure they match the request
-	reminder.ID = reminderID
-	reminder.UserID = userID
+	// Update only fields that are provided
+	if updatedFields.Message != "" {
+		existingReminder.Message = updatedFields.Message
+	}
+	if updatedFields.NextTrigger != nil {
+		existingReminder.NextTrigger = updatedFields.NextTrigger
+	}
+	if updatedFields.Recurrence != nil {
+		existingReminder.Recurrence = updatedFields.Recurrence
+	}
+
+	// Only update IsActive if it's different from the existing value
+	if updatedFields.IsActive != existingReminder.IsActive {
+		existingReminder.IsActive = updatedFields.IsActive
+	}
+
+	// Keep the original ID, UserID and CreatedAt
+	existingReminder.ID = reminderID
+	existingReminder.UserID = userID
+	existingReminder.CreatedAt = existingReminder.CreatedAt
 
 	// Update the reminder
-	err = r.reminderRepo.UpdateReminder(reminder)
+	err = r.reminderRepo.UpdateReminder(existingReminder)
 	if err != nil {
 		return nil, err
 	}
 
-	return reminder, nil
+	return existingReminder, nil
 }
 
 func (r *reminderUseCase) GetActiveReminders() ([]entities.Reminder, error) {

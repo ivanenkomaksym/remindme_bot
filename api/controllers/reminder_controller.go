@@ -218,8 +218,8 @@ func (c *ReminderController) DeleteReminder(w http.ResponseWriter, r *http.Reque
 
 	err = c.reminderUseCase.DeleteReminder(reminderID, userID)
 	if err != nil {
-		log.Printf("Failed to delete reminder: %v", err)
-		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		log.Printf("Failed to delete reminder: %v. Not found", err)
+		http.Error(w, "Internal Server Error", http.StatusNotFound)
 		return
 	}
 
