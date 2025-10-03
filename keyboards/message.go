@@ -95,10 +95,8 @@ func FormatReminderConfirmation(user *entities.User, userSelection *entities.Use
 	if userSelection.RecurrenceType == entities.Monthly {
 		confirmation += "📆 " + s.Days + ": "
 		var days []string
-		for i, selected := range userSelection.MonthOptions {
-			if selected {
-				days = append(days, fmt.Sprintf("%d", i+1))
-			}
+		for _, day := range userSelection.MonthOptions {
+			days = append(days, fmt.Sprintf("%d", day))
 		}
 		if len(days) > 0 {
 			confirmation += strings.Join(days, ", ")

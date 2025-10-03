@@ -128,14 +128,11 @@ func (r *reminderUseCase) createWeeklyReminder(user *entities.User, selection *e
 }
 
 func (r *reminderUseCase) createMonthlyReminder(user *entities.User, selection *entities.UserSelection, timeOfDay time.Time) (*entities.Reminder, error) {
-	daysOfMonth := []int{}
-	for idx, day := range selection.MonthOptions {
-		if day {
-			daysOfMonth = append(daysOfMonth, idx+1)
-		}
+	if len(selection.MonthOptions) == 0 {
+		return nil, errors.NewDomainError("NO_DAYS_SELECTED", "At least one day of month must be selected", nil)
 	}
 
-	reminder, err := r.reminderRepo.CreateMonthlyReminder(daysOfMonth, timeOfDay, user, selection.ReminderMessage)
+	reminder, err := r.reminderRepo.CreateMonthlyReminder(selection.MonthOptions, timeOfDay, user, selection.ReminderMessage)
 	if err != nil {
 		return nil, err
 	}

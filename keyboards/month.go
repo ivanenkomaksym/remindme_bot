@@ -23,7 +23,7 @@ func IsMonthSelectionCallback(callbackData string) bool {
 }
 
 // GetMonthRangeMarkup renders a 4x7 grid for days 1..28 with multi-select support.
-func GetMonthRangeMarkup(currentOptions [28]bool, lang string) *tgbotapi.InlineKeyboardMarkup {
+func GetMonthRangeMarkup(selectedDays []int, lang string) *tgbotapi.InlineKeyboardMarkup {
 	var inlineKeyboard [][]tgbotapi.InlineKeyboardButton
 	s := T(lang)
 
@@ -34,7 +34,14 @@ func GetMonthRangeMarkup(currentOptions [28]bool, lang string) *tgbotapi.InlineK
 		for c := 0; c < 7; c++ {
 			label := fmt.Sprintf("%d", day)
 			callback := fmt.Sprintf("%s%d", CallbackMonthDay, day)
-			row = append(row, tgbotapi.NewInlineKeyboardButtonData(buttonText(label, currentOptions[day-1]), callback))
+			isSelected := false
+			for _, selectedDay := range selectedDays {
+				if selectedDay == day {
+					isSelected = true
+					break
+				}
+			}
+			row = append(row, tgbotapi.NewInlineKeyboardButtonData(buttonText(label, isSelected), callback))
 			day++
 		}
 		inlineKeyboard = append(inlineKeyboard, row)
@@ -49,18 +56,30 @@ func GetMonthRangeMarkup(currentOptions [28]bool, lang string) *tgbotapi.InlineK
 }
 
 // HandleMonthSelection toggles a selected day and returns the updated view or proceeds on select.
-func HandleMonthSelection(callbackData string, currentOptions *[28]bool, lang string) *SelectionResult {
+func HandleMonthSelection(callbackData string, selectedDays *[]int, lang string) *SelectionResult {
 	if stringsHasPrefix(callbackData, CallbackMonthDay) {
 		var day int
 		_, _ = fmt.Sscanf(callbackData[len(CallbackMonthDay):], "%d", &day)
 		if day >= 1 && day <= 28 {
-			idx := day - 1
-			currentOptions[idx] = !currentOptions[idx]
+			// Check if the day is already selected
+			found := false
+			for i, selectedDay := range *selectedDays {
+				if selectedDay == day {
+					// Remove the day (deselect)
+					*selectedDays = append((*selectedDays)[:i], (*selectedDays)[i+1:]...)
+					found = true
+					break
+				}
+			}
+			if !found {
+				// Add the day (select)
+				*selectedDays = append(*selectedDays, day)
+			}
 		}
 	}
 	s := T(lang)
 	if callbackData == CallbackMonthSelect {
 		return &SelectionResult{Text: s.MsgSelectTime, Markup: GetHourRangeMarkup(lang)}
 	}
-	return &SelectionResult{Text: s.MsgSelectDate, Markup: GetMonthRangeMarkup(*currentOptions, lang)}
+	return &SelectionResult{Text: s.MsgSelectDate, Markup: GetMonthRangeMarkup(*selectedDays, lang)}
 }

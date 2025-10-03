@@ -15,7 +15,7 @@ func TestIsMonthSelectionCallback(t *testing.T) {
 }
 
 func TestGetMonthRangeMarkup(t *testing.T) {
-	var opts [28]bool
+	var opts []int
 	m := GetMonthRangeMarkup(opts, LangEN)
 	// 4 day rows + select + back
 	if len(m.InlineKeyboard) != 6 {
@@ -29,11 +29,11 @@ func TestGetMonthRangeMarkup(t *testing.T) {
 }
 
 func TestHandleMonthSelection_ToggleAndSelect(t *testing.T) {
-	opts := [28]bool{}
+	opts := []int{}
 
 	// Toggle day 1
 	res := HandleMonthSelection(CallbackMonthDay+"1", &opts, LangEN)
-	if res == nil || !opts[0] {
+	if res == nil || opts[0] != 1 {
 		t.Fatalf("day 1 should be toggled on")
 	}
 	if res.Markup == nil || len(res.Markup.InlineKeyboard) != 6 {
