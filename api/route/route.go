@@ -28,17 +28,21 @@ func Setup(app *bootstrap.Application) {
 	mux.HandleFunc("/set-timezone", app.Container.TimezoneController.ServePage)
 	mux.HandleFunc("/set-timezone/callback", app.Container.TimezoneController.Callback)
 
-	// API endpoints
-	mux.HandleFunc("/api/users", app.Container.UserController.GetUsers)
-	mux.HandleFunc("/api/users/{user_id}", app.Container.UserController.GetUser)
-	mux.HandleFunc("/api/users/{user_id}/language", app.Container.UserController.UpdateUserLanguage)
-	mux.HandleFunc("/api/users/{user_id}/selection", app.Container.UserController.GetUserSelection)
-	mux.HandleFunc("/api/users/{user_id}/selection/clear", app.Container.UserController.ClearUserSelection)
+	// API endpoints - Users
+	mux.HandleFunc("GET /api/users", app.Container.UserController.GetUsers)
+	mux.HandleFunc("GET /api/users/{user_id}", app.Container.UserController.GetUser)
+	mux.HandleFunc("PUT /api/users/{user_id}/language", app.Container.UserController.UpdateUserLanguage)
+	mux.HandleFunc("GET /api/users/{user_id}/selection", app.Container.UserController.GetUserSelection)
+	mux.HandleFunc("DELETE /api/users/{user_id}/selection", app.Container.UserController.ClearUserSelection)
 
-	mux.HandleFunc("/api/reminders", app.Container.ReminderController.GetAllReminders)
-	mux.HandleFunc("/api/reminders/{user_id}", app.Container.ReminderController.ProcessUserReminders)
-	mux.HandleFunc("/api/reminders/{user_id}/active", app.Container.ReminderController.GetActiveReminders)
-	mux.HandleFunc("/api/reminders/{user_id}/delete/{reminder_id}", app.Container.ReminderController.DeleteReminder)
+	// API endpoints - Reminders
+	mux.HandleFunc("GET /api/reminders", app.Container.ReminderController.GetAllReminders)
+	mux.HandleFunc("GET /api/reminders/{user_id}", app.Container.ReminderController.GetUserReminders)
+	mux.HandleFunc("POST /api/reminders/{user_id}", app.Container.ReminderController.CreateReminder)
+	mux.HandleFunc("GET /api/reminders/{user_id}/{reminder_id}", app.Container.ReminderController.GetReminder)
+	mux.HandleFunc("PUT /api/reminders/{user_id}/{reminder_id}", app.Container.ReminderController.UpdateReminder)
+	mux.HandleFunc("DELETE /api/reminders/{user_id}/{reminder_id}", app.Container.ReminderController.DeleteReminder)
+	mux.HandleFunc("GET /api/reminders/{user_id}/active", app.Container.ReminderController.GetActiveReminders)
 
 	// Add a health check endpoint for Cloud Run
 	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {

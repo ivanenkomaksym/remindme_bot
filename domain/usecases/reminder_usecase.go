@@ -13,9 +13,10 @@ import (
 type ReminderUseCase interface {
 	CreateReminder(userID int64, selection *entities.UserSelection) (*entities.Reminder, error)
 	GetUserReminders(userID int64) ([]entities.Reminder, error)
+	GetReminder(userID, reminderID int64) (*entities.Reminder, error)
 	GetAllReminders() ([]entities.Reminder, error)
 	DeleteReminder(reminderID, userID int64) error
-	UpdateReminder(reminder *entities.Reminder) error
+	UpdateReminder(userID, reminderID int64, reminder *entities.Reminder) (*entities.Reminder, error)
 	GetActiveReminders() ([]entities.Reminder, error)
 }
 
@@ -204,15 +205,65 @@ func (r *reminderUseCase) DeleteReminder(reminderID, userID int64) error {
 	return r.reminderRepo.DeleteReminder(reminderID, userID)
 }
 
-func (r *reminderUseCase) UpdateReminder(reminder *entities.Reminder) error {
-	if reminder == nil {
-		return errors.NewDomainError("INVALID_REMINDER", "Reminder cannot be nil", nil)
+func (r *reminderUseCase) GetReminder(userID, reminderID int64) (*entities.Reminder, error) {
+	if reminderID <= 0 {
+		return nil, errors.NewDomainError("INVALID_REMINDER_ID", "Reminder ID must be positive", nil)
 	}
-	if reminder.ID <= 0 {
-		return errors.NewDomainError("INVALID_REMINDER_ID", "Reminder ID must be positive", nil)
+	if userID <= 0 {
+		return nil, errors.NewDomainError("INVALID_USER_ID", "User ID must be positive", nil)
 	}
 
-	return r.reminderRepo.UpdateReminder(reminder)
+	// Get reminder
+	reminder, err := r.reminderRepo.GetReminder(reminderID)
+	if err != nil {
+		return nil, err
+	}
+	if reminder == nil {
+		return nil, errors.ErrReminderNotFound
+	}
+
+	// Verify ownership
+	if reminder.UserID != userID {
+		return nil, errors.ErrUnauthorized
+	}
+
+	return reminder, nil
+}
+
+func (r *reminderUseCase) UpdateReminder(userID, reminderID int64, reminder *entities.Reminder) (*entities.Reminder, error) {
+	if reminder == nil {
+		return nil, errors.NewDomainError("INVALID_REMINDER", "Reminder cannot be nil", nil)
+	}
+	if reminderID <= 0 {
+		return nil, errors.NewDomainError("INVALID_REMINDER_ID", "Reminder ID must be positive", nil)
+	}
+	if userID <= 0 {
+		return nil, errors.NewDomainError("INVALID_USER_ID", "User ID must be positive", nil)
+	}
+
+	// Get existing reminder to verify ownership
+	existingReminder, err := r.reminderRepo.GetReminder(reminderID)
+	if err != nil {
+		return nil, err
+	}
+	if existingReminder == nil {
+		return nil, errors.ErrReminderNotFound
+	}
+	if existingReminder.UserID != userID {
+		return nil, errors.ErrUnauthorized
+	}
+
+	// Update reminder ID and user ID to ensure they match the request
+	reminder.ID = reminderID
+	reminder.UserID = userID
+
+	// Update the reminder
+	err = r.reminderRepo.UpdateReminder(reminder)
+	if err != nil {
+		return nil, err
+	}
+
+	return reminder, nil
 }
 
 func (r *reminderUseCase) GetActiveReminders() ([]entities.Reminder, error) {
