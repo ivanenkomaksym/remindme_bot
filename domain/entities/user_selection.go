@@ -6,7 +6,7 @@ import "time"
 type UserSelection struct {
 	RecurrenceType  RecurrenceType `json:"recurrenceType" bson:"recurrenceType"`
 	WeekOptions     []time.Weekday `json:"weekOptions" bson:"weekOptions"`
-	MonthOptions    [28]bool       `json:"monthOptions" bson:"monthOptions"`
+	MonthOptions    []int          `json:"monthOptions" bson:"monthOptions"`
 	SelectedDate    time.Time      `json:"selectedDate" bson:"selectedDate"`
 	SelectedTime    string         `json:"selectedTime" bson:"selectedTime"`
 	IntervalDays    int            `json:"intervalDays" bson:"intervalDays"`
@@ -19,13 +19,8 @@ type UserSelection struct {
 // NewUserSelection creates a new user selection with default values
 func NewUserSelection() *UserSelection {
 	return &UserSelection{
-		WeekOptions: []time.Weekday{},
-		MonthOptions: [28]bool{
-			false, false, false, false, false, false, false,
-			false, false, false, false, false, false, false,
-			false, false, false, false, false, false, false,
-			false, false, false, false, false, false,
-		},
+		WeekOptions:  []time.Weekday{},
+		MonthOptions: []int{},
 	}
 }
 

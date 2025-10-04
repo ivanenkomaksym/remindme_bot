@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"strconv"
 
+	"github.com/ivanenkomaksym/remindme_bot/domain/entities"
 	"github.com/ivanenkomaksym/remindme_bot/domain/usecases"
 )
 
@@ -28,7 +29,6 @@ func (c *ReminderController) GetUserReminders(w http.ResponseWriter, r *http.Req
 		return
 	}
 
-	// Extract user ID from path
 	userIDStr := r.PathValue("user_id")
 	if userIDStr == "" {
 		http.Error(w, "user_id parameter is required", http.StatusBadRequest)
@@ -50,6 +50,124 @@ func (c *ReminderController) GetUserReminders(w http.ResponseWriter, r *http.Req
 
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(reminders)
+}
+
+// CreateReminder creates a new reminder for a user
+func (c *ReminderController) CreateReminder(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		http.Error(w, "Only POST requests are allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
+	userIDStr := r.PathValue("user_id")
+	if userIDStr == "" {
+		http.Error(w, "user_id parameter is required", http.StatusBadRequest)
+		return
+	}
+
+	userID, err := strconv.ParseInt(userIDStr, 10, 64)
+	if err != nil {
+		http.Error(w, "Invalid user_id", http.StatusBadRequest)
+		return
+	}
+
+	var userSelection entities.UserSelection
+	if err := json.NewDecoder(r.Body).Decode(&userSelection); err != nil {
+		http.Error(w, "Invalid request body", http.StatusBadRequest)
+		return
+	}
+
+	reminder, err := c.reminderUseCase.CreateReminder(userID, &userSelection)
+	if err != nil {
+		log.Printf("Failed to create reminder: %v", err)
+		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(reminder)
+}
+
+// GetReminder returns a specific reminder by ID
+func (c *ReminderController) GetReminder(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodGet {
+		http.Error(w, "Only GET requests are allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
+	userIDStr := r.PathValue("user_id")
+	reminderIDStr := r.PathValue("reminder_id")
+
+	if userIDStr == "" || reminderIDStr == "" {
+		http.Error(w, "user_id and reminder_id parameters are required", http.StatusBadRequest)
+		return
+	}
+
+	userID, err := strconv.ParseInt(userIDStr, 10, 64)
+	if err != nil {
+		http.Error(w, "Invalid user_id", http.StatusBadRequest)
+		return
+	}
+
+	reminderID, err := strconv.ParseInt(reminderIDStr, 10, 64)
+	if err != nil {
+		http.Error(w, "Invalid reminder_id", http.StatusBadRequest)
+		return
+	}
+
+	reminder, err := c.reminderUseCase.GetReminder(userID, reminderID)
+	if err != nil {
+		log.Printf("Failed to get reminder: %v", err)
+		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(reminder)
+}
+
+// UpdateReminder updates a specific reminder
+func (c *ReminderController) UpdateReminder(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPut {
+		http.Error(w, "Only PUT requests are allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
+	userIDStr := r.PathValue("user_id")
+	reminderIDStr := r.PathValue("reminder_id")
+
+	if userIDStr == "" || reminderIDStr == "" {
+		http.Error(w, "user_id and reminder_id parameters are required", http.StatusBadRequest)
+		return
+	}
+
+	userID, err := strconv.ParseInt(userIDStr, 10, 64)
+	if err != nil {
+		http.Error(w, "Invalid user_id", http.StatusBadRequest)
+		return
+	}
+
+	reminderID, err := strconv.ParseInt(reminderIDStr, 10, 64)
+	if err != nil {
+		http.Error(w, "Invalid reminder_id", http.StatusBadRequest)
+		return
+	}
+
+	var reminder entities.Reminder
+	if err := json.NewDecoder(r.Body).Decode(&reminder); err != nil {
+		http.Error(w, "Invalid request body", http.StatusBadRequest)
+		return
+	}
+
+	updatedReminder, err := c.reminderUseCase.UpdateReminder(userID, reminderID, &reminder)
+	if err != nil {
+		log.Printf("Failed to update reminder: %v", err)
+		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(updatedReminder)
 }
 
 // GetAllReminders returns all reminders (admin endpoint)
@@ -100,8 +218,8 @@ func (c *ReminderController) DeleteReminder(w http.ResponseWriter, r *http.Reque
 
 	err = c.reminderUseCase.DeleteReminder(reminderID, userID)
 	if err != nil {
-		log.Printf("Failed to delete reminder: %v", err)
-		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		log.Printf("Failed to delete reminder: %v. Not found", err)
+		http.Error(w, "Internal Server Error", http.StatusNotFound)
 		return
 	}
 

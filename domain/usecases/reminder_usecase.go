@@ -13,9 +13,10 @@ import (
 type ReminderUseCase interface {
 	CreateReminder(userID int64, selection *entities.UserSelection) (*entities.Reminder, error)
 	GetUserReminders(userID int64) ([]entities.Reminder, error)
+	GetReminder(userID, reminderID int64) (*entities.Reminder, error)
 	GetAllReminders() ([]entities.Reminder, error)
 	DeleteReminder(reminderID, userID int64) error
-	UpdateReminder(reminder *entities.Reminder) error
+	UpdateReminder(userID, reminderID int64, reminder *entities.Reminder) (*entities.Reminder, error)
 	GetActiveReminders() ([]entities.Reminder, error)
 }
 
@@ -127,14 +128,11 @@ func (r *reminderUseCase) createWeeklyReminder(user *entities.User, selection *e
 }
 
 func (r *reminderUseCase) createMonthlyReminder(user *entities.User, selection *entities.UserSelection, timeOfDay time.Time) (*entities.Reminder, error) {
-	daysOfMonth := []int{}
-	for idx, day := range selection.MonthOptions {
-		if day {
-			daysOfMonth = append(daysOfMonth, idx+1)
-		}
+	if len(selection.MonthOptions) == 0 {
+		return nil, errors.NewDomainError("NO_DAYS_SELECTED", "At least one day of month must be selected", nil)
 	}
 
-	reminder, err := r.reminderRepo.CreateMonthlyReminder(daysOfMonth, timeOfDay, user, selection.ReminderMessage)
+	reminder, err := r.reminderRepo.CreateMonthlyReminder(selection.MonthOptions, timeOfDay, user, selection.ReminderMessage)
 	if err != nil {
 		return nil, err
 	}
@@ -204,15 +202,82 @@ func (r *reminderUseCase) DeleteReminder(reminderID, userID int64) error {
 	return r.reminderRepo.DeleteReminder(reminderID, userID)
 }
 
-func (r *reminderUseCase) UpdateReminder(reminder *entities.Reminder) error {
-	if reminder == nil {
-		return errors.NewDomainError("INVALID_REMINDER", "Reminder cannot be nil", nil)
+func (r *reminderUseCase) GetReminder(userID, reminderID int64) (*entities.Reminder, error) {
+	if reminderID <= 0 {
+		return nil, errors.NewDomainError("INVALID_REMINDER_ID", "Reminder ID must be positive", nil)
 	}
-	if reminder.ID <= 0 {
-		return errors.NewDomainError("INVALID_REMINDER_ID", "Reminder ID must be positive", nil)
+	if userID <= 0 {
+		return nil, errors.NewDomainError("INVALID_USER_ID", "User ID must be positive", nil)
 	}
 
-	return r.reminderRepo.UpdateReminder(reminder)
+	// Get reminder
+	reminder, err := r.reminderRepo.GetReminder(reminderID)
+	if err != nil {
+		return nil, err
+	}
+	if reminder == nil {
+		return nil, errors.ErrReminderNotFound
+	}
+
+	// Verify ownership
+	if reminder.UserID != userID {
+		return nil, errors.ErrUnauthorized
+	}
+
+	return reminder, nil
+}
+
+func (r *reminderUseCase) UpdateReminder(userID, reminderID int64, updatedFields *entities.Reminder) (*entities.Reminder, error) {
+	if updatedFields == nil {
+		return nil, errors.NewDomainError("INVALID_REMINDER", "Reminder cannot be nil", nil)
+	}
+	if reminderID <= 0 {
+		return nil, errors.NewDomainError("INVALID_REMINDER_ID", "Reminder ID must be positive", nil)
+	}
+	if userID <= 0 {
+		return nil, errors.NewDomainError("INVALID_USER_ID", "User ID must be positive", nil)
+	}
+
+	// Get existing reminder to verify ownership and use as base for update
+	existingReminder, err := r.reminderRepo.GetReminder(reminderID)
+	if err != nil {
+		return nil, err
+	}
+	if existingReminder == nil {
+		return nil, errors.ErrReminderNotFound
+	}
+	if existingReminder.UserID != userID {
+		return nil, errors.ErrUnauthorized
+	}
+
+	// Update only fields that are provided
+	if updatedFields.Message != "" {
+		existingReminder.Message = updatedFields.Message
+	}
+	if updatedFields.NextTrigger != nil {
+		existingReminder.NextTrigger = updatedFields.NextTrigger
+	}
+	if updatedFields.Recurrence != nil {
+		existingReminder.Recurrence = updatedFields.Recurrence
+	}
+
+	// Only update IsActive if it's different from the existing value
+	if updatedFields.IsActive != existingReminder.IsActive {
+		existingReminder.IsActive = updatedFields.IsActive
+	}
+
+	// Keep the original ID, UserID and CreatedAt
+	existingReminder.ID = reminderID
+	existingReminder.UserID = userID
+	existingReminder.CreatedAt = existingReminder.CreatedAt
+
+	// Update the reminder
+	err = r.reminderRepo.UpdateReminder(existingReminder)
+	if err != nil {
+		return nil, err
+	}
+
+	return existingReminder, nil
 }
 
 func (r *reminderUseCase) GetActiveReminders() ([]entities.Reminder, error) {
