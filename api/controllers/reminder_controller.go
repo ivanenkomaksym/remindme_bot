@@ -219,12 +219,11 @@ func (c *ReminderController) DeleteReminder(w http.ResponseWriter, r *http.Reque
 	err = c.reminderUseCase.DeleteReminder(reminderID, userID)
 	if err != nil {
 		log.Printf("Failed to delete reminder: %v. Not found", err)
-		http.Error(w, "Internal Server Error", http.StatusNotFound)
+		w.WriteHeader(http.StatusNotFound)
 		return
 	}
 
 	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(map[string]string{"message": "Reminder deleted successfully"})
 }
 
 // GetActiveReminders returns all active reminders

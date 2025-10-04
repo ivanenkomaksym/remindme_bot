@@ -1,0 +1,408 @@
+{
+    "info": {
+        "name": "RemindMeBot",
+        "description": "API tests for RemindMeBot",
+        "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+    },
+    "variable": [
+        {
+            "key": "userId",
+            "value": "123",
+            "type": "string"
+        },
+        {
+            "key": "reminderId",
+            "value": "",
+            "type": "string"
+        }
+    ],
+    "item": [
+        {
+            "name": "Users",
+            "item": [
+                {
+                    "name": "Get All Users",
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "exec": [
+                                    "pm.test(\"Status code is 200\", function () {",
+                                    "    pm.response.to.have.status(200);",
+                                    "});",
+                                    "",
+                                    "pm.test(\"Response is an array\", function () {",
+                                    "    const responseData = pm.response.json();",
+                                    "    pm.expect(Array.isArray(responseData)).to.be.true;",
+                                    "});"
+                                ],
+                                "type": "text/javascript"
+                            }
+                        }
+                    ],
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "x-api-key",
+                                "value": "{{apiKey}}",
+                                "type": "text"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{baseUrl}}/api/users",
+                            "host": ["{{baseUrl}}"],
+                            "path": ["api", "users"]
+                        }
+                    }
+                },
+                {
+                    "name": "Get User",
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "exec": [
+                                    "pm.test(\"Status code is 200\", function () {",
+                                    "    pm.response.to.have.status(200);",
+                                    "});",
+                                    "",
+                                    "pm.test(\"User data is valid\", function () {",
+                                    "    const responseData = pm.response.json();",
+                                    "    pm.expect(responseData).to.have.property('id');",
+                                    "    pm.expect(responseData.id).to.eql(Number(pm.variables.get('userId')));",
+                                    "});"
+                                ],
+                                "type": "text/javascript"
+                            }
+                        }
+                    ],
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "x-api-key",
+                                "value": "{{apiKey}}",
+                                "type": "text"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{baseUrl}}/api/users/{{userId}}",
+                            "host": ["{{baseUrl}}"],
+                            "path": ["api", "users", "{{userId}}"]
+                        }
+                    }
+                },
+                {
+                    "name": "Update User Language",
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "exec": [
+                                    "pm.test(\"Status code is 200\", function () {",
+                                    "    pm.response.to.have.status(200);",
+                                    "});"
+                                ],
+                                "type": "text/javascript"
+                            }
+                        }
+                    ],
+                    "request": {
+                        "method": "PUT",
+                        "header": [
+                            {
+                                "key": "x-api-key",
+                                "value": "{{apiKey}}",
+                                "type": "text"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\"language\": \"en\"}",
+                            "options": {
+                                "raw": {
+                                    "language": "json"
+                                }
+                            }
+                        },
+                        "url": {
+                            "raw": "{{baseUrl}}/api/users/{{userId}}/language",
+                            "host": ["{{baseUrl}}"],
+                            "path": ["api", "users", "{{userId}}", "language"]
+                        }
+                    }
+                }
+            ]
+        },
+        {
+            "name": "Reminders",
+            "item": [
+                {
+                    "name": "Create Reminder",
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "exec": [
+                                    "pm.test(\"Status code is 200\", function () {",
+                                    "    pm.response.to.have.status(200);",
+                                    "});",
+                                    "",
+                                    "pm.test(\"Reminder created successfully\", function () {",
+                                    "    const responseData = pm.response.json();",
+                                    "    pm.expect(responseData).to.have.property('id');",
+                                    "    pm.expect(responseData).to.have.property('message').that.equals('Test reminder');",
+                                    "    pm.expect(responseData).to.have.property('userId').that.equals(Number(pm.variables.get('userId')));",
+                                    "    // Store reminder ID for later tests",
+                                    "    pm.collectionVariables.set('reminderId', responseData.id.toString());",
+                                    "});"
+                                ],
+                                "type": "text/javascript"
+                            }
+                        }
+                    ],
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "x-api-key",
+                                "value": "{{apiKey}}",
+                                "type": "text"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\"message\": \"Test reminder\", \"isActive\": true, \"recurrence\": {\"type\": \"Daily\"}}",
+                            "options": {
+                                "raw": {
+                                    "language": "json"
+                                }
+                            }
+                        },
+                        "url": {
+                            "raw": "{{baseUrl}}/api/reminders/{{userId}}",
+                            "host": ["{{baseUrl}}"],
+                            "path": ["api", "reminders", "{{userId}}"]
+                        }
+                    }
+                },
+                {
+                    "name": "Get User Reminders",
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "exec": [
+                                    "pm.test(\"Status code is 200\", function () {",
+                                    "    pm.response.to.have.status(200);",
+                                    "});",
+                                    "",
+                                    "pm.test(\"Response is an array\", function () {",
+                                    "    const responseData = pm.response.json();",
+                                    "    pm.expect(Array.isArray(responseData)).to.be.true;",
+                                    "});",
+                                    "",
+                                    "pm.test(\"Created reminder is in the list\", function () {",
+                                    "    const responseData = pm.response.json();",
+                                    "    const reminderId = Number(pm.collectionVariables.get('reminderId'));",
+                                    "    const found = responseData.some(r => r.id === reminderId);",
+                                    "    pm.expect(found).to.be.true;",
+                                    "});"
+                                ],
+                                "type": "text/javascript"
+                            }
+                        }
+                    ],
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "x-api-key",
+                                "value": "{{apiKey}}",
+                                "type": "text"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{baseUrl}}/api/reminders/{{userId}}",
+                            "host": ["{{baseUrl}}"],
+                            "path": ["api", "reminders", "{{userId}}"]
+                        }
+                    }
+                },
+                {
+                    "name": "Get Specific Reminder",
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "exec": [
+                                    "pm.test(\"Status code is 200\", function () {",
+                                    "    pm.response.to.have.status(200);",
+                                    "});",
+                                    "",
+                                    "pm.test(\"Reminder data is correct\", function () {",
+                                    "    const responseData = pm.response.json();",
+                                    "    pm.expect(responseData).to.have.property('id').that.equals(Number(pm.collectionVariables.get('reminderId')));",
+                                    "    pm.expect(responseData).to.have.property('message').that.equals('Test reminder');",
+                                    "    pm.expect(responseData).to.have.property('userId').that.equals(Number(pm.variables.get('userId')));",
+                                    "});"
+                                ],
+                                "type": "text/javascript"
+                            }
+                        }
+                    ],
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "x-api-key",
+                                "value": "{{apiKey}}",
+                                "type": "text"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{baseUrl}}/api/reminders/{{userId}}/{{reminderId}}",
+                            "host": ["{{baseUrl}}"],
+                            "path": ["api", "reminders", "{{userId}}", "{{reminderId}}"]
+                        }
+                    }
+                },
+                {
+                    "name": "Update Reminder",
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "exec": [
+                                    "pm.test(\"Status code is 200\", function () {",
+                                    "    pm.response.to.have.status(200);",
+                                    "});",
+                                    "",
+                                    "pm.test(\"Reminder was updated\", function () {",
+                                    "    const responseData = pm.response.json();",
+                                    "    pm.expect(responseData).to.have.property('message').that.equals('Updated reminder');",
+                                    "    pm.expect(responseData).to.have.property('isActive').that.equals(false);",
+                                    "    pm.expect(responseData.recurrence).to.have.property('type').that.equals('Weekly');",
+                                    "});"
+                                ],
+                                "type": "text/javascript"
+                            }
+                        }
+                    ],
+                    "request": {
+                        "method": "PUT",
+                        "header": [
+                            {
+                                "key": "x-api-key",
+                                "value": "{{apiKey}}",
+                                "type": "text"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\"message\": \"Updated reminder\", \"isActive\": false, \"recurrence\": {\"type\": \"Weekly\"}}",
+                            "options": {
+                                "raw": {
+                                    "language": "json"
+                                }
+                            }
+                        },
+                        "url": {
+                            "raw": "{{baseUrl}}/api/reminders/{{userId}}/{{reminderId}}",
+                            "host": ["{{baseUrl}}"],
+                            "path": ["api", "reminders", "{{userId}}", "{{reminderId}}"]
+                        }
+                    }
+                },
+                {
+                    "name": "Get Active Reminders",
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "exec": [
+                                    "pm.test(\"Status code is 200\", function () {",
+                                    "    pm.response.to.have.status(200);",
+                                    "});",
+                                    "",
+                                    "pm.test(\"Response is an array\", function () {",
+                                    "    const responseData = pm.response.json();",
+                                    "    pm.expect(Array.isArray(responseData)).to.be.true;",
+                                    "});",
+                                    "",
+                                    "pm.test(\"Updated reminder is not in active list\", function () {",
+                                    "    const responseData = pm.response.json();",
+                                    "    const reminderId = Number(pm.collectionVariables.get('reminderId'));",
+                                    "    const found = responseData.some(r => r.id === reminderId);",
+                                    "    pm.expect(found).to.be.false;",
+                                    "});"
+                                ],
+                                "type": "text/javascript"
+                            }
+                        }
+                    ],
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "x-api-key",
+                                "value": "{{apiKey}}",
+                                "type": "text"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{baseUrl}}/api/reminders/{{userId}}/active",
+                            "host": ["{{baseUrl}}"],
+                            "path": ["api", "reminders", "{{userId}}", "active"]
+                        }
+                    }
+                },
+                {
+                    "name": "Delete Reminder",
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "exec": [
+                                    "pm.test(\"Status code is 200\", function () {",
+                                    "    pm.response.to.have.status(200);",
+                                    "});",
+                                    "",
+                                    "// Send a GET request to verify the reminder was deleted",
+                                    "pm.sendRequest({",
+                                    "    url: pm.request.url.toString(),",
+                                    "    method: 'GET',",
+                                    "    header: {",
+                                    "        'x-api-key': pm.variables.get('apiKey')",
+                                    "    }",
+                                    "}, function (err, res) {",
+                                    "    pm.test(\"Reminder was deleted\", function () {",
+                                    "        pm.expect(res).to.have.property('code', 404);",
+                                    "    });",
+                                    "});"
+                                ],
+                                "type": "text/javascript"
+                            }
+                        }
+                    ],
+                    "request": {
+                        "method": "DELETE",
+                        "header": [
+                            {
+                                "key": "x-api-key",
+                                "value": "{{apiKey}}",
+                                "type": "text"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{baseUrl}}/api/reminders/{{userId}}/{{reminderId}}",
+                            "host": ["{{baseUrl}}"],
+                            "path": ["api", "reminders", "{{userId}}", "{{reminderId}}"]
+                        }
+                    }
+                }
+            ]
+        }
+    ]
+}

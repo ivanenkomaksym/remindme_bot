@@ -115,7 +115,6 @@ func (c *UserController) UpdateUserLanguage(w http.ResponseWriter, r *http.Reque
 	}
 
 	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(map[string]string{"message": "Language updated successfully"})
 }
 
 // GetUserSelection returns user's current selection state
