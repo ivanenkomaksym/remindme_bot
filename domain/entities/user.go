@@ -6,7 +6,7 @@ import (
 
 // User represents a user in the system
 type User struct {
-	ID           int64          `json:"id" bson:"id"`
+	ID           int64          `json:"id,string" bson:"id"`
 	UserName     string         `json:"userName" bson:"userName"`
 	FirstName    string         `json:"firstName" bson:"firstName"`
 	LastName     string         `json:"lastName" bson:"lastName"`

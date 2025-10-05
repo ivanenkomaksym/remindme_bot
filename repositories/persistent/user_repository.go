@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/ivanenkomaksym/remindme_bot/domain/entities"
+	"github.com/ivanenkomaksym/remindme_bot/domain/errors"
 	"github.com/ivanenkomaksym/remindme_bot/domain/repositories"
 	"go.mongodb.org/mongo-driver/v2/mongo"
 	"go.mongodb.org/mongo-driver/v2/mongo/options"
@@ -99,5 +100,45 @@ func (r *MongoUserRepository) UpdateLocation(userID int64, location string) erro
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 	_, err := r.usersCol.UpdateOne(ctx, map[string]any{"id": userID}, map[string]any{"$set": map[string]any{"location": location, "updatedAt": time.Now()}})
+	return err
+}
+
+func (r *MongoUserRepository) CreateUser(userID int64, userName, firstName, lastName, language string) (*entities.User, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	// Check if user already exists
+	var existingUser entities.User
+	err := r.usersCol.FindOne(ctx, map[string]any{"id": userID}).Decode(&existingUser)
+	if err != mongo.ErrNoDocuments {
+		if err == nil {
+			return nil, errors.ErrUserExists
+		}
+		return nil, err
+	}
+
+	now := time.Now()
+	user := entities.User{
+		ID:        userID,
+		UserName:  userName,
+		FirstName: firstName,
+		LastName:  lastName,
+		Language:  language,
+		CreatedAt: now,
+		UpdatedAt: now,
+	}
+
+	if _, err := r.usersCol.InsertOne(ctx, &user); err != nil {
+		return nil, err
+	}
+
+	return &user, nil
+}
+
+func (r *MongoUserRepository) DeleteUser(userID int64) error {
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	_, err := r.usersCol.DeleteOne(ctx, map[string]any{"id": userID})
 	return err
 }

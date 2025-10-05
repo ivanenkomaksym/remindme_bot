@@ -30,7 +30,9 @@ func Setup(app *bootstrap.Application) {
 
 	// API endpoints - Users
 	mux.HandleFunc("GET /api/users", app.Container.UserController.GetUsers)
+	mux.HandleFunc("POST /api/user", app.Container.UserController.CreateUser)
 	mux.HandleFunc("GET /api/users/{user_id}", app.Container.UserController.GetUser)
+	mux.HandleFunc("DELETE /api/users/{user_id}", app.Container.UserController.DeleteUser)
 	mux.HandleFunc("PUT /api/users/{user_id}/language", app.Container.UserController.UpdateUserLanguage)
 	mux.HandleFunc("GET /api/users/{user_id}/selection", app.Container.UserController.GetUserSelection)
 	mux.HandleFunc("DELETE /api/users/{user_id}/selection", app.Container.UserController.ClearUserSelection)

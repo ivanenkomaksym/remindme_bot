@@ -118,7 +118,7 @@ func (c *ReminderController) GetReminder(w http.ResponseWriter, r *http.Request)
 	reminder, err := c.reminderUseCase.GetReminder(userID, reminderID)
 	if err != nil {
 		log.Printf("Failed to get reminder: %v", err)
-		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		http.Error(w, "Internal Server Error", http.StatusNotFound)
 		return
 	}
 

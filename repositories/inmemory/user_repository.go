@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/ivanenkomaksym/remindme_bot/domain/entities"
+	"github.com/ivanenkomaksym/remindme_bot/domain/errors"
 	"github.com/ivanenkomaksym/remindme_bot/domain/repositories"
 )
 
@@ -100,5 +101,30 @@ func (r *InMemoryUserRepository) UpdateUserInfo(userID int64, userName, firstNam
 	}
 
 	user.UpdateInfo(userName, firstName, lastName)
+	return nil
+}
+
+func (r *InMemoryUserRepository) CreateUser(userID int64, userName, firstName, lastName, language string) (*entities.User, error) {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+
+	// Check if user already exists
+	if _, exists := r.users[userID]; exists {
+		return nil, errors.ErrUserExists
+	}
+
+	user := entities.NewUser(userID, userName, firstName, lastName, language)
+	r.users[userID] = user
+
+	// Return a copy to prevent external modifications
+	userCopy := *user
+	return &userCopy, nil
+}
+
+func (r *InMemoryUserRepository) DeleteUser(userID int64) error {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+
+	delete(r.users, userID)
 	return nil
 }

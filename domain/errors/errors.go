@@ -27,6 +27,16 @@ var (
 		Message: "User not found",
 	}
 
+	ErrUserExists = &DomainError{
+		Code:    "USER_EXISTS",
+		Message: "User already exists",
+	}
+
+	ErrUserDataInvalid = &DomainError{
+		Code:    "INVALID_USER_DATA",
+		Message: "User data invalid",
+	}
+
 	ErrReminderNotFound = &DomainError{
 		Code:    "REMINDER_NOT_FOUND",
 		Message: "Reminder not found",
