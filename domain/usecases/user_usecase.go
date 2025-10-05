@@ -1,6 +1,8 @@
 package usecases
 
 import (
+	"time"
+
 	"github.com/ivanenkomaksym/remindme_bot/domain/entities"
 	"github.com/ivanenkomaksym/remindme_bot/domain/errors"
 	"github.com/ivanenkomaksym/remindme_bot/domain/repositories"
@@ -105,6 +107,12 @@ func (u *userUseCase) UpdateLocation(userID int64, location string) error {
 	if location == "" {
 		return errors.NewDomainError("INVALID_LOCATION", "Location cannot be empty", nil)
 	}
+
+	_, err := time.LoadLocation(location)
+	if err != nil {
+		return err
+	}
+
 	return u.userRepo.UpdateLocation(userID, location)
 }
 

@@ -223,7 +223,7 @@ func (c *ReminderController) DeleteReminder(w http.ResponseWriter, r *http.Reque
 		return
 	}
 
-	w.WriteHeader(http.StatusOK)
+	w.WriteHeader(http.StatusNoContent)
 }
 
 // GetActiveReminders returns all active reminders

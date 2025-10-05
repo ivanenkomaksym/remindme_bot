@@ -117,6 +117,47 @@ func (c *UserController) UpdateUserLanguage(w http.ResponseWriter, r *http.Reque
 	w.WriteHeader(http.StatusOK)
 }
 
+// UpdateUserLocation updates user's location (timezone)
+func (c *UserController) UpdateUserLocation(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPut {
+		http.Error(w, "Only PUT requests are allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
+	// Extract user ID from query parameters
+	userIDStr := r.PathValue("user_id")
+	if userIDStr == "" {
+		http.Error(w, "user_id parameter is required", http.StatusBadRequest)
+		return
+	}
+
+	userID, err := strconv.ParseInt(userIDStr, 10, 64)
+	if err != nil {
+		http.Error(w, "Invalid user_id", http.StatusBadRequest)
+		return
+	}
+
+	// Parse request body
+	var request struct {
+		Location string `json:"location"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
+		http.Error(w, "Invalid JSON", http.StatusBadRequest)
+		return
+	}
+	if request.Location == "" {
+		http.Error(w, "location field is required", http.StatusBadRequest)
+		return
+	}
+	err = c.userUseCase.UpdateLocation(userID, request.Location)
+	if err != nil {
+		log.Printf("Failed to update user location: %v", err)
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+	w.WriteHeader(http.StatusOK)
+}
+
 // GetUserSelection returns user's current selection state
 func (c *UserController) GetUserSelection(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {

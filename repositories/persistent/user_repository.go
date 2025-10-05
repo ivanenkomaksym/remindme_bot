@@ -117,22 +117,13 @@ func (r *MongoUserRepository) CreateUser(userID int64, userName, firstName, last
 		return nil, err
 	}
 
-	now := time.Now()
-	user := entities.User{
-		ID:        userID,
-		UserName:  userName,
-		FirstName: firstName,
-		LastName:  lastName,
-		Language:  language,
-		CreatedAt: now,
-		UpdatedAt: now,
-	}
+	user := entities.NewUser(userID, userName, firstName, lastName, language)
 
-	if _, err := r.usersCol.InsertOne(ctx, &user); err != nil {
+	if _, err := r.usersCol.InsertOne(ctx, user); err != nil {
 		return nil, err
 	}
 
-	return &user, nil
+	return user, nil
 }
 
 func (r *MongoUserRepository) DeleteUser(userID int64) error {
