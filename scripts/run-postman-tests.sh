@@ -27,4 +27,5 @@ newman run ./postman/RemindMeBot.postman_collection.json \
     --env-var "CI_BASE_URL=$CI_BASE_URL" \
     --env-var "CI_API_KEY=$CI_API_KEY" \
     --reporters cli,junit \
-    --reporter-junit-export test-results.xml
+    --reporter-junit-export test-results.xml \
+    --bail
