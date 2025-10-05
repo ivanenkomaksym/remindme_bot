@@ -261,16 +261,6 @@ func (r *reminderUseCase) UpdateReminder(userID, reminderID int64, updatedFields
 		existingReminder.Recurrence = updatedFields.Recurrence
 	}
 
-	// Only update IsActive if it's different from the existing value
-	if updatedFields.IsActive != existingReminder.IsActive {
-		existingReminder.IsActive = updatedFields.IsActive
-	}
-
-	// Keep the original ID, UserID and CreatedAt
-	existingReminder.ID = reminderID
-	existingReminder.UserID = userID
-	existingReminder.CreatedAt = existingReminder.CreatedAt
-
 	// Update the reminder
 	err = r.reminderRepo.UpdateReminder(existingReminder)
 	if err != nil {

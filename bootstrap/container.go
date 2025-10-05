@@ -90,10 +90,12 @@ func (c *Container) initUseCases() {
 
 // initControllers initializes all controllers
 func (c *Container) initControllers(bot *tgbotapi.BotAPI) {
-	c.DateUseCase = usecases.NewDateUseCase(c.UserUseCase, bot)
-	c.BotUseCase = usecases.NewBotUseCase(c.UserUseCase, c.ReminderUseCase, c.DateUseCase, bot)
-	c.BotController = controllers.NewBotController(c.BotUseCase, c.UserUseCase, c.DateUseCase, c.Config, bot)
 	c.UserController = controllers.NewUserController(c.UserUseCase)
 	c.ReminderController = controllers.NewReminderController(c.ReminderUseCase)
-	c.TimezoneController = controllers.NewTimezoneController(c.UserUseCase, bot, c.Config)
+	if bot != nil {
+		c.DateUseCase = usecases.NewDateUseCase(c.UserUseCase, bot)
+		c.BotUseCase = usecases.NewBotUseCase(c.UserUseCase, c.ReminderUseCase, c.DateUseCase, bot)
+		c.BotController = controllers.NewBotController(c.BotUseCase, c.UserUseCase, c.DateUseCase, c.Config, bot)
+		c.TimezoneController = controllers.NewTimezoneController(c.UserUseCase, bot, c.Config)
+	}
 }
