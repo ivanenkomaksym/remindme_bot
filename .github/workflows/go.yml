@@ -41,12 +41,83 @@ jobs:
 
     - name: Test
       run: go test -v ./...
+
+  api-tests:
+    name: API Integration Tests
+    runs-on: ubuntu-latest
+    needs: build
+    if: success()
+
+    steps:
+    - uses: actions/checkout@v4
+        
+    - name: Create test-results directory
+      run: mkdir -p test-results
+      
+    - name: Run API Tests with Docker Compose
+      run: |
+        # Run the complete test suite using compose
+        docker compose up --build --abort-on-container-exit
+        
+    - name: Upload Test Results
+      uses: actions/upload-artifact@v3
+      if: always()
+      with:
+        name: test-results
+        path: test-results/
+        
+    - name: Publish Test Results
+      uses: dorny/test-reporter@v1
+      if: always()
+      with:
+        name: API Test Results
+        path: test-results/test-results.xml
+        reporter: java-junit
+        
+    - name: Cleanup Docker Resources
+      if: always()
+      run: docker compose down -v
+
+  push-image:
+    name: Push Docker Image
+    runs-on: ubuntu-latest
+    needs: [build, api-tests]
+    if: success()
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Log in to Docker Hub
+      uses: docker/login-action@v3
+      with:
+        username: ${{ secrets.DOCKER_USER  }}
+        password: ${{ secrets.DOCKER_PASSWORD  }}
+
+    - name: Extract metadata
+      id: meta
+      uses: docker/metadata-action@v5
+      with:
+        images: ${{ secrets.DOCKER_USER }}/remindme-bot
+        tags: |
+          type=ref,event=branch
+          type=ref,event=pr
+          type=sha,prefix=sha-
+          type=raw,value=latest,enable={{is_default_branch}}
+
+    - name: Build and push Docker image
+      uses: docker/build-push-action@v5
+      with:
+        context: .
+        file: ./Dockerfile
+        push: true
+        tags: ${{ steps.meta.outputs.tags }}
+        labels: ${{ steps.meta.outputs.labels }}
       
   deploy:
     name: Build and Deploy to AWS App Runner
     runs-on: ubuntu-latest
     needs: build
-    if: success()
+    if: false  # Disabled for now
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4

@@ -1,0 +1,74 @@
+version: '3.8'
+
+services:
+  # MongoDB for testing
+  mongo:
+    image: mongo:latest
+    container_name: remindme-mongo-test
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: root
+      MONGO_INITDB_ROOT_PASSWORD: password
+      MONGO_INITDB_DATABASE: remindme_bot
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo_test_data:/data/db
+    networks:
+      - remindme-test-network
+
+  # API Server for testing
+  api-server:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: remindme-api-test
+    depends_on:
+      - mongo
+    environment:
+      - BOT_ENABLED=false
+      - API_KEY=test-api-key
+      - SERVER_ADDRESS=0.0.0.0
+      - PORT=8080
+      - STORAGE=mongo
+      - DB_CONNECTION_STRING=mongodb://root:password@mongo:27017
+    ports:
+      - "8080:8080"
+    networks:
+      - remindme-test-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://0.0.0.0:8080/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  # Newman test runner
+  newman:
+    image: postman/newman:latest
+    container_name: remindme-newman-test
+    depends_on:
+      - api-server
+      - mongo
+    volumes:
+      - ./postman:/etc/newman
+      - ./test-results:/var/newman
+    environment:
+      - CI_BASE_URL=http://api-server:8080
+      - CI_API_KEY=test-api-key
+    networks:
+      - remindme-test-network
+    command: >
+      run /etc/newman/RemindMeBot.postman_collection.json
+      -e /etc/newman/RemindMeBot.ci.postman_environment.json
+      --env-var "CI_BASE_URL=http://api-server:8080"
+      --env-var "CI_API_KEY=test-api-key"
+      --reporters cli,junit
+      --reporter-junit-export /var/newman/test-results.xml
+      --bail
+
+volumes:
+  mongo_test_data:
+
+networks:
+  remindme-test-network:
+    driver: bridge

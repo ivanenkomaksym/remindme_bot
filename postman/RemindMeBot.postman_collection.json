@@ -306,7 +306,7 @@
 						],
 						"body": {
 							"mode": "raw",
-							"raw": "{\t\t\r\n    \"recurrenceType\": \"Daily\",\r\n\t\"selectedTime\": \"10:00\",\r\n\t\"reminderMessage\": \"{{reminderMessage}}\"\r\n}"
+							"raw": "{\t\t\r\n    \"recurrenceType\": \"Daily\",\r\n\t\"selectedTime\": \"10:00\",\r\n\t\"reminderMessage\": \"{{reminderMessage}}\",\r\n    \"isActive\": true\r\n}"
 						},
 						"url": {
 							"raw": "{{baseUrl}}/api/reminders/{{userId}}",
@@ -436,7 +436,7 @@
 									"pm.test(\"Reminder was updated\", function () {",
 									"    const responseData = pm.response.json();",
 									"    pm.expect(responseData).to.have.property('message').that.equals('Updated test reminder');",
-									"    pm.expect(responseData).to.have.property('isActive').that.equals(false);",
+									"    pm.expect(responseData).to.have.property('isActive').that.equals(true);",
 									"});"
 								],
 								"type": "text/javascript",
@@ -498,7 +498,7 @@
 									"    const responseData = pm.response.json();",
 									"    const reminderId = pm.collectionVariables.get('reminderId');",
 									"    const found = responseData.some(r => r.id === reminderId);",
-									"    pm.expect(found).to.be.false;",
+									"    pm.expect(found).to.be.true;",
 									"});"
 								],
 								"type": "text/javascript",

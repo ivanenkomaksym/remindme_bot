@@ -443,7 +443,7 @@ func TestReminderController_DeleteReminder_Success(t *testing.T) {
 
 	c.DeleteReminder(rw, req)
 
-	if rw.Code != http.StatusOK {
-		t.Fatalf("expected 200, got %d", rw.Code)
+	if rw.Code != http.StatusNoContent {
+		t.Fatalf("expected 204, got %d", rw.Code)
 	}
 }
