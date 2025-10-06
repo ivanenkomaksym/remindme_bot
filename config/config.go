@@ -41,6 +41,7 @@ type DatabaseConfig struct {
 
 // BotConfig holds bot-related configuration
 type BotConfig struct {
+	Enabled   bool
 	Token     string
 	Debug     bool
 	PublicURL string
@@ -106,6 +107,7 @@ func (c *Config) setDefaults() {
 	}
 
 	c.Bot = BotConfig{
+		Enabled:   false,
 		Token:     "",
 		Debug:     false,
 		PublicURL: "",
@@ -184,6 +186,11 @@ func (c *Config) loadDatabaseConfig() {
 
 // loadBotConfig loads bot configuration
 func (c *Config) loadBotConfig() {
+	c.Bot.Enabled = viper.GetBool("BOT_ENABLED")
+	if !c.Bot.Enabled {
+		return
+	}
+
 	if token := viper.GetString("BOT_TOKEN"); token != "" {
 		c.Bot.Token = token
 	}
@@ -220,11 +227,13 @@ func (c *Config) loadAppConfig() {
 
 // validate validates the configuration
 func (c *Config) validate() {
-	if c.Bot.Token == "" {
-		log.Fatal("BOT_TOKEN is required")
-	}
-	if c.Bot.PublicURL == "" {
-		log.Fatal("PUBLIC_URL is required")
+	if c.Bot.Enabled {
+		if c.Bot.Token == "" {
+			log.Fatal("BOT_TOKEN is required")
+		}
+		if c.Bot.PublicURL == "" {
+			log.Fatal("PUBLIC_URL is required")
+		}
 	}
 	if c.Server.Port == "" {
 		log.Fatal("Server port is required")

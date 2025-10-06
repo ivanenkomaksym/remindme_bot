@@ -1,6 +1,8 @@
 package usecases
 
 import (
+	"time"
+
 	"github.com/ivanenkomaksym/remindme_bot/domain/entities"
 	"github.com/ivanenkomaksym/remindme_bot/domain/errors"
 	"github.com/ivanenkomaksym/remindme_bot/domain/repositories"
@@ -10,12 +12,14 @@ import (
 type UserUseCase interface {
 	GetUsers() ([]*entities.User, error)
 	GetUser(userID int64) (*entities.User, error)
+	CreateUser(userID int64, userName, firstName, lastName, language string) (*entities.User, error)
 	GetOrCreateUser(userID int64, userName, firstName, lastName, language string) (*entities.User, error)
 	UpdateUserLanguage(userID int64, language string) error
 	UpdateLocation(userID int64, location string) error
 	GetUserSelection(userID int64) (*entities.UserSelection, error)
 	UpdateUserSelection(userID int64, selection *entities.UserSelection) error
 	ClearUserSelection(userID int64) error
+	DeleteUser(userID int64) error
 }
 
 type userUseCase struct {
@@ -46,9 +50,33 @@ func (u *userUseCase) GetUser(userID int64) (*entities.User, error) {
 	return user, nil
 }
 
+func (u *userUseCase) CreateUser(userID int64, userName, firstName, lastName, language string) (*entities.User, error) {
+	if userID <= 0 {
+		return nil, errors.NewDomainError(errors.ErrUserDataInvalid.Code, "User ID must be positive", nil)
+	}
+	if userName == "" && firstName == "" && lastName == "" {
+		return nil, errors.NewDomainError(errors.ErrUserDataInvalid.Code, "At least one name field must be provided", nil)
+	}
+
+	// Check if user already exists
+	existingUser, err := u.userRepo.GetUser(userID)
+	if err != nil {
+		return nil, err
+	}
+	if existingUser != nil {
+		return nil, errors.ErrUserExists
+	}
+
+	user, err := u.userRepo.CreateUser(userID, userName, firstName, lastName, language)
+	if err != nil {
+		return nil, err
+	}
+	return user, nil
+}
+
 func (u *userUseCase) GetOrCreateUser(userID int64, userName, firstName, lastName, language string) (*entities.User, error) {
 	if userID <= 0 {
-		return nil, errors.NewDomainError("INVALID_USER_ID", "User ID must be positive", nil)
+		return nil, errors.NewDomainError(errors.ErrUserDataInvalid.Code, "User ID must be positive", nil)
 	}
 	if userName == "" && firstName == "" && lastName == "" {
 		return nil, errors.NewDomainError("INVALID_USER_DATA", "At least one name field must be provided", nil)
@@ -63,7 +91,7 @@ func (u *userUseCase) GetOrCreateUser(userID int64, userName, firstName, lastNam
 
 func (u *userUseCase) UpdateUserLanguage(userID int64, language string) error {
 	if userID <= 0 {
-		return errors.NewDomainError("INVALID_USER_ID", "User ID must be positive", nil)
+		return errors.NewDomainError(errors.ErrUserDataInvalid.Code, "User ID must be positive", nil)
 	}
 	if language == "" {
 		return errors.NewDomainError("INVALID_LANGUAGE", "Language cannot be empty", nil)
@@ -74,17 +102,23 @@ func (u *userUseCase) UpdateUserLanguage(userID int64, language string) error {
 
 func (u *userUseCase) UpdateLocation(userID int64, location string) error {
 	if userID <= 0 {
-		return errors.NewDomainError("INVALID_USER_ID", "User ID must be positive", nil)
+		return errors.NewDomainError(errors.ErrUserDataInvalid.Code, "User ID must be positive", nil)
 	}
 	if location == "" {
 		return errors.NewDomainError("INVALID_LOCATION", "Location cannot be empty", nil)
 	}
+
+	_, err := time.LoadLocation(location)
+	if err != nil {
+		return err
+	}
+
 	return u.userRepo.UpdateLocation(userID, location)
 }
 
 func (u *userUseCase) GetUserSelection(userID int64) (*entities.UserSelection, error) {
 	if userID <= 0 {
-		return nil, errors.NewDomainError("INVALID_USER_ID", "User ID must be positive", nil)
+		return nil, errors.NewDomainError(errors.ErrUserDataInvalid.Code, "User ID must be positive", nil)
 	}
 
 	selection, err := u.selectionRepo.GetUserSelection(userID)
@@ -100,7 +134,7 @@ func (u *userUseCase) GetUserSelection(userID int64) (*entities.UserSelection, e
 
 func (u *userUseCase) UpdateUserSelection(userID int64, selection *entities.UserSelection) error {
 	if userID <= 0 {
-		return errors.NewDomainError("INVALID_USER_ID", "User ID must be positive", nil)
+		return errors.NewDomainError(errors.ErrUserDataInvalid.Code, "User ID must be positive", nil)
 	}
 	if selection == nil {
 		return errors.NewDomainError("INVALID_SELECTION", "User selection cannot be nil", nil)
@@ -111,8 +145,25 @@ func (u *userUseCase) UpdateUserSelection(userID int64, selection *entities.User
 
 func (u *userUseCase) ClearUserSelection(userID int64) error {
 	if userID <= 0 {
-		return errors.NewDomainError("INVALID_USER_ID", "User ID must be positive", nil)
+		return errors.NewDomainError(errors.ErrUserDataInvalid.Code, "User ID must be positive", nil)
 	}
 
 	return u.selectionRepo.ClearUserSelection(userID)
+}
+
+func (u *userUseCase) DeleteUser(userID int64) error {
+	if userID <= 0 {
+		return errors.NewDomainError(errors.ErrUserDataInvalid.Code, "User ID must be positive", nil)
+	}
+
+	user, err := u.userRepo.GetUser(userID)
+	if err != nil {
+		return err
+	}
+
+	if user == nil {
+		return errors.ErrUserNotFound
+	}
+
+	return u.userRepo.DeleteUser(userID)
 }

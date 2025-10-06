@@ -13,7 +13,9 @@ type Application struct {
 func App() Application {
 	app := &Application{}
 	app.Env = NewEnv()
-	app.Bot = NewBot(app.Env)
+	if app.Env.Config.Bot.Enabled {
+		app.Bot = NewBot(app.Env)
+	}
 	app.Container = NewContainer(app)
 
 	return *app

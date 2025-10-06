@@ -6,8 +6,8 @@ import (
 
 // Reminder represents a reminder in the system
 type Reminder struct {
-	ID          int64       `json:"id" bson:"id"`
-	UserID      int64       `json:"userId" bson:"userId"`
+	ID          int64       `json:"id,string" bson:"id"`
+	UserID      int64       `json:"userId,string" bson:"userId"`
 	Message     string      `json:"message" bson:"message"`
 	CreatedAt   time.Time   `json:"createdAt" bson:"createdAt"`
 	NextTrigger *time.Time  `json:"nextTrigger" bson:"nextTrigger"`
