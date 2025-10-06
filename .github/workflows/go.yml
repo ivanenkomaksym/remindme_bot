@@ -10,6 +10,13 @@ on:
     branches: [ "main" ]
   workflow_dispatch: # Allows manual triggering from the GitHub Actions UI
 
+# Permissions required by dorny/test-reporter
+permissions:
+  contents: read
+  actions: read
+  checks: write
+  pull-requests: write
+
 env:
   AWS_REGION: eu-central-1
   ECR_REPOSITORY: remindmebot
@@ -60,7 +67,7 @@ jobs:
         docker compose up --build --abort-on-container-exit
         
     - name: Upload Test Results
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       if: always()
       with:
         name: test-results
@@ -116,7 +123,10 @@ jobs:
   deploy:
     name: Build and Deploy to AWS App Runner
     runs-on: ubuntu-latest
-    needs: build
+    needs: 
+      - build
+      - api-tests
+      - push-image
     if: false  # Disabled for now
     steps:
       - name: Checkout repository
