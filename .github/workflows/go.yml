@@ -103,6 +103,7 @@ jobs:
     - name: Extract metadata
       id: meta
       uses: docker/metadata-action@v5
+      if: false # Disabled for now
       with:
         images: ${{ secrets.DOCKER_USER }}/remindme-bot
         tags: |
@@ -117,10 +118,36 @@ jobs:
         context: .
         file: ./Dockerfile
         push: true
-        tags: ${{ steps.meta.outputs.tags }}
-        labels: ${{ steps.meta.outputs.labels }}
+        tags: ${{ secrets.DOCKER_USER }}/remindme-bot:latest
+
+  deploy-to-cloud-run:
+    runs-on: ubuntu-latest
+    needs: push-image
+    if: true
+    steps:
+      # Authenticate with Google Cloud
+      - name: Authenticate with Google Cloud
+        uses: google-github-actions/auth@v1
+        with:
+          credentials_json: ${{ env.GOOGLE_SERVICE_ACCOUNT_KEY }}
+
+      # Install Google Cloud SDK
+      - name: Set up Google Cloud SDK
+        uses: google-github-actions/setup-gcloud@v1
+        with:
+          project_id: ${{ env.PROJECT_ID }}
+
+      # Deploy to Cloud Run
+      - name: Deploy to Cloud Run
+        run: |
+          gcloud run deploy remindme-bot \
+            --image ivanenkomak/remindme-bot:latest \
+            --platform managed \
+            --region europe-central2 \
+            --allow-unauthenticated \
+            --set-env-vars "BOT_TOKEN=${{ env.BOT_TOKEN }},PUBLIC_URL=${{ env.PUBLIC_URL }},API_KEY=${{ env.API_KEY }},STORAGE=mongo,DB_CONNECTION_STRING=${{ env.DB_CONNECTION_STRING }},NOTIFIER_TIMEOUT=15m"
       
-  deploy:
+  deploy-to-aws-app-runner:
     name: Build and Deploy to AWS App Runner
     runs-on: ubuntu-latest
     needs: 
