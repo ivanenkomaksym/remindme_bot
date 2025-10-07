@@ -47,13 +47,15 @@ func (c *BotController) HandleWebhook(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Process the update
-	if err := c.processUpdate(update); err != nil {
-		log.Printf("ERROR: Failed to process update: %v", err)
-	}
-
-	// Respond with 200 OK to Telegram immediately
+	// Acknowledge immediately! Tell Telegram you received the update.
 	w.WriteHeader(http.StatusOK)
+
+	// Process the update in the background using a goroutine.
+	go func() {
+		if err := c.processUpdate(update); err != nil {
+			log.Printf("ERROR: Failed to process update: %v", err)
+		}
+	}()
 }
 
 // processUpdate processes a Telegram update
