@@ -1,5 +1,70 @@
 # remindme_bot
-Remind me telegram bot
+
+A feature-rich Telegram bot for managing personal reminders with flexible scheduling and multi-language support.
+
+## Overview
+
+RemindMeBot is a sophisticated reminder management system built as a Telegram bot that helps users create, schedule, and manage reminders with advanced features like recurring schedules, timezone detection, and intuitive date/time selection.
+
+## Key Features
+
+### 🤖 **Telegram Integration**
+- Interactive bot interface with intuitive commands
+- Real-time notifications delivered directly to Telegram
+- Seamless user experience with inline keyboards and quick actions
+
+### ⏰ **Advanced Scheduling**
+- **Multiple Recurrence Types**: Once, Daily, Weekly, Monthly, Custom Interval, Spaced-Based Repetition
+- **Smart Date Picker**: Interactive calendar for easy date selection
+- **Time Picker**: Intuitive time selection interface
+- **Timezone Detection**: Automatically detects and adapts to user's timezone
+
+### 🌍 **Localization**
+- **Multi-language Support**: English (en) and Ukrainian (uk)
+- **Automatic Language Detection**: Adapts to user's Telegram language preferences
+- **Localized Interfaces**: Date pickers, messages, and commands in user's language
+
+### 📱 **User Management**
+- **Reminder Overview**: View all active and past reminders
+- **Easy Deletion**: Remove reminders with simple commands
+- **User Preferences**: Language and timezone customization
+- **Persistent Storage**: Reminders survive bot restarts
+
+### 🔧 **Technical Architecture**
+- **Clean Architecture**: Domain-driven design with clear separation of concerns
+- **Flexible Storage**: Supports both in-memory and MongoDB persistence
+- **Configuration Management**: Environment variables and `.env` file support
+- **Background Processing**: Dedicated reminder notifier service
+
+### 🚀 **API Support**
+- **Complete REST API**: Full CRUD operations for users and reminders
+- **API Authentication**: Secure access with API keys
+- **Integration Ready**: Easy integration with external systems
+- **Comprehensive Testing**: Automated API tests with Postman collections
+
+## Architecture
+
+### 📁 **Clean Architecture Layers**
+```
+├── Domain Layer (entities, use cases, repositories)
+├── Infrastructure Layer (database, external services)  
+├── Application Layer (controllers, middleware)
+└── Presentation Layer (Telegram bot, REST API)
+```
+
+### 💾 **Storage Options**
+- **In-Memory**: Fast, ephemeral storage for development/testing
+- **MongoDB**: Persistent, scalable storage for production
+
+### ⚙️ **Configuration**
+- **Environment Variables**: `BOT_TOKEN`, `API_KEY`, `DB_CONNECTION_STRING`
+- **`.env` File**: Local development configuration
+- **Runtime Settings**: Storage type, server address, notification intervals
+
+### 🔄 **Background Services**
+- **Reminder Notifier**: Continuously monitors active reminders
+- **Configurable Intervals**: Adjustable check frequency (default: 15 minutes)
+- **Reliable Delivery**: Ensures notifications are sent even after failures
 
 ## Testing
 
