@@ -122,8 +122,8 @@ The project uses GitHub Actions for automated testing, building, and deployment 
 
 ### 📋 **Pipeline Flow**
 ```
-Build → API Tests → Push Image → Deploy (disabled)
-  ✓       ✓           ✓          (🚫)
+Build → API Tests → Push Image → Deploy (GCP)
+  ✓       ✓           ✓          ✓
 ```
 
 **Secrets Required:**
@@ -134,5 +134,7 @@ Build → API Tests → Push Image → Deploy (disabled)
 - `PUBLIC_URL` - used for telegram bot
 - `API_KEY` - api key to gain access
 - `DB_CONNECTION_STRING` - mongo connection string
+- `PROJECT_ID` - GCP project id
+- `GOOGLE_SERVICE_ACCOUNT_KEY` - GCP service account JSON key
 
 **Test Results**: Visible in GitHub Actions UI, PR comments, and downloadable artifacts.

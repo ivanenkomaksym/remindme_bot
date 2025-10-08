@@ -126,6 +126,7 @@ jobs:
         tags: ${{ secrets.DOCKER_USER }}/remindme-bot:latest
 
   deploy-to-cloud-run:
+    name: Deploy to Google Cloud Run
     runs-on: ubuntu-latest
     needs: push-image
     if: true
