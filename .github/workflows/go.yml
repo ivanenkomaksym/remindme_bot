@@ -18,16 +18,21 @@ permissions:
   pull-requests: write
 
 env:
-  AWS_REGION: eu-central-1
-  ECR_REPOSITORY: remindmebot
-  APP_RUNNER_SERVICE_ARN: arn:aws:apprunner:eu-central-1:861276125075:service/remindmebot/52395a313e234e52b68c38db60dee09a
-
   BOT_TOKEN: ${{ secrets.BOT_TOKEN }}
   PUBLIC_URL: ${{ secrets.PUBLIC_URL }}
   API_KEY: ${{ secrets.API_KEY }}
   DB_CONNECTION_STRING: ${{ secrets.DB_CONNECTION_STRING }}
   
   NOTIFIER_TIMEOUT: 15m
+
+  # AWS
+  AWS_REGION: eu-central-1
+  ECR_REPOSITORY: remindmebot
+  APP_RUNNER_SERVICE_ARN: arn:aws:apprunner:eu-central-1:861276125075:service/remindmebot/52395a313e234e52b68c38db60dee09a
+
+  # GCP
+  PROJECT_ID: remindmebot-473606
+  GOOGLE_SERVICE_ACCOUNT_KEY: ${{ secrets.GOOGLE_SERVICE_ACCOUNT_KEY }}
 
 jobs:
 
