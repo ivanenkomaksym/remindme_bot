@@ -149,7 +149,7 @@ jobs:
           gcloud run deploy remindme-bot \
             --image ivanenkomak/remindme-bot:latest \
             --platform managed \
-            --region europe-central2 \
+            --region europe-west1 \
             --allow-unauthenticated \
             --set-env-vars "BOT_TOKEN=${{ env.BOT_TOKEN }},PUBLIC_URL=${{ env.PUBLIC_URL }},API_KEY=${{ env.API_KEY }},STORAGE=mongo,DB_CONNECTION_STRING=${{ env.DB_CONNECTION_STRING }},NOTIFIER_TIMEOUT=15m"
       
