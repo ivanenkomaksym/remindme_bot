@@ -101,14 +101,14 @@ func TestNextForRecurrence(t *testing.T) {
 
 	timeOfDay := time.Date(2025, 1, 10, 10, 30, 0, 0, loc)
 	recOnce := entities.OnceAt(timeOfDay, loc)
-	gotUTC := NextForRecurrence(from, recOnce)
+	gotUTC := NextForRecurrence(from, timeOfDay, recOnce)
 	if gotUTC != nil {
 		t.Fatalf("daily: expected %v, got %v", nil, gotUTC)
 	}
 
 	// Daily advances to the next local 10:30 -> compute expected candidate in loc and compare in UTC
 	recDaily := entities.DailyAt(timeOfDay, loc)
-	gotUTC = NextForRecurrence(from, recDaily)
+	gotUTC = NextForRecurrence(from, timeOfDay, recDaily)
 	candidate := time.Date(from.Year(), from.Month(), from.Day(), 10, 30, 0, 0, loc)
 	if !candidate.After(from) {
 		candidate = candidate.Add(24 * time.Hour)
@@ -120,7 +120,7 @@ func TestNextForRecurrence(t *testing.T) {
 	// Weekly Monday at 09:00 from Friday -> next Monday at 09:00
 	timeOfDay = time.Date(2025, 1, 10, 9, 0, 0, 0, loc)
 	recWeekly := entities.CustomWeekly([]time.Weekday{time.Monday}, timeOfDay, loc)
-	gotUTC = NextForRecurrence(from, recWeekly)
+	gotUTC = NextForRecurrence(from, timeOfDay, recWeekly)
 
 	wantLocal = time.Date(2025, 1, 13, 9, 0, 0, 0, loc)
 	wantUTC = wantLocal.UTC()
@@ -129,7 +129,7 @@ func TestNextForRecurrence(t *testing.T) {
 	}
 	// Monthly 15th 09:00
 	recMonthly := entities.MonthlyOnDay([]int{15}, timeOfDay, loc)
-	gotUTC = NextForRecurrence(from, recMonthly)
+	gotUTC = NextForRecurrence(from, timeOfDay, recMonthly)
 	wantLocal = time.Date(2025, 1, 15, 9, 0, 0, 0, loc)
 	wantUTC = wantLocal.UTC()
 	if !gotUTC.Equal(wantUTC) {

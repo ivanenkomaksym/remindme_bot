@@ -140,19 +140,19 @@ func NextForSpacedBasedRepetition(last time.Time, timeOfDay time.Time, rec *enti
 }
 
 // NextForRecurrence advances from last trigger according to the recurrence configuration.
-func NextForRecurrence(last time.Time, rec *entities.Recurrence) *time.Time {
+func NextForRecurrence(last time.Time, timeOfDay time.Time, rec *entities.Recurrence) *time.Time {
 	switch rec.Type {
 	case entities.Once:
 		return nil
 	case entities.Daily:
 		// Maintain the same clock time as last trigger, add 24h
-		result := NextDailyTrigger(last, *rec.StartDate, rec.GetLocation())
+		result := NextDailyTrigger(last, timeOfDay, rec.GetLocation())
 		return &result
 	case entities.Weekly:
-		result := NextWeeklyTrigger(last, rec.Weekdays, *rec.StartDate, rec.GetLocation())
+		result := NextWeeklyTrigger(last, rec.Weekdays, timeOfDay, rec.GetLocation())
 		return &result
 	case entities.Monthly:
-		result := NextMonthlyTrigger(last, rec.DayOfMonth, *rec.StartDate, rec.GetLocation())
+		result := NextMonthlyTrigger(last, rec.DayOfMonth, timeOfDay, rec.GetLocation())
 		return &result
 	case entities.Interval:
 		// For interval reminders, we need to calculate the next trigger in the user's timezone
@@ -169,9 +169,9 @@ func NextForRecurrence(last time.Time, rec *entities.Recurrence) *time.Time {
 
 		return &result
 	case entities.SpacedBasedRepetition:
-		return NextForSpacedBasedRepetition(last, *rec.StartDate, rec)
+		return NextForSpacedBasedRepetition(last, timeOfDay, rec)
 	default:
-		result := NextDailyTrigger(last, *rec.StartDate, rec.GetLocation())
+		result := NextDailyTrigger(last, timeOfDay, rec.GetLocation())
 		return &result
 	}
 }

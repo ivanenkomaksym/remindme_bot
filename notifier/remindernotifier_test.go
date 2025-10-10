@@ -41,7 +41,7 @@ func TestProcessDueReminders_DailyAdvancesNextTrigger(t *testing.T) {
 	// After processing, NextTrigger should advance according to scheduler.NextForRecurrence
 	reminders, _ := repo.GetReminders()
 	updated := reminders[0]
-	expected := scheduler.NextForRecurrence(past, rem.Recurrence)
+	expected := scheduler.NextForRecurrence(past, past, rem.Recurrence)
 	if expected == nil {
 		t.Fatalf("expected non-nil expected NextTrigger")
 	}
