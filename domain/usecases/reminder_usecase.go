@@ -71,7 +71,7 @@ func (r *reminderUseCase) CreateReminder(userID int64, selection *entities.UserS
 		return nil, errors.ErrInvalidTimeFormat
 	} else {
 		loc := user.GetLocation()
-		timeOfDay, err = buildDateTimeFromSelection(selection.SelectedDate, selection.SelectedTime, loc)
+		timeOfDay, err = buildDateTimeFromSelection(time.Now(), selection.SelectedTime, loc)
 		if err != nil {
 			return nil, err
 		}
