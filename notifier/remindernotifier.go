@@ -18,10 +18,44 @@ type BotSender interface {
 
 // startReminderNotifier runs a loop that checks for due reminders and notifies users
 func StartReminderNotifier(reminderRepo repositories.ReminderRepository, appConfig config.AppConfig, bot *tgbotapi.BotAPI) {
+	// Calculate the next aligned time to start
+	now := time.Now()
+	nextStart := calculateNextAlignedTime(now, appConfig.NotifierTimeout)
+
+	// Wait until the aligned time
+	initialDelay := nextStart.Sub(now)
+	log.Printf("Starting reminder notifier in %v (next aligned time: %v)", initialDelay.Truncate(time.Second), nextStart.Format("15:04:05"))
+	time.Sleep(initialDelay)
+
+	// Now run the regular loop at aligned intervals
 	for {
 		ProcessDueReminders(time.Now(), reminderRepo, bot)
 		time.Sleep(appConfig.NotifierTimeout)
 	}
+}
+
+// calculateNextAlignedTime calculates the next time aligned to the interval
+// For example, if interval is 15min and current time is 9:28, it returns 9:30
+func calculateNextAlignedTime(now time.Time, interval time.Duration) time.Time {
+	// Get minutes since midnight
+	minutesSinceMidnight := now.Hour()*60 + now.Minute()
+	intervalMinutes := int(interval.Minutes())
+
+	// Calculate next aligned minute
+	nextAlignedMinute := ((minutesSinceMidnight / intervalMinutes) + 1) * intervalMinutes
+
+	// Handle day overflow
+	if nextAlignedMinute >= 24*60 {
+		// Next day
+		tomorrow := now.Add(24 * time.Hour)
+		return time.Date(tomorrow.Year(), tomorrow.Month(), tomorrow.Day(), 0, 0, 0, 0, now.Location())
+	}
+
+	// Same day
+	nextHour := nextAlignedMinute / 60
+	nextMinute := nextAlignedMinute % 60
+
+	return time.Date(now.Year(), now.Month(), now.Day(), nextHour, nextMinute, 0, 0, now.Location())
 }
 
 // ProcessDueReminders performs a single pass over repository reminders, sending due ones

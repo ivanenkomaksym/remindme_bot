@@ -17,6 +17,161 @@ func (f *fakeSender) Send(c tgbotapi.Chattable) (tgbotapi.Message, error) {
 	return tgbotapi.Message{}, nil
 }
 
+func TestCalculateNextAlignedTime(t *testing.T) {
+	tests := []struct {
+		name     string
+		now      string
+		interval time.Duration
+		expected string
+	}{
+		{
+			name:     "9:28 with 15min interval should align to 9:30",
+			now:      "09:28:00",
+			interval: 15 * time.Minute,
+			expected: "09:30:00",
+		},
+		{
+			name:     "9:46 with 15min interval should align to 10:00",
+			now:      "09:46:00",
+			interval: 15 * time.Minute,
+			expected: "10:00:00",
+		},
+		{
+			name:     "9:46 with 5min interval should align to 9:50",
+			now:      "09:46:00",
+			interval: 5 * time.Minute,
+			expected: "09:50:00",
+		},
+		{
+			name:     "9:30 exact with 15min interval should align to 9:45",
+			now:      "09:30:00",
+			interval: 15 * time.Minute,
+			expected: "09:45:00",
+		},
+		{
+			name:     "23:55 with 15min interval should align to 00:00 next day",
+			now:      "23:55:00",
+			interval: 15 * time.Minute,
+			expected: "00:00:00",
+		},
+		{
+			name:     "10:17 with 10min interval should align to 10:20",
+			now:      "10:17:00",
+			interval: 10 * time.Minute,
+			expected: "10:20:00",
+		},
+		{
+			name:     "14:58 with 30min interval should align to 15:00",
+			now:      "14:58:00",
+			interval: 30 * time.Minute,
+			expected: "15:00:00",
+		},
+		{
+			name:     "23:45 with 30min interval should align to 00:00 next day",
+			now:      "23:45:00",
+			interval: 30 * time.Minute,
+			expected: "00:00:00",
+		},
+	}
+
+	baseDate := time.Date(2025, 1, 15, 0, 0, 0, 0, time.UTC)
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			// Parse the time strings relative to baseDate
+			nowTime, err := time.Parse("15:04:05", tt.now)
+			if err != nil {
+				t.Fatalf("Failed to parse now time: %v", err)
+			}
+			now := time.Date(baseDate.Year(), baseDate.Month(), baseDate.Day(),
+				nowTime.Hour(), nowTime.Minute(), nowTime.Second(), 0, time.UTC)
+
+			expectedTime, err := time.Parse("15:04:05", tt.expected)
+			if err != nil {
+				t.Fatalf("Failed to parse expected time: %v", err)
+			}
+
+			var expected time.Time
+			if expectedTime.Hour() == 0 && expectedTime.Minute() == 0 &&
+				(now.Hour() > 20 || (now.Hour() == 23 && now.Minute() >= 30)) {
+				// Next day case
+				nextDay := baseDate.Add(24 * time.Hour)
+				expected = time.Date(nextDay.Year(), nextDay.Month(), nextDay.Day(),
+					expectedTime.Hour(), expectedTime.Minute(), expectedTime.Second(), 0, time.UTC)
+			} else {
+				// Same day case
+				expected = time.Date(baseDate.Year(), baseDate.Month(), baseDate.Day(),
+					expectedTime.Hour(), expectedTime.Minute(), expectedTime.Second(), 0, time.UTC)
+			}
+
+			result := calculateNextAlignedTime(now, tt.interval)
+
+			if !result.Equal(expected) {
+				t.Errorf("calculateNextAlignedTime(%s, %v) = %s, want %s",
+					now.Format("15:04:05"), tt.interval, result.Format("15:04:05"), expected.Format("15:04:05"))
+			}
+		})
+	}
+}
+
+func TestCalculateNextAlignedTime_EdgeCases(t *testing.T) {
+	baseDate := time.Date(2025, 1, 15, 0, 0, 0, 0, time.UTC)
+
+	t.Run("End of day overflow", func(t *testing.T) {
+		// 23:50 with 15min interval should go to next day 00:00
+		now := time.Date(baseDate.Year(), baseDate.Month(), baseDate.Day(), 23, 50, 0, 0, time.UTC)
+		expected := time.Date(baseDate.Year(), baseDate.Month(), baseDate.Day()+1, 0, 0, 0, 0, time.UTC)
+
+		result := calculateNextAlignedTime(now, 15*time.Minute)
+
+		if !result.Equal(expected) {
+			t.Errorf("Expected next day 00:00, got %s", result.Format("2006-01-02 15:04:05"))
+		}
+	})
+
+	t.Run("1 minute interval", func(t *testing.T) {
+		now := time.Date(baseDate.Year(), baseDate.Month(), baseDate.Day(), 12, 34, 30, 0, time.UTC)
+		expected := time.Date(baseDate.Year(), baseDate.Month(), baseDate.Day(), 12, 35, 0, 0, time.UTC)
+
+		result := calculateNextAlignedTime(now, 1*time.Minute)
+
+		if !result.Equal(expected) {
+			t.Errorf("Expected 12:35:00, got %s", result.Format("15:04:05"))
+		}
+	})
+
+	t.Run("60 minute interval", func(t *testing.T) {
+		now := time.Date(baseDate.Year(), baseDate.Month(), baseDate.Day(), 14, 30, 0, 0, time.UTC)
+		expected := time.Date(baseDate.Year(), baseDate.Month(), baseDate.Day(), 15, 0, 0, 0, time.UTC)
+
+		result := calculateNextAlignedTime(now, 60*time.Minute)
+
+		if !result.Equal(expected) {
+			t.Errorf("Expected 15:00:00, got %s", result.Format("15:04:05"))
+		}
+	})
+}
+
+func TestCalculateNextAlignedTime_PreservesTimezone(t *testing.T) {
+	// Test that the function preserves the input timezone
+	est, err := time.LoadLocation("America/New_York")
+	if err != nil {
+		t.Skip("EST timezone not available")
+	}
+
+	now := time.Date(2025, 1, 15, 14, 28, 0, 0, est)
+	result := calculateNextAlignedTime(now, 15*time.Minute)
+	expected := time.Date(2025, 1, 15, 14, 30, 0, 0, est)
+
+	if !result.Equal(expected) {
+		t.Errorf("Expected %s, got %s", expected.Format("15:04:05 MST"), result.Format("15:04:05 MST"))
+	}
+
+	if result.Location() != est {
+		t.Errorf("Expected timezone %s, got %s", est, result.Location())
+	}
+}
+
 func TestProcessDueReminders_DailyAdvancesNextTrigger(t *testing.T) {
 	repo := inmemory.NewInMemoryReminderRepository()
 	loc, _ := time.LoadLocation("Asia/Shanghai")
