@@ -59,6 +59,19 @@ type Strings struct {
 	MsgTimezoneAutoDetect      string
 	MsgTimezoneAutoDetectDescr string
 	MsgTimezoneSet             string
+	// Navigation-related i18n
+	NavMainMenu           string
+	NavList               string
+	NavSetup              string
+	NavAccount            string
+	NavChooseOption       string
+	NavAccountPlaceholder string
+	// Bot command descriptions
+	CmdStartDesc   string
+	CmdMenuDesc    string
+	CmdListDesc    string
+	CmdSetupDesc   string
+	CmdAccountDesc string
 }
 
 var stringsByLang = map[string]Strings{
@@ -130,6 +143,17 @@ var stringsByLang = map[string]Strings{
 		MsgTimezoneAutoDetect:      "🌍 Set Timezone Automatically",
 		MsgTimezoneAutoDetectDescr: "Click the button to detect your timezone.",
 		MsgTimezoneSet:             "✅ Your timezone is set to",
+		NavMainMenu:                "📱 Main Menu",
+		NavList:                    "Show reminders",
+		NavSetup:                   "Setup",
+		NavAccount:                 "Account",
+		NavChooseOption:            "Choose an option:",
+		NavAccountPlaceholder:      "💰 Account management coming soon!",
+		CmdStartDesc:               "Start the bot and show main menu",
+		CmdMenuDesc:                "Show main navigation menu",
+		CmdListDesc:                "Show or remove reminders",
+		CmdSetupDesc:               "Set up time, recurrence, and reminder settings",
+		CmdAccountDesc:             "Manage account settings",
 	},
 	LangUK: {
 		Welcome: "Ласкаво просимо до бота-нагадувача!",
@@ -199,6 +223,17 @@ var stringsByLang = map[string]Strings{
 		MsgTimezoneAutoDetect:      "🌍 Автоматично встановити часовий пояс",
 		MsgTimezoneAutoDetectDescr: "Натисніть кнопку, щоб визначити свій часовий пояс.",
 		MsgTimezoneSet:             "✅ Часовий пояс встановлено на",
+		NavMainMenu:                "📱 Головне меню",
+		NavList:                    "Показати нагадування",
+		NavSetup:                   "Налаштування",
+		NavAccount:                 "Рахунок",
+		NavChooseOption:            "Оберіть опцію:",
+		NavAccountPlaceholder:      "💰 Управління рахунком незабаром!",
+		CmdStartDesc:               "Запустити бота та показати головне меню",
+		CmdMenuDesc:                "Показати головне навігаційне меню",
+		CmdListDesc:                "Показати або видалити нагадування",
+		CmdSetupDesc:               "Налаштувати час, повторення та параметри нагадувань",
+		CmdAccountDesc:             "Управління налаштуваннями рахунку",
 	},
 }
 
