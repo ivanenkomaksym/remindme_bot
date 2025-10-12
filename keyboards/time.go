@@ -73,7 +73,7 @@ func GetHourRangeMarkup(lang string) *tgbotapi.InlineKeyboardMarkup {
 
 	rows = append(rows, tgbotapi.NewInlineKeyboardRow(
 		tgbotapi.NewInlineKeyboardButtonData(s.BtnCustomTime, CallbackPrefixCustom),
-		tgbotapi.NewInlineKeyboardButtonData(s.BtnBack, MainMenu),
+		tgbotapi.NewInlineKeyboardButtonData(s.BtnBack, SetupMenu),
 	))
 
 	menu := tgbotapi.NewInlineKeyboardMarkup(rows...)

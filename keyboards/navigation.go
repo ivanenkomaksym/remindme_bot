@@ -15,8 +15,13 @@ const (
 	// Account management callbacks
 	CallbackAccountChangeLanguage = "acc_change_lang"
 	CallbackAccountChangeTimezone = "acc_change_tz"
-	CallbackAccountBackToMenu     = "acc_back_menu"
+	// General back to main menu callback
+	CallbackBackToMainMenu = "back_to_main"
 )
+
+func IsMainMenuSelection(callbackData string) bool {
+	return callbackData == CallbackBackToMainMenu
+}
 
 // GetNavigationMenuMarkup returns the main navigation menu keyboard
 func GetNavigationMenuMarkup(lang string) *tgbotapi.InlineKeyboardMarkup {
@@ -54,7 +59,7 @@ func GetAccountMenuMarkup(lang string) *tgbotapi.InlineKeyboardMarkup {
 			tgbotapi.NewInlineKeyboardButtonData(s.AccChangeTimezone, CallbackAccountChangeTimezone),
 		),
 		tgbotapi.NewInlineKeyboardRow(
-			tgbotapi.NewInlineKeyboardButtonData(s.AccBackToMenu, CallbackAccountBackToMenu),
+			tgbotapi.NewInlineKeyboardButtonData(s.AccBackToMenu, CallbackBackToMainMenu),
 		),
 	)
 
@@ -97,8 +102,7 @@ func FormatAccountInfo(user *entities.User, lang string) string {
 // IsAccountCallback checks if the callback data is for account management
 func IsAccountCallback(callbackData string) bool {
 	return callbackData == CallbackAccountChangeLanguage ||
-		callbackData == CallbackAccountChangeTimezone ||
-		callbackData == CallbackAccountBackToMenu
+		callbackData == CallbackAccountChangeTimezone
 }
 
 // HandleNavigationCallback handles navigation menu callbacks

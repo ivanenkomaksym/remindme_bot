@@ -66,7 +66,6 @@ func setupCommandsForLanguage(bot *tgbotapi.BotAPI, langCode string) error {
 
 	commands := []tgbotapi.BotCommand{
 		{Command: "start", Description: s.CmdStartDesc},
-		{Command: "menu", Description: s.CmdMenuDesc},
 		{Command: "list", Description: s.CmdListDesc},
 		{Command: "setup", Description: s.CmdSetupDesc},
 		{Command: "account", Description: s.CmdAccountDesc},

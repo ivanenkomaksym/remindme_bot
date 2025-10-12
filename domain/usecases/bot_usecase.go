@@ -111,6 +111,8 @@ func (b *botUseCase) HandleCallbackQuery(user *tgbotapi.User, message *tgbotapi.
 	switch keyboardType {
 	case keyboards.Main:
 		return b.handleMainMenu(user, userEntity)
+	case keyboards.Setup:
+		return b.handleMainMenu(user, userEntity)
 	case keyboards.Date:
 		return b.handleDateSelection(callbackQuery, userEntity, selection)
 	case keyboards.Reccurence:
@@ -159,7 +161,7 @@ func (b *botUseCase) HandleTextMessage(user *tgbotapi.User, text string) (*keybo
 		return b.handleCustomIntervalInput(user, text, userEntity, selection)
 	}
 
-	return &keyboards.SelectionResult{Text: keyboards.T(userEntity.Language).MsgParsingFailed, Markup: keyboards.GetMainMenuMarkup(userEntity.Language)}, nil
+	return &keyboards.SelectionResult{Text: keyboards.T(userEntity.Language).MsgParsingFailed, Markup: keyboards.GetNavigationMenuMarkup(userEntity.Language)}, nil
 }
 
 func (b *botUseCase) ProcessKeyboardSelection(callbackQuery *tgbotapi.CallbackQuery) (*keyboards.SelectionResult, error) {
@@ -182,17 +184,6 @@ func (b *botUseCase) ProcessUserInput(message *tgbotapi.Message) (*keyboards.Sel
 		switch message.Command() {
 		case "start":
 			return b.HandleStartCommand(message.From)
-		case "menu":
-			// Show navigation menu
-			userEntity, err := b.userUseCase.GetUser(message.From.ID)
-			if err != nil {
-				return nil, err
-			}
-			s := keyboards.T(userEntity.Language)
-			return &keyboards.SelectionResult{
-				Text:   s.NavMainMenu + ":\n\n" + s.NavChooseOption,
-				Markup: keyboards.GetNavigationMenuMarkup(userEntity.Language),
-			}, nil
 		case "list":
 			// Handle /list command directly
 			userEntity, err := b.userUseCase.GetUser(message.From.ID)
@@ -209,7 +200,7 @@ func (b *botUseCase) ProcessUserInput(message *tgbotapi.Message) (*keyboards.Sel
 			s := keyboards.T(userEntity.Language)
 			return &keyboards.SelectionResult{
 				Text:   "⚙️ " + s.NavSetup + ":",
-				Markup: keyboards.GetMainMenuMarkup(userEntity.Language),
+				Markup: keyboards.GetSetupMenuMarkup(userEntity.Language),
 			}, nil
 		case "account":
 			// Handle /account command directly - show account information
@@ -262,11 +253,11 @@ func (b *botUseCase) handleLanguageSelection(user *tgbotapi.User, callbackData s
 		return nil, err
 	}
 
-	return &keyboards.SelectionResult{Text: keyboards.T(lang).Welcome, Markup: keyboards.GetMainMenuMarkup(lang)}, nil
+	return &keyboards.SelectionResult{Text: keyboards.T(lang).Welcome, Markup: keyboards.GetNavigationMenuMarkup(lang)}, nil
 }
 
 func (b *botUseCase) handleMainMenu(user *tgbotapi.User, userEntity *entities.User) (*keyboards.SelectionResult, error) {
-	return &keyboards.SelectionResult{Text: keyboards.T(userEntity.Language).Welcome, Markup: keyboards.GetMainMenuMarkup(userEntity.Language)}, nil
+	return &keyboards.SelectionResult{Text: keyboards.T(userEntity.Language).Welcome, Markup: keyboards.GetNavigationMenuMarkup(userEntity.Language)}, nil
 }
 
 func (b *botUseCase) handleNavigationSelection(user *tgbotapi.User, callbackData string, userEntity *entities.User) (*keyboards.SelectionResult, error) {
@@ -277,10 +268,10 @@ func (b *botUseCase) handleNavigationSelection(user *tgbotapi.User, callbackData
 		// Handle /list command - show user's reminders
 		return b.handleRemindersList(user, userEntity)
 	case keyboards.CallbackSetup:
-		// Handle /setup command - show main menu for creating reminders
+		// Handle /setup command - show setup menu for creating reminders
 		return &keyboards.SelectionResult{
 			Text:   "⚙️ " + s.NavSetup + ":",
-			Markup: keyboards.GetMainMenuMarkup(userEntity.Language),
+			Markup: keyboards.GetSetupMenuMarkup(userEntity.Language),
 		}, nil
 	case keyboards.CallbackAccount:
 		// Handle /account command - show account information

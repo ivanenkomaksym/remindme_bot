@@ -23,7 +23,7 @@ func GetRemindersListMarkup(reminders []entities.Reminder, lang string) *tgbotap
 	s := T(lang)
 	if len(reminders) == 0 {
 		rows = append(rows, tgbotapi.NewInlineKeyboardRow(
-			tgbotapi.NewInlineKeyboardButtonData(s.BtnBack, MainMenu),
+			tgbotapi.NewInlineKeyboardButtonData(s.BtnBack, CallbackBackToMainMenu),
 		))
 		menu := tgbotapi.NewInlineKeyboardMarkup(rows...)
 		return &menu
@@ -44,7 +44,7 @@ func GetRemindersListMarkup(reminders []entities.Reminder, lang string) *tgbotap
 	}
 
 	rows = append(rows, tgbotapi.NewInlineKeyboardRow(
-		tgbotapi.NewInlineKeyboardButtonData(s.BtnBack, MainMenu),
+		tgbotapi.NewInlineKeyboardButtonData(s.BtnBack, CallbackBackToMainMenu),
 	))
 
 	menu := tgbotapi.NewInlineKeyboardMarkup(rows...)

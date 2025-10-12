@@ -6,16 +6,16 @@ import (
 )
 
 const (
-	MainMenu = "main_menu"
+	SetupMenu = "setup_menu"
 )
 
-func IsMainMenuSelection(callbackData string) bool {
-	return callbackData == MainMenu
+func IsSetupMenuSelection(callbackData string) bool {
+	return callbackData == SetupMenu
 }
 
-func GetMainMenuMarkup(lang string) *tgbotapi.InlineKeyboardMarkup {
+func GetSetupMenuMarkup(lang string) *tgbotapi.InlineKeyboardMarkup {
 	s := T(lang)
-	mainMenu := tgbotapi.NewInlineKeyboardMarkup(
+	setupMenu := tgbotapi.NewInlineKeyboardMarkup(
 		tgbotapi.NewInlineKeyboardRow(
 			tgbotapi.NewInlineKeyboardButtonData(RecurrenceTypeLabel(lang, entities.Once), entities.Once.String()),
 		),
@@ -39,5 +39,5 @@ func GetMainMenuMarkup(lang string) *tgbotapi.InlineKeyboardMarkup {
 		),
 	)
 
-	return &mainMenu
+	return &setupMenu
 }

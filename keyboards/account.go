@@ -16,7 +16,7 @@ func HandleAccountSelection(user *tgbotapi.User, callbackData string, userEntity
 	case CallbackAccountChangeTimezone:
 		// Show timezone setup
 		return HandleTimezoneSelection(userEntity, timezoneURL)
-	case CallbackAccountBackToMenu:
+	case CallbackBackToMainMenu:
 		// Return to main navigation menu
 		s := T(userEntity.Language)
 		return &SelectionResult{

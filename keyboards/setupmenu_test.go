@@ -2,18 +2,18 @@ package keyboards
 
 import "testing"
 
-func TestIsMainMenuSelection(t *testing.T) {
-	if !IsMainMenuSelection(MainMenu) {
-		t.Fatalf("MainMenu should be recognized")
+func TestIsSetupMenuSelection(t *testing.T) {
+	if !IsSetupMenuSelection(SetupMenu) {
+		t.Fatalf("SetupMenu should be recognized")
 	}
-	if IsMainMenuSelection("not_main") {
-		t.Fatalf("Unexpected main menu recognition")
+	if IsSetupMenuSelection("not_setup") {
+		t.Fatalf("Unexpected setup menu recognition")
 	}
 }
 
-func TestGetMainMenuMarkup(t *testing.T) {
+func TestGetSetupMenuMarkup(t *testing.T) {
 	expectedRows := 7
-	m := GetMainMenuMarkup(LangEN)
+	m := GetSetupMenuMarkup(LangEN)
 	if len(m.InlineKeyboard) != expectedRows {
 		t.Fatalf("expected %d rows, got %d", expectedRows, len(m.InlineKeyboard))
 	}

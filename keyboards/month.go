@@ -50,7 +50,7 @@ func GetMonthRangeMarkup(selectedDays []int, lang string) *tgbotapi.InlineKeyboa
 	inlineKeyboard = append(inlineKeyboard, tgbotapi.NewInlineKeyboardRow(
 		tgbotapi.NewInlineKeyboardButtonData(s.BtnSelect, CallbackMonthSelect)))
 	inlineKeyboard = append(inlineKeyboard, tgbotapi.NewInlineKeyboardRow(
-		tgbotapi.NewInlineKeyboardButtonData(s.BtnBack, MainMenu)))
+		tgbotapi.NewInlineKeyboardButtonData(s.BtnBack, SetupMenu)))
 
 	return &tgbotapi.InlineKeyboardMarkup{InlineKeyboard: inlineKeyboard}
 }
