@@ -12,7 +12,7 @@ func TestIsSetupMenuSelection(t *testing.T) {
 }
 
 func TestGetSetupMenuMarkup(t *testing.T) {
-	expectedRows := 7
+	expectedRows := 8
 	m := GetSetupMenuMarkup(LangEN)
 	if len(m.InlineKeyboard) != expectedRows {
 		t.Fatalf("expected %d rows, got %d", expectedRows, len(m.InlineKeyboard))

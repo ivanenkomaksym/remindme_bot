@@ -11,7 +11,7 @@ func HandleAccountSelection(user *tgbotapi.User, callbackData string, userEntity
 		// Show language selection menu
 		return &SelectionResult{
 			Text:   "Select language / Оберіть мову:",
-			Markup: GetLanguageSelectionMarkup(),
+			Markup: GetLanguageSelectionMarkup(userEntity.Language),
 		}, nil
 	case CallbackAccountChangeTimezone:
 		// Show timezone setup

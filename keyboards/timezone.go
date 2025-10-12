@@ -9,6 +9,10 @@ func HandleTimezoneSelection(user *entities.User, url string) (*SelectionResult,
 	s := T(user.Language)
 
 	btn := tgbotapi.NewInlineKeyboardButtonURL(s.MsgTimezoneAutoDetect, url)
-	markup := tgbotapi.NewInlineKeyboardMarkup(tgbotapi.NewInlineKeyboardRow(btn))
+	backBtn := tgbotapi.NewInlineKeyboardButtonData(s.BtnBack, CallbackBackToMainMenu)
+	markup := tgbotapi.NewInlineKeyboardMarkup(
+		tgbotapi.NewInlineKeyboardRow(btn),
+		tgbotapi.NewInlineKeyboardRow(backBtn),
+	)
 	return &SelectionResult{Text: s.MsgTimezoneAutoDetectDescr, Markup: &markup}, nil
 }

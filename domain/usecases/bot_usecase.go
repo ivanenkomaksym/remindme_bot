@@ -73,7 +73,7 @@ func (b *botUseCase) HandleStartCommand(user *tgbotapi.User) (*keyboards.Selecti
 		// Ask for language if still not set
 		text = "Select language / Оберіть мову"
 		msg.ParseMode = "HTML"
-		markup = keyboards.GetLanguageSelectionMarkup()
+		markup = keyboards.GetLanguageSelectionMarkup(userEntity.Language)
 	} else {
 		// Use language and show welcome with navigation menu
 		s := keyboards.T(userEntity.Language)

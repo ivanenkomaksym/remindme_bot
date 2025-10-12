@@ -59,7 +59,7 @@ func GetAccountMenuMarkup(lang string) *tgbotapi.InlineKeyboardMarkup {
 			tgbotapi.NewInlineKeyboardButtonData(s.AccChangeTimezone, CallbackAccountChangeTimezone),
 		),
 		tgbotapi.NewInlineKeyboardRow(
-			tgbotapi.NewInlineKeyboardButtonData(s.AccBackToMenu, CallbackBackToMainMenu),
+			tgbotapi.NewInlineKeyboardButtonData(s.BtnBack, CallbackBackToMainMenu),
 		),
 	)
 

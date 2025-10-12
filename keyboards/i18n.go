@@ -79,7 +79,6 @@ type Strings struct {
 	AccNoTimezone     string
 	AccChangeLanguage string
 	AccChangeTimezone string
-	AccBackToMenu     string
 }
 
 var stringsByLang = map[string]Strings{
@@ -168,7 +167,6 @@ var stringsByLang = map[string]Strings{
 		AccNoTimezone:              "Not set",
 		AccChangeLanguage:          "🌐 Change Language",
 		AccChangeTimezone:          "🌍 Change Timezone",
-		AccBackToMenu:              "↩️ Back to Menu",
 	},
 	LangUK: {
 		Welcome: "Ласкаво просимо до бота-нагадувача!",
@@ -180,7 +178,7 @@ var stringsByLang = map[string]Strings{
 			entities.Interval:              "Інтервал",
 			entities.SpacedBasedRepetition: "Інтервал з повторенням",
 		},
-		BtnBack:                  "← Назад",
+		BtnBack:                  "↩️ Повернутися до меню",
 		BtnCustomTime:            "Свій час",
 		MsgSelectTime:            "Оберіть час для нагадувань:",
 		MsgSelectHour:            "Оберіть діапазон часу:",
@@ -255,7 +253,6 @@ var stringsByLang = map[string]Strings{
 		AccNoTimezone:              "Не встановлено",
 		AccChangeLanguage:          "🌐 Змінити мову",
 		AccChangeTimezone:          "🌍 Змінити часовий пояс",
-		AccBackToMenu:              "↩️ Повернутися до меню",
 	},
 }
 
