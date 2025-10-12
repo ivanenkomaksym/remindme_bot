@@ -3,6 +3,7 @@ package usecases
 import (
 	"log"
 
+	"github.com/ivanenkomaksym/remindme_bot/config"
 	"github.com/ivanenkomaksym/remindme_bot/domain/entities"
 	"github.com/ivanenkomaksym/remindme_bot/domain/errors"
 	"github.com/ivanenkomaksym/remindme_bot/keyboards"
@@ -17,22 +18,24 @@ type BotUseCase interface {
 	HandleTextMessage(user *tgbotapi.User, text string) (*keyboards.SelectionResult, error)
 	ProcessKeyboardSelection(callbackQuery *tgbotapi.CallbackQuery) (*keyboards.SelectionResult, error)
 	ProcessUserInput(message *tgbotapi.Message) (*keyboards.SelectionResult, error)
-	ProcessTimezone(user *entities.User, url string) (*keyboards.SelectionResult, error)
+	ProcessTimezone(user *entities.User) (*keyboards.SelectionResult, error)
 }
 
 type botUseCase struct {
 	userUseCase     UserUseCase
 	reminderUseCase ReminderUseCase
 	dateUseCase     DateUseCase
+	config          config.Config
 	bot             *tgbotapi.BotAPI
 }
 
 // NewBotUseCase creates a new bot use case
-func NewBotUseCase(userUseCase UserUseCase, reminderUseCase ReminderUseCase, dateUseCase DateUseCase, bot *tgbotapi.BotAPI) BotUseCase {
+func NewBotUseCase(userUseCase UserUseCase, reminderUseCase ReminderUseCase, dateUseCase DateUseCase, config config.Config, bot *tgbotapi.BotAPI) BotUseCase {
 	return &botUseCase{
 		userUseCase:     userUseCase,
 		reminderUseCase: reminderUseCase,
 		dateUseCase:     dateUseCase,
+		config:          config,
 		bot:             bot,
 	}
 }
@@ -96,6 +99,11 @@ func (b *botUseCase) HandleCallbackQuery(user *tgbotapi.User, message *tgbotapi.
 	// Handle navigation menu selection
 	if keyboards.IsNavigationCallback(callbackData) {
 		return b.handleNavigationSelection(user, callbackData, userEntity)
+	}
+
+	// Handle account management callbacks
+	if keyboards.IsAccountCallback(callbackData) {
+		return b.handleAccountSelection(user, callbackData, userEntity)
 	}
 
 	// Handle other callback types
@@ -204,15 +212,14 @@ func (b *botUseCase) ProcessUserInput(message *tgbotapi.Message) (*keyboards.Sel
 				Markup: keyboards.GetMainMenuMarkup(userEntity.Language),
 			}, nil
 		case "account":
-			// Handle /account command directly
+			// Handle /account command directly - show account information
 			userEntity, err := b.userUseCase.GetUser(message.From.ID)
 			if err != nil {
 				return nil, err
 			}
-			s := keyboards.T(userEntity.Language)
 			return &keyboards.SelectionResult{
-				Text:   s.NavAccountPlaceholder,
-				Markup: keyboards.GetNavigationMenuMarkup(userEntity.Language),
+				Text:   keyboards.FormatAccountInfo(userEntity, userEntity.Language),
+				Markup: keyboards.GetAccountMenuMarkup(userEntity.Language),
 			}, nil
 		}
 	}
@@ -224,8 +231,13 @@ func (b *botUseCase) ProcessUserInput(message *tgbotapi.Message) (*keyboards.Sel
 	return &keyboards.SelectionResult{Text: "", Markup: nil}, nil
 }
 
-func (b *botUseCase) ProcessTimezone(user *entities.User, url string) (*keyboards.SelectionResult, error) {
+func (b *botUseCase) ProcessTimezone(user *entities.User) (*keyboards.SelectionResult, error) {
+	url := buildTimezoneURL(b, user)
 	return keyboards.HandleTimezoneSelection(user, url)
+}
+
+func buildTimezoneURL(b *botUseCase, user *entities.User) string {
+	return b.config.Bot.PublicURL + "/timezone?user_id=" + string(rune(user.ID))
 }
 
 // Helper methods
@@ -273,8 +285,8 @@ func (b *botUseCase) handleNavigationSelection(user *tgbotapi.User, callbackData
 	case keyboards.CallbackAccount:
 		// Handle /account command - show account information
 		return &keyboards.SelectionResult{
-			Text:   s.NavAccountPlaceholder,
-			Markup: keyboards.GetNavigationMenuMarkup(userEntity.Language),
+			Text:   keyboards.FormatAccountInfo(userEntity, userEntity.Language),
+			Markup: keyboards.GetAccountMenuMarkup(userEntity.Language),
 		}, nil
 	default:
 		return &keyboards.SelectionResult{
@@ -282,6 +294,11 @@ func (b *botUseCase) handleNavigationSelection(user *tgbotapi.User, callbackData
 			Markup: keyboards.GetNavigationMenuMarkup(userEntity.Language),
 		}, nil
 	}
+}
+
+func (b *botUseCase) handleAccountSelection(user *tgbotapi.User, callbackData string, userEntity *entities.User) (*keyboards.SelectionResult, error) {
+	url := buildTimezoneURL(b, userEntity)
+	return keyboards.HandleAccountSelection(user, callbackData, userEntity, url)
 }
 
 func (b *botUseCase) handleRecurrenceSelection(message *tgbotapi.Message, user *tgbotapi.User, callbackData string, userEntity *entities.User, selection *entities.UserSelection) (*keyboards.SelectionResult, error) {

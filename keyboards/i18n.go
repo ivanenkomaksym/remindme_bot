@@ -72,6 +72,17 @@ type Strings struct {
 	CmdListDesc    string
 	CmdSetupDesc   string
 	CmdAccountDesc string
+	// Account management i18n
+	AccTitle          string
+	AccUsername       string
+	AccLanguage       string
+	AccTimezone       string
+	AccCreatedAt      string
+	AccNoUsername     string
+	AccNoTimezone     string
+	AccChangeLanguage string
+	AccChangeTimezone string
+	AccBackToMenu     string
 }
 
 var stringsByLang = map[string]Strings{
@@ -154,6 +165,16 @@ var stringsByLang = map[string]Strings{
 		CmdListDesc:                "Show or remove reminders",
 		CmdSetupDesc:               "Set up time, recurrence, and reminder settings",
 		CmdAccountDesc:             "Manage account settings",
+		AccTitle:                   "👤 Account Information",
+		AccUsername:                "Username",
+		AccLanguage:                "Language",
+		AccTimezone:                "Timezone",
+		AccCreatedAt:               "Created",
+		AccNoUsername:              "Not set",
+		AccNoTimezone:              "Not set",
+		AccChangeLanguage:          "🌐 Change Language",
+		AccChangeTimezone:          "🌍 Change Timezone",
+		AccBackToMenu:              "↩️ Back to Menu",
 	},
 	LangUK: {
 		Welcome: "Ласкаво просимо до бота-нагадувача!",
@@ -234,6 +255,16 @@ var stringsByLang = map[string]Strings{
 		CmdListDesc:                "Показати або видалити нагадування",
 		CmdSetupDesc:               "Налаштувати час, повторення та параметри нагадувань",
 		CmdAccountDesc:             "Управління налаштуваннями рахунку",
+		AccTitle:                   "👤 Інформація про рахунок",
+		AccUsername:                "Ім'я користувача",
+		AccLanguage:                "Мова",
+		AccTimezone:                "Часовий пояс",
+		AccCreatedAt:               "Створено",
+		AccNoUsername:              "Не встановлено",
+		AccNoTimezone:              "Не встановлено",
+		AccChangeLanguage:          "🌐 Змінити мову",
+		AccChangeTimezone:          "🌍 Змінити часовий пояс",
+		AccBackToMenu:              "↩️ Повернутися до меню",
 	},
 }
 

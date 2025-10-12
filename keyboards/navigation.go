@@ -1,7 +1,10 @@
 package keyboards
 
 import (
+	"fmt"
+
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
+	"github.com/ivanenkomaksym/remindme_bot/domain/entities"
 )
 
 // Navigation menu callback data constants
@@ -9,6 +12,10 @@ const (
 	CallbackList    = "nav_list"
 	CallbackSetup   = "nav_setup"
 	CallbackAccount = "nav_account"
+	// Account management callbacks
+	CallbackAccountChangeLanguage = "acc_change_lang"
+	CallbackAccountChangeTimezone = "acc_change_tz"
+	CallbackAccountBackToMenu     = "acc_back_menu"
 )
 
 // GetNavigationMenuMarkup returns the main navigation menu keyboard
@@ -33,6 +40,65 @@ func IsNavigationCallback(callbackData string) bool {
 	return callbackData == CallbackList ||
 		callbackData == CallbackSetup ||
 		callbackData == CallbackAccount
+}
+
+// GetAccountMenuMarkup returns the account management keyboard
+func GetAccountMenuMarkup(lang string) *tgbotapi.InlineKeyboardMarkup {
+	s := T(lang)
+
+	accountMenu := tgbotapi.NewInlineKeyboardMarkup(
+		tgbotapi.NewInlineKeyboardRow(
+			tgbotapi.NewInlineKeyboardButtonData(s.AccChangeLanguage, CallbackAccountChangeLanguage),
+		),
+		tgbotapi.NewInlineKeyboardRow(
+			tgbotapi.NewInlineKeyboardButtonData(s.AccChangeTimezone, CallbackAccountChangeTimezone),
+		),
+		tgbotapi.NewInlineKeyboardRow(
+			tgbotapi.NewInlineKeyboardButtonData(s.AccBackToMenu, CallbackAccountBackToMenu),
+		),
+	)
+
+	return &accountMenu
+}
+
+// FormatAccountInfo formats user account information for display
+func FormatAccountInfo(user *entities.User, lang string) string {
+	s := T(lang)
+
+	username := user.UserName
+	if username == "" {
+		username = s.AccNoUsername
+	}
+
+	language := "English"
+	if user.Language == LangUK {
+		language = "Українська"
+	}
+
+	timezone := s.AccNoTimezone
+	if user.GetLocation() != nil {
+		timezone = user.GetLocation().String()
+	}
+
+	createdAt := user.CreatedAt.Format("2006-01-02 15:04")
+
+	return fmt.Sprintf("%s\n\n"+
+		"📝 %s: @%s\n"+
+		"🌐 %s: %s\n"+
+		"🕐 %s: %s\n"+
+		"📅 %s: %s",
+		s.AccTitle,
+		s.AccUsername, username,
+		s.AccLanguage, language,
+		s.AccTimezone, timezone,
+		s.AccCreatedAt, createdAt)
+}
+
+// IsAccountCallback checks if the callback data is for account management
+func IsAccountCallback(callbackData string) bool {
+	return callbackData == CallbackAccountChangeLanguage ||
+		callbackData == CallbackAccountChangeTimezone ||
+		callbackData == CallbackAccountBackToMenu
 }
 
 // HandleNavigationCallback handles navigation menu callbacks
