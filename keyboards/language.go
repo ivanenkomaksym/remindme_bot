@@ -13,13 +13,20 @@ const (
 	CallbackLangPrefix = "lang:"
 )
 
-func GetLanguageSelectionMarkup() *tgbotapi.InlineKeyboardMarkup {
+func GetLanguageSelectionMarkup(lang string) *tgbotapi.InlineKeyboardMarkup {
+	if lang == "" {
+		lang = LangEN
+	}
+	s := T(lang)
 	menu := tgbotapi.NewInlineKeyboardMarkup(
 		tgbotapi.NewInlineKeyboardRow(
 			tgbotapi.NewInlineKeyboardButtonData("English", CallbackLangPrefix+LangEN),
 		),
 		tgbotapi.NewInlineKeyboardRow(
 			tgbotapi.NewInlineKeyboardButtonData("Українська", CallbackLangPrefix+LangUK),
+		),
+		tgbotapi.NewInlineKeyboardRow(
+			tgbotapi.NewInlineKeyboardButtonData(s.BtnBack, CallbackBackToMainMenu),
 		),
 	)
 	return &menu

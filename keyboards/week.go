@@ -42,7 +42,7 @@ func GetWeekRangeMarkup(weekdays []time.Weekday, lang string) *tgbotapi.InlineKe
 	inlineKeyboard = append(inlineKeyboard, tgbotapi.NewInlineKeyboardRow(
 		tgbotapi.NewInlineKeyboardButtonData(s.BtnSelect, CallbackWeekSelect)))
 	inlineKeyboard = append(inlineKeyboard, tgbotapi.NewInlineKeyboardRow(
-		tgbotapi.NewInlineKeyboardButtonData(s.BtnBack, MainMenu)))
+		tgbotapi.NewInlineKeyboardButtonData(s.BtnBack, SetupMenu)))
 
 	return &tgbotapi.InlineKeyboardMarkup{InlineKeyboard: inlineKeyboard}
 }

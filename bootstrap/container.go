@@ -94,8 +94,8 @@ func (c *Container) initControllers(bot *tgbotapi.BotAPI) {
 	c.ReminderController = controllers.NewReminderController(c.ReminderUseCase)
 	if bot != nil {
 		c.DateUseCase = usecases.NewDateUseCase(c.UserUseCase, bot)
-		c.BotUseCase = usecases.NewBotUseCase(c.UserUseCase, c.ReminderUseCase, c.DateUseCase, bot)
-		c.BotController = controllers.NewBotController(c.BotUseCase, c.UserUseCase, c.DateUseCase, c.Config, bot)
+		c.BotUseCase = usecases.NewBotUseCase(c.UserUseCase, c.ReminderUseCase, c.DateUseCase, c.Config, bot)
+		c.BotController = controllers.NewBotController(c.BotUseCase, c.UserUseCase, c.DateUseCase, bot)
 		c.TimezoneController = controllers.NewTimezoneController(c.UserUseCase, bot, c.Config)
 	}
 }

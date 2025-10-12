@@ -3,6 +3,7 @@ package usecases
 import (
 	"log"
 
+	"github.com/ivanenkomaksym/remindme_bot/config"
 	"github.com/ivanenkomaksym/remindme_bot/domain/entities"
 	"github.com/ivanenkomaksym/remindme_bot/domain/errors"
 	"github.com/ivanenkomaksym/remindme_bot/keyboards"
@@ -17,22 +18,24 @@ type BotUseCase interface {
 	HandleTextMessage(user *tgbotapi.User, text string) (*keyboards.SelectionResult, error)
 	ProcessKeyboardSelection(callbackQuery *tgbotapi.CallbackQuery) (*keyboards.SelectionResult, error)
 	ProcessUserInput(message *tgbotapi.Message) (*keyboards.SelectionResult, error)
-	ProcessTimezone(user *entities.User, url string) (*keyboards.SelectionResult, error)
+	ProcessTimezone(user *entities.User) (*keyboards.SelectionResult, error)
 }
 
 type botUseCase struct {
 	userUseCase     UserUseCase
 	reminderUseCase ReminderUseCase
 	dateUseCase     DateUseCase
+	config          config.Config
 	bot             *tgbotapi.BotAPI
 }
 
 // NewBotUseCase creates a new bot use case
-func NewBotUseCase(userUseCase UserUseCase, reminderUseCase ReminderUseCase, dateUseCase DateUseCase, bot *tgbotapi.BotAPI) BotUseCase {
+func NewBotUseCase(userUseCase UserUseCase, reminderUseCase ReminderUseCase, dateUseCase DateUseCase, config config.Config, bot *tgbotapi.BotAPI) BotUseCase {
 	return &botUseCase{
 		userUseCase:     userUseCase,
 		reminderUseCase: reminderUseCase,
 		dateUseCase:     dateUseCase,
+		config:          config,
 		bot:             bot,
 	}
 }
@@ -70,11 +73,12 @@ func (b *botUseCase) HandleStartCommand(user *tgbotapi.User) (*keyboards.Selecti
 		// Ask for language if still not set
 		text = "Select language / Оберіть мову"
 		msg.ParseMode = "HTML"
-		markup = keyboards.GetLanguageSelectionMarkup()
+		markup = keyboards.GetLanguageSelectionMarkup(userEntity.Language)
 	} else {
-		// Use language and show welcome
-		text = keyboards.T(userEntity.Language).Welcome
-		markup = keyboards.GetMainMenuMarkup(userEntity.Language)
+		// Use language and show welcome with navigation menu
+		s := keyboards.T(userEntity.Language)
+		text = s.Welcome + "\n\n" + s.NavChooseOption
+		markup = keyboards.GetNavigationMenuMarkup(userEntity.Language)
 	}
 
 	return &keyboards.SelectionResult{Text: text, Markup: markup}, nil
@@ -92,10 +96,22 @@ func (b *botUseCase) HandleCallbackQuery(user *tgbotapi.User, message *tgbotapi.
 		return b.handleLanguageSelection(user, callbackData, userEntity)
 	}
 
+	// Handle navigation menu selection
+	if keyboards.IsNavigationCallback(callbackData) {
+		return b.handleNavigationSelection(user, callbackData, userEntity)
+	}
+
+	// Handle account management callbacks
+	if keyboards.IsAccountCallback(callbackData) {
+		return b.handleAccountSelection(user, callbackData, userEntity)
+	}
+
 	// Handle other callback types
 	keyboardType := keyboards.GetKeyboardType(callbackData)
 	switch keyboardType {
 	case keyboards.Main:
+		return b.handleMainMenu(user, userEntity)
+	case keyboards.Setup:
 		return b.handleMainMenu(user, userEntity)
 	case keyboards.Date:
 		return b.handleDateSelection(callbackQuery, userEntity, selection)
@@ -145,7 +161,7 @@ func (b *botUseCase) HandleTextMessage(user *tgbotapi.User, text string) (*keybo
 		return b.handleCustomIntervalInput(user, text, userEntity, selection)
 	}
 
-	return &keyboards.SelectionResult{Text: keyboards.T(userEntity.Language).MsgParsingFailed, Markup: keyboards.GetMainMenuMarkup(userEntity.Language)}, nil
+	return &keyboards.SelectionResult{Text: keyboards.T(userEntity.Language).MsgParsingFailed, Markup: keyboards.GetNavigationMenuMarkup(userEntity.Language)}, nil
 }
 
 func (b *botUseCase) ProcessKeyboardSelection(callbackQuery *tgbotapi.CallbackQuery) (*keyboards.SelectionResult, error) {
@@ -165,8 +181,37 @@ func (b *botUseCase) ProcessKeyboardSelection(callbackQuery *tgbotapi.CallbackQu
 
 func (b *botUseCase) ProcessUserInput(message *tgbotapi.Message) (*keyboards.SelectionResult, error) {
 	if message.IsCommand() {
-		if message.Command() == "start" {
+		switch message.Command() {
+		case "start":
 			return b.HandleStartCommand(message.From)
+		case "list":
+			// Handle /list command directly
+			userEntity, err := b.userUseCase.GetUser(message.From.ID)
+			if err != nil {
+				return nil, err
+			}
+			return b.handleRemindersList(message.From, userEntity)
+		case "setup":
+			// Handle /setup command directly
+			userEntity, err := b.userUseCase.GetUser(message.From.ID)
+			if err != nil {
+				return nil, err
+			}
+			s := keyboards.T(userEntity.Language)
+			return &keyboards.SelectionResult{
+				Text:   "⚙️ " + s.NavSetup + ":",
+				Markup: keyboards.GetSetupMenuMarkup(userEntity.Language),
+			}, nil
+		case "account":
+			// Handle /account command directly - show account information
+			userEntity, err := b.userUseCase.GetUser(message.From.ID)
+			if err != nil {
+				return nil, err
+			}
+			return &keyboards.SelectionResult{
+				Text:   keyboards.FormatAccountInfo(userEntity, userEntity.Language),
+				Markup: keyboards.GetAccountMenuMarkup(userEntity.Language),
+			}, nil
 		}
 	}
 
@@ -177,8 +222,13 @@ func (b *botUseCase) ProcessUserInput(message *tgbotapi.Message) (*keyboards.Sel
 	return &keyboards.SelectionResult{Text: "", Markup: nil}, nil
 }
 
-func (b *botUseCase) ProcessTimezone(user *entities.User, url string) (*keyboards.SelectionResult, error) {
+func (b *botUseCase) ProcessTimezone(user *entities.User) (*keyboards.SelectionResult, error) {
+	url := buildTimezoneURL(b, user)
 	return keyboards.HandleTimezoneSelection(user, url)
+}
+
+func buildTimezoneURL(b *botUseCase, user *entities.User) string {
+	return b.config.Bot.PublicURL + "/timezone?user_id=" + string(rune(user.ID))
 }
 
 // Helper methods
@@ -203,11 +253,43 @@ func (b *botUseCase) handleLanguageSelection(user *tgbotapi.User, callbackData s
 		return nil, err
 	}
 
-	return &keyboards.SelectionResult{Text: keyboards.T(lang).Welcome, Markup: keyboards.GetMainMenuMarkup(lang)}, nil
+	return &keyboards.SelectionResult{Text: keyboards.T(lang).Welcome, Markup: keyboards.GetNavigationMenuMarkup(lang)}, nil
 }
 
 func (b *botUseCase) handleMainMenu(user *tgbotapi.User, userEntity *entities.User) (*keyboards.SelectionResult, error) {
-	return &keyboards.SelectionResult{Text: keyboards.T(userEntity.Language).Welcome, Markup: keyboards.GetMainMenuMarkup(userEntity.Language)}, nil
+	return &keyboards.SelectionResult{Text: keyboards.T(userEntity.Language).Welcome, Markup: keyboards.GetNavigationMenuMarkup(userEntity.Language)}, nil
+}
+
+func (b *botUseCase) handleNavigationSelection(user *tgbotapi.User, callbackData string, userEntity *entities.User) (*keyboards.SelectionResult, error) {
+	s := keyboards.T(userEntity.Language)
+
+	switch callbackData {
+	case keyboards.CallbackList:
+		// Handle /list command - show user's reminders
+		return b.handleRemindersList(user, userEntity)
+	case keyboards.CallbackSetup:
+		// Handle /setup command - show setup menu for creating reminders
+		return &keyboards.SelectionResult{
+			Text:   "⚙️ " + s.NavSetup + ":",
+			Markup: keyboards.GetSetupMenuMarkup(userEntity.Language),
+		}, nil
+	case keyboards.CallbackAccount:
+		// Handle /account command - show account information
+		return &keyboards.SelectionResult{
+			Text:   keyboards.FormatAccountInfo(userEntity, userEntity.Language),
+			Markup: keyboards.GetAccountMenuMarkup(userEntity.Language),
+		}, nil
+	default:
+		return &keyboards.SelectionResult{
+			Text:   s.MsgParsingFailed,
+			Markup: keyboards.GetNavigationMenuMarkup(userEntity.Language),
+		}, nil
+	}
+}
+
+func (b *botUseCase) handleAccountSelection(user *tgbotapi.User, callbackData string, userEntity *entities.User) (*keyboards.SelectionResult, error) {
+	url := buildTimezoneURL(b, userEntity)
+	return keyboards.HandleAccountSelection(user, callbackData, userEntity, url)
 }
 
 func (b *botUseCase) handleRecurrenceSelection(message *tgbotapi.Message, user *tgbotapi.User, callbackData string, userEntity *entities.User, selection *entities.UserSelection) (*keyboards.SelectionResult, error) {

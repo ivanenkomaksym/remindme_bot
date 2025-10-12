@@ -7,7 +7,6 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"github.com/ivanenkomaksym/remindme_bot/config"
 	"github.com/ivanenkomaksym/remindme_bot/domain/entities"
 	"github.com/ivanenkomaksym/remindme_bot/domain/usecases"
 	"github.com/ivanenkomaksym/remindme_bot/keyboards"
@@ -19,7 +18,7 @@ type botUseCaseMock struct {
 	usecases.BotUseCase
 	processKeyboardSelectionFn func(cb *tgbotapi.CallbackQuery) (*keyboards.SelectionResult, error)
 	processUserInputFn         func(msg *tgbotapi.Message) (*keyboards.SelectionResult, error)
-	ProcessTimezoneFn          func(user *entities.User, url string) (*keyboards.SelectionResult, error)
+	ProcessTimezoneFn          func(user *entities.User) (*keyboards.SelectionResult, error)
 }
 
 func (m *botUseCaseMock) ProcessKeyboardSelection(cb *tgbotapi.CallbackQuery) (*keyboards.SelectionResult, error) {
@@ -34,9 +33,9 @@ func (m *botUseCaseMock) ProcessUserInput(msg *tgbotapi.Message) (*keyboards.Sel
 	}
 	return nil, nil
 }
-func (m *botUseCaseMock) ProcessTimezone(user *entities.User, url string) (*keyboards.SelectionResult, error) {
+func (m *botUseCaseMock) ProcessTimezone(user *entities.User) (*keyboards.SelectionResult, error) {
 	if m.ProcessTimezoneFn != nil {
-		return m.ProcessTimezoneFn(user, url)
+		return m.ProcessTimezoneFn(user)
 	}
 	return nil, nil
 }
@@ -58,7 +57,7 @@ type botAPINop struct{ t *testing.T }
 func (b *botAPINop) Send(ch interface{}) (tgbotapi.Message, error) { return tgbotapi.Message{}, nil }
 
 func TestHandleWebhook_MethodGuard(t *testing.T) {
-	ctrl := NewBotController(&botUseCaseMock{}, &userUseCaseMock{}, &dateUseCaseMock{}, config.Config{}, &tgbotapi.BotAPI{})
+	ctrl := NewBotController(&botUseCaseMock{}, &userUseCaseMock{}, &dateUseCaseMock{}, &tgbotapi.BotAPI{})
 	req := httptest.NewRequest(http.MethodGet, "/webhook", nil)
 	rw := httptest.NewRecorder()
 
@@ -70,7 +69,7 @@ func TestHandleWebhook_MethodGuard(t *testing.T) {
 }
 
 func TestHandleWebhook_BadJSON(t *testing.T) {
-	ctrl := NewBotController(&botUseCaseMock{}, &userUseCaseMock{}, &dateUseCaseMock{}, config.Config{}, &tgbotapi.BotAPI{})
+	ctrl := NewBotController(&botUseCaseMock{}, &userUseCaseMock{}, &dateUseCaseMock{}, &tgbotapi.BotAPI{})
 	req := httptest.NewRequest(http.MethodPost, "/webhook", bytes.NewBufferString("{"))
 	rw := httptest.NewRecorder()
 
@@ -88,10 +87,10 @@ func TestHandleWebhook_ValidUpdate(t *testing.T) {
 
 	// Return nil selection to avoid calling Send on real bot
 	mockUC := &botUseCaseMock{processUserInputFn: func(msg *tgbotapi.Message) (*keyboards.SelectionResult, error) { return nil, nil },
-		ProcessTimezoneFn: func(user *entities.User, url string) (*keyboards.SelectionResult, error) {
+		ProcessTimezoneFn: func(user *entities.User) (*keyboards.SelectionResult, error) {
 			return &keyboards.SelectionResult{}, nil
 		}}
-	ctrl := NewBotController(mockUC, &userUseCaseMock{}, &dateUseCaseMock{}, config.Config{}, &tgbotapi.BotAPI{})
+	ctrl := NewBotController(mockUC, &userUseCaseMock{}, &dateUseCaseMock{}, &tgbotapi.BotAPI{})
 	req := httptest.NewRequest(http.MethodPost, "/webhook", bytes.NewReader(body))
 	rw := httptest.NewRecorder()
 

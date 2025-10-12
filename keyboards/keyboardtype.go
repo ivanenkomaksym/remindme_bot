@@ -6,6 +6,7 @@ type KeyboardType int64
 
 const (
 	Main KeyboardType = iota
+	Setup
 	Reccurence
 	Date
 	Time
@@ -15,10 +16,12 @@ const (
 	Reminders
 )
 
-func (k KeyboardType) String() string {
-	switch k {
+func (kt KeyboardType) String() string {
+	switch kt {
 	case Main:
 		return "main"
+	case Setup:
+		return "setup"
 	case Reccurence:
 		return "reccurence"
 	case Date:
@@ -41,6 +44,10 @@ func (k KeyboardType) String() string {
 func GetKeyboardType(callbackData string) KeyboardType {
 	if IsMainMenuSelection(callbackData) {
 		return Main
+	}
+
+	if IsSetupMenuSelection(callbackData) {
+		return Setup
 	}
 
 	if IsDateCallback(callbackData) {

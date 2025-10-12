@@ -59,6 +59,26 @@ type Strings struct {
 	MsgTimezoneAutoDetect      string
 	MsgTimezoneAutoDetectDescr string
 	MsgTimezoneSet             string
+	// Navigation-related i18n
+	NavList         string
+	NavSetup        string
+	NavAccount      string
+	NavChooseOption string
+	// Bot command descriptions
+	CmdStartDesc   string
+	CmdListDesc    string
+	CmdSetupDesc   string
+	CmdAccountDesc string
+	// Account management i18n
+	AccTitle          string
+	AccUsername       string
+	AccLanguage       string
+	AccTimezone       string
+	AccCreatedAt      string
+	AccNoUsername     string
+	AccNoTimezone     string
+	AccChangeLanguage string
+	AccChangeTimezone string
 }
 
 var stringsByLang = map[string]Strings{
@@ -130,6 +150,23 @@ var stringsByLang = map[string]Strings{
 		MsgTimezoneAutoDetect:      "🌍 Set Timezone Automatically",
 		MsgTimezoneAutoDetectDescr: "Click the button to detect your timezone.",
 		MsgTimezoneSet:             "✅ Your timezone is set to",
+		NavList:                    "Show reminders",
+		NavSetup:                   "Setup",
+		NavAccount:                 "Account",
+		NavChooseOption:            "Choose an option:",
+		CmdStartDesc:               "Start the bot and show main menu",
+		CmdListDesc:                "Show or remove reminders",
+		CmdSetupDesc:               "Set up time, recurrence, and reminder settings",
+		CmdAccountDesc:             "Manage account settings",
+		AccTitle:                   "👤 Account Information",
+		AccUsername:                "Username",
+		AccLanguage:                "Language",
+		AccTimezone:                "Timezone",
+		AccCreatedAt:               "Created",
+		AccNoUsername:              "Not set",
+		AccNoTimezone:              "Not set",
+		AccChangeLanguage:          "🌐 Change Language",
+		AccChangeTimezone:          "🌍 Change Timezone",
 	},
 	LangUK: {
 		Welcome: "Ласкаво просимо до бота-нагадувача!",
@@ -141,7 +178,7 @@ var stringsByLang = map[string]Strings{
 			entities.Interval:              "Інтервал",
 			entities.SpacedBasedRepetition: "Інтервал з повторенням",
 		},
-		BtnBack:                  "← Назад",
+		BtnBack:                  "↩️ Повернутися до меню",
 		BtnCustomTime:            "Свій час",
 		MsgSelectTime:            "Оберіть час для нагадувань:",
 		MsgSelectHour:            "Оберіть діапазон часу:",
@@ -199,6 +236,23 @@ var stringsByLang = map[string]Strings{
 		MsgTimezoneAutoDetect:      "🌍 Автоматично встановити часовий пояс",
 		MsgTimezoneAutoDetectDescr: "Натисніть кнопку, щоб визначити свій часовий пояс.",
 		MsgTimezoneSet:             "✅ Часовий пояс встановлено на",
+		NavList:                    "Показати нагадування",
+		NavSetup:                   "Налаштування",
+		NavAccount:                 "Акаунт",
+		NavChooseOption:            "Оберіть опцію:",
+		CmdStartDesc:               "Запустити бота та показати головне меню",
+		CmdListDesc:                "Показати або видалити нагадування",
+		CmdSetupDesc:               "Налаштувати час, повторення та параметри нагадувань",
+		CmdAccountDesc:             "Управління налаштуваннями акаунту",
+		AccTitle:                   "👤 Інформація про рахунок",
+		AccUsername:                "Ім'я користувача",
+		AccLanguage:                "Мова",
+		AccTimezone:                "Часовий пояс",
+		AccCreatedAt:               "Створено",
+		AccNoUsername:              "Не встановлено",
+		AccNoTimezone:              "Не встановлено",
+		AccChangeLanguage:          "🌐 Змінити мову",
+		AccChangeTimezone:          "🌍 Змінити часовий пояс",
 	},
 }
 

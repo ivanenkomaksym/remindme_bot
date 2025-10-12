@@ -2,11 +2,9 @@ package controllers
 
 import (
 	"encoding/json"
-	"fmt"
 	"log"
 	"net/http"
 
-	"github.com/ivanenkomaksym/remindme_bot/config"
 	"github.com/ivanenkomaksym/remindme_bot/domain/usecases"
 	"github.com/ivanenkomaksym/remindme_bot/keyboards"
 
@@ -18,17 +16,15 @@ type BotController struct {
 	botUseCase  usecases.BotUseCase
 	userUsecase usecases.UserUseCase
 	dateUseCase usecases.DateUseCase
-	config      config.Config
 	bot         *tgbotapi.BotAPI
 }
 
 // NewBotController creates a new bot controller
-func NewBotController(botUseCase usecases.BotUseCase, userUsecase usecases.UserUseCase, dateUseCase usecases.DateUseCase, config config.Config, bot *tgbotapi.BotAPI) *BotController {
+func NewBotController(botUseCase usecases.BotUseCase, userUsecase usecases.UserUseCase, dateUseCase usecases.DateUseCase, bot *tgbotapi.BotAPI) *BotController {
 	return &BotController{
 		botUseCase:  botUseCase,
 		userUsecase: userUsecase,
 		dateUseCase: dateUseCase,
-		config:      config,
 		bot:         bot,
 	}
 }
@@ -121,8 +117,7 @@ func (c *BotController) processMessage(message *tgbotapi.Message) error {
 
 	// Ask to set timezone if not set yet.
 	if userEntity.GetLocation() == nil {
-		url := fmt.Sprintf("%s/set-timezone?user_id=%d", c.config.Bot.PublicURL, user.ID)
-		response, err = c.botUseCase.ProcessTimezone(userEntity, url)
+		response, err = c.botUseCase.ProcessTimezone(userEntity)
 		if err != nil {
 			log.Printf("Failed to process message: %v", err)
 			return err
