@@ -17,6 +17,9 @@ const (
 	CallbackAccountChangeTimezone = "acc_change_tz"
 	// General back to main menu callback
 	CallbackBackToMainMenu = "back_to_main"
+	// Timezone selection callbacks
+	CallbackTimezoneManual = "tz_manual"
+	CallbackTimezoneSelect = "tz_select_"
 )
 
 func IsMainMenuSelection(callbackData string) bool {
@@ -35,7 +38,7 @@ func GetNavigationMenuMarkup(lang string) *tgbotapi.InlineKeyboardMarkup {
 			tgbotapi.NewInlineKeyboardButtonData("⚙️ "+s.NavSetup, CallbackSetup),
 		),
 		tgbotapi.NewInlineKeyboardRow(
-			tgbotapi.NewInlineKeyboardButtonData("💰 "+s.NavAccount, CallbackAccount),
+			tgbotapi.NewInlineKeyboardButtonData("💼 "+s.NavAccount, CallbackAccount),
 		),
 	)
 

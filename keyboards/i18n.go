@@ -79,6 +79,9 @@ type Strings struct {
 	AccNoTimezone     string
 	AccChangeLanguage string
 	AccChangeTimezone string
+	// Timezone selection i18n
+	TzManualSelect string
+	TzSelectPrompt string
 }
 
 var stringsByLang = map[string]Strings{
@@ -167,6 +170,8 @@ var stringsByLang = map[string]Strings{
 		AccNoTimezone:              "Not set",
 		AccChangeLanguage:          "🌐 Change Language",
 		AccChangeTimezone:          "🌍 Change Timezone",
+		TzManualSelect:             "📍 Select Manually",
+		TzSelectPrompt:             "Select your timezone:",
 	},
 	LangUK: {
 		Welcome: "Ласкаво просимо до бота-нагадувача!",
@@ -253,6 +258,8 @@ var stringsByLang = map[string]Strings{
 		AccNoTimezone:              "Не встановлено",
 		AccChangeLanguage:          "🌐 Змінити мову",
 		AccChangeTimezone:          "🌍 Змінити часовий пояс",
+		TzManualSelect:             "📍 Обрати вручну",
+		TzSelectPrompt:             "Оберіть свій часовий пояс:",
 	},
 }
 

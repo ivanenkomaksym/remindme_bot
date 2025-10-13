@@ -1,7 +1,9 @@
 package usecases
 
 import (
+	"fmt"
 	"log"
+	"strings"
 
 	"github.com/ivanenkomaksym/remindme_bot/config"
 	"github.com/ivanenkomaksym/remindme_bot/domain/entities"
@@ -104,6 +106,11 @@ func (b *botUseCase) HandleCallbackQuery(user *tgbotapi.User, message *tgbotapi.
 	// Handle account management callbacks
 	if keyboards.IsAccountCallback(callbackData) {
 		return b.handleAccountSelection(user, callbackData, userEntity)
+	}
+
+	// Handle timezone selection callbacks
+	if keyboards.IsTimezoneCallback(callbackData) {
+		return b.handleTimezoneSelection(user, callbackData, userEntity)
 	}
 
 	// Handle other callback types
@@ -228,7 +235,7 @@ func (b *botUseCase) ProcessTimezone(user *entities.User) (*keyboards.SelectionR
 }
 
 func buildTimezoneURL(b *botUseCase, user *entities.User) string {
-	return b.config.Bot.PublicURL + "/timezone?user_id=" + string(rune(user.ID))
+	return b.config.Bot.PublicURL + "/set-timezone?user_id=" + fmt.Sprint(user.ID)
 }
 
 // Helper methods
@@ -290,6 +297,24 @@ func (b *botUseCase) handleNavigationSelection(user *tgbotapi.User, callbackData
 func (b *botUseCase) handleAccountSelection(user *tgbotapi.User, callbackData string, userEntity *entities.User) (*keyboards.SelectionResult, error) {
 	url := buildTimezoneURL(b, userEntity)
 	return keyboards.HandleAccountSelection(user, callbackData, userEntity, url)
+}
+
+func (b *botUseCase) handleTimezoneSelection(user *tgbotapi.User, callbackData string, userEntity *entities.User) (*keyboards.SelectionResult, error) {
+	result, err := keyboards.HandleManualTimezoneSelection(callbackData, userEntity.Language)
+	if err != nil {
+		return nil, err
+	}
+	if result != nil {
+		// If a timezone was selected, update the user's timezone
+		if after, ok := strings.CutPrefix(callbackData, keyboards.CallbackTimezoneSelect); ok {
+			timezone := after
+			err = b.userUseCase.UpdateLocation(user.ID, timezone)
+			if err != nil {
+				log.Printf("Failed to update user timezone: %v", err)
+			}
+		}
+	}
+	return result, nil
 }
 
 func (b *botUseCase) handleRecurrenceSelection(message *tgbotapi.Message, user *tgbotapi.User, callbackData string, userEntity *entities.User, selection *entities.UserSelection) (*keyboards.SelectionResult, error) {
