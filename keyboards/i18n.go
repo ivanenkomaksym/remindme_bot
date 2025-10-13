@@ -79,6 +79,9 @@ type Strings struct {
 	AccNoTimezone     string
 	AccChangeLanguage string
 	AccChangeTimezone string
+	// Timezone selection i18n
+	TzManualSelect string
+	TzSelectPrompt string
 }
 
 var stringsByLang = map[string]Strings{
@@ -151,7 +154,7 @@ var stringsByLang = map[string]Strings{
 		MsgTimezoneAutoDetectDescr: "Click the button to detect your timezone.",
 		MsgTimezoneSet:             "✅ Your timezone is set to",
 		NavList:                    "Show reminders",
-		NavSetup:                   "Setup",
+		NavSetup:                   "Setup reminder",
 		NavAccount:                 "Account",
 		NavChooseOption:            "Choose an option:",
 		CmdStartDesc:               "Start the bot and show main menu",
@@ -167,6 +170,8 @@ var stringsByLang = map[string]Strings{
 		AccNoTimezone:              "Not set",
 		AccChangeLanguage:          "🌐 Change Language",
 		AccChangeTimezone:          "🌍 Change Timezone",
+		TzManualSelect:             "📍 Select Manually",
+		TzSelectPrompt:             "Select your timezone:",
 	},
 	LangUK: {
 		Welcome: "Ласкаво просимо до бота-нагадувача!",
@@ -237,7 +242,7 @@ var stringsByLang = map[string]Strings{
 		MsgTimezoneAutoDetectDescr: "Натисніть кнопку, щоб визначити свій часовий пояс.",
 		MsgTimezoneSet:             "✅ Часовий пояс встановлено на",
 		NavList:                    "Показати нагадування",
-		NavSetup:                   "Налаштування",
+		NavSetup:                   "Встановити нагадування",
 		NavAccount:                 "Акаунт",
 		NavChooseOption:            "Оберіть опцію:",
 		CmdStartDesc:               "Запустити бота та показати головне меню",
@@ -253,6 +258,8 @@ var stringsByLang = map[string]Strings{
 		AccNoTimezone:              "Не встановлено",
 		AccChangeLanguage:          "🌐 Змінити мову",
 		AccChangeTimezone:          "🌍 Змінити часовий пояс",
+		TzManualSelect:             "📍 Обрати вручну",
+		TzSelectPrompt:             "Оберіть свій часовий пояс:",
 	},
 }
 

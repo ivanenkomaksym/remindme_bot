@@ -63,6 +63,20 @@ func (d *dateUseCase) CreateDatepicker(message *tgbotapi.Message,
 	onCancel := func(bot *tgbotapi.BotAPI, m *tgbotapi.Message) {
 		// Remove datepicker from active datepickers on cancel
 		delete(d.datepickers, user.ID)
+
+		// Navigate back to setup menu
+		s := keyboards.T(user.Language)
+		text := "⚙️ " + s.NavSetup + ":"
+		markup := keyboards.GetSetupMenuMarkup(user.Language)
+
+		msg := tgbotapi.NewEditMessageText(
+			user.ID,
+			message.MessageID,
+			text,
+		)
+		msg.ReplyMarkup = markup
+		msg.ParseMode = "HTML"
+		d.bot.Send(msg)
 	}
 
 	dp := datepicker.New(onSelect,
