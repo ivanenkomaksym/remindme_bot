@@ -1,6 +1,7 @@
 package notifier
 
 import (
+	"fmt"
 	"log"
 	"time"
 
@@ -72,7 +73,8 @@ func ProcessDueReminders(now time.Time, reminderRepo repositories.ReminderReposi
 		}
 
 		// Send notification
-		msg := tgbotapi.NewMessage(rem.UserID, rem.Message)
+		text := fmt.Sprintf("🔔 %s", rem.Message)
+		msg := tgbotapi.NewMessage(rem.UserID, text)
 		if _, err := sender.Send(msg); err != nil {
 			log.Printf("Failed to send reminder to user %d: %v", rem.UserID, err)
 		}
