@@ -27,9 +27,10 @@ func ParseHourMinute(timeStr string) (int, int, bool) {
 
 // NextDailyTrigger returns the next occurrence of the provided HH:MM from the reference time.
 func NextDailyTrigger(from time.Time, timeOfDay time.Time, location *time.Location) time.Time {
-	fromInTz := from.In(location)
-	candidate := time.Date(from.Year(), from.Month(), from.Day(), timeOfDay.Hour(), timeOfDay.Minute(), 0, 0, location)
-	if !candidate.After(fromInTz) {
+	fromInLocal := from.In(location)
+	timeOfDayInLocal := timeOfDay.In(location)
+	candidate := time.Date(from.Year(), from.Month(), from.Day(), timeOfDayInLocal.Hour(), timeOfDayInLocal.Minute(), 0, 0, location)
+	if !candidate.After(fromInLocal) {
 		candidate = candidate.Add(24 * time.Hour)
 	}
 
@@ -51,15 +52,16 @@ func NextWeeklyTrigger(from time.Time, days []time.Weekday, timeOfDay time.Time,
 		}
 	}
 
-	fromInTz := from.In(location)
+	fromInLocal := from.In(location)
+	timeOfDayInLocal := timeOfDay.In(location)
 
 	best := time.Time{}
 	for i := range 7 {
-		day := fromInTz.Add(time.Duration(i) * 24 * time.Hour)
+		day := fromInLocal.Add(time.Duration(i) * 24 * time.Hour)
 		for _, d := range uniqueDays {
 			if day.Weekday() == d {
-				candidate := time.Date(day.Year(), day.Month(), day.Day(), timeOfDay.Hour(), timeOfDay.Minute(), 0, 0, location)
-				if candidate.After(fromInTz) && (best.IsZero() || candidate.Before(best)) {
+				candidate := time.Date(day.Year(), day.Month(), day.Day(), timeOfDayInLocal.Hour(), timeOfDayInLocal.Minute(), 0, 0, location)
+				if candidate.After(fromInLocal) && (best.IsZero() || candidate.Before(best)) {
 					best = candidate
 				}
 			}
@@ -97,18 +99,19 @@ func NextMonthlyTrigger(from time.Time, daysOfMonth []int, timeOfDay time.Time, 
 	}
 	sort.Ints(days)
 
-	fromInTz := from.In(location)
+	fromInLocal := from.In(location)
+	timeOfDayInLocal := timeOfDay.In(location)
 
 	best := time.Time{}
 	for m := 0; m < 3; m++ {
-		t := fromInTz.AddDate(0, m, 0)
+		t := fromInLocal.AddDate(0, m, 0)
 		dim := daysIn(t.Month(), t.Year())
 		for _, d := range days {
 			if d > dim {
 				continue
 			}
-			candidate := time.Date(t.Year(), t.Month(), d, timeOfDay.Hour(), timeOfDay.Minute(), 0, 0, location)
-			if candidate.After(fromInTz) && (best.IsZero() || candidate.Before(best)) {
+			candidate := time.Date(t.Year(), t.Month(), d, timeOfDayInLocal.Hour(), timeOfDayInLocal.Minute(), 0, 0, location)
+			if candidate.After(fromInLocal) && (best.IsZero() || candidate.Before(best)) {
 				best = candidate
 			}
 		}

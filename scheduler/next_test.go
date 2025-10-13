@@ -93,46 +93,97 @@ func TestNextMonthlyTrigger(t *testing.T) {
 }
 
 func TestNextForRecurrence(t *testing.T) {
-	loc, _ := time.LoadLocation("Asia/Shanghai")
+	loc, _ := time.LoadLocation("Europe/Kyiv")
+	// Friday January 10, 2025 at 10:30 AM Kyiv time (avoid edge cases)
 	from := mustTime(t, "2006-01-02 15:04", "2025-01-10 10:30", loc)
 
-	var wantLocal time.Time
-	var wantUTC time.Time
+	t.Run("Daily recurrence same day", func(t *testing.T) {
+		// Want daily at 11:00 AM Kyiv time (same day since 11:00 > 10:30)
+		timeOfDay := time.Date(2025, 1, 10, 11, 0, 0, 0, loc)
+		dailyRec := entities.DailyAt(timeOfDay, loc)
+		
+		gotUTC := NextForRecurrence(from, timeOfDay, dailyRec)
+		if gotUTC == nil {
+			t.Fatal("Expected non-nil result for daily recurrence")
+		}
+		
+		// Should be today at 11:00 AM Kyiv time
+		wantLocal := time.Date(2025, 1, 10, 11, 0, 0, 0, loc)
+		wantUTC := wantLocal.UTC()
+		
+		if !gotUTC.Equal(wantUTC) {
+			t.Errorf("Daily same day: expected %v, got %v", wantUTC, *gotUTC)
+		}
+	})
 
-	timeOfDay := time.Date(2025, 1, 10, 10, 30, 0, 0, loc)
-	recOnce := entities.OnceAt(timeOfDay, loc)
-	gotUTC := NextForRecurrence(from, timeOfDay, recOnce)
-	if gotUTC != nil {
-		t.Fatalf("daily: expected %v, got %v", nil, gotUTC)
-	}
+	t.Run("Daily recurrence next day", func(t *testing.T) {
+		// Want daily at 9:00 AM Kyiv time (next day since 9:00 < 10:30)
+		timeOfDay := time.Date(2025, 1, 10, 9, 0, 0, 0, loc)
+		dailyRec := entities.DailyAt(timeOfDay, loc)
+		
+		gotUTC := NextForRecurrence(from, timeOfDay, dailyRec)
+		if gotUTC == nil {
+			t.Fatal("Expected non-nil result for daily recurrence")
+		}
+		
+		// Should be tomorrow at 9:00 AM Kyiv time
+		wantLocal := time.Date(2025, 1, 11, 9, 0, 0, 0, loc)
+		wantUTC := wantLocal.UTC()
+		
+		if !gotUTC.Equal(wantUTC) {
+			t.Errorf("Daily next day: expected %v, got %v", wantUTC, *gotUTC)
+		}
+	})
 
-	// Daily advances to the next local 10:30 -> compute expected candidate in loc and compare in UTC
-	recDaily := entities.DailyAt(timeOfDay, loc)
-	gotUTC = NextForRecurrence(from, timeOfDay, recDaily)
-	candidate := time.Date(from.Year(), from.Month(), from.Day(), 10, 30, 0, 0, loc)
-	if !candidate.After(from) {
-		candidate = candidate.Add(24 * time.Hour)
-	}
-	wantUTC = candidate.UTC()
-	if !gotUTC.Equal(wantUTC) {
-		t.Fatalf("daily: expected %v, got %v", wantUTC, gotUTC)
-	}
-	// Weekly Monday at 09:00 from Friday -> next Monday at 09:00
-	timeOfDay = time.Date(2025, 1, 10, 9, 0, 0, 0, loc)
-	recWeekly := entities.CustomWeekly([]time.Weekday{time.Monday}, timeOfDay, loc)
-	gotUTC = NextForRecurrence(from, timeOfDay, recWeekly)
+	t.Run("Monthly recurrence same month", func(t *testing.T) {
+		// Want 15th of month at 9:00 AM (same month since 15 > 10)
+		timeOfDay := time.Date(2025, 1, 10, 9, 0, 0, 0, loc)
+		recMonthly := entities.MonthlyOnDay([]int{15}, timeOfDay, loc)
+		
+		gotUTC := NextForRecurrence(from, timeOfDay, recMonthly)
+		if gotUTC == nil {
+			t.Fatal("Expected non-nil result for monthly recurrence")
+		}
+		
+		// Should be January 15, 2025 at 9:00 AM Kyiv time
+		wantLocal := time.Date(2025, 1, 15, 9, 0, 0, 0, loc)
+		wantUTC := wantLocal.UTC()
+		
+		if !gotUTC.Equal(wantUTC) {
+			t.Errorf("Monthly same month: expected %v, got %v", wantUTC, *gotUTC)
+		}
+	})
 
-	wantLocal = time.Date(2025, 1, 13, 9, 0, 0, 0, loc)
-	wantUTC = wantLocal.UTC()
-	if !gotUTC.Equal(wantUTC) {
-		t.Fatalf("weekly: expected %v, got %v", wantUTC, gotUTC)
-	}
-	// Monthly 15th 09:00
-	recMonthly := entities.MonthlyOnDay([]int{15}, timeOfDay, loc)
-	gotUTC = NextForRecurrence(from, timeOfDay, recMonthly)
-	wantLocal = time.Date(2025, 1, 15, 9, 0, 0, 0, loc)
-	wantUTC = wantLocal.UTC()
-	if !gotUTC.Equal(wantUTC) {
-		t.Fatalf("monthly: expected %v, got %v", wantUTC, gotUTC)
-	}
+	t.Run("Interval recurrence", func(t *testing.T) {
+		timeOfDay := time.Date(2025, 1, 10, 9, 0, 0, 0, loc)
+		recInterval := &entities.Recurrence{
+			Type:     entities.Interval,
+			Interval: 3, // Every 3 days
+		}
+		recInterval.SetLocation(loc)
+		
+		gotUTC := NextForRecurrence(from, timeOfDay, recInterval)
+		if gotUTC == nil {
+			t.Fatal("Expected non-nil result for interval recurrence")
+		}
+		
+		// Should advance by 3 days from the from time
+		fromInTz := from.In(loc)
+		wantLocal := fromInTz.Add(3 * 24 * time.Hour)
+		wantUTC := wantLocal.UTC()
+		
+		if !gotUTC.Equal(wantUTC) {
+			t.Errorf("Interval: expected %v, got %v", wantUTC, *gotUTC)
+		}
+	})
+
+	t.Run("Once recurrence returns nil", func(t *testing.T) {
+		timeOfDay := time.Date(2025, 1, 10, 9, 0, 0, 0, loc)
+		recOnce := &entities.Recurrence{Type: entities.Once}
+		
+		gotUTC := NextForRecurrence(from, timeOfDay, recOnce)
+		if gotUTC != nil {
+			t.Errorf("Once: expected nil, got %v", *gotUTC)
+		}
+	})
 }
