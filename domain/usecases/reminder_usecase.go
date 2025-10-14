@@ -67,11 +67,17 @@ func (r *reminderUseCase) CreateReminder(userID int64, selection *entities.UserS
 	if selection.ReminderMessage == "" {
 		return nil, errors.ErrEmptyMessage
 	}
+
+	date := time.Now()
+	if selection.RecurrenceType == entities.Once {
+		date = selection.SelectedDate
+	}
+
 	if selection.SelectedTime == "" {
 		return nil, errors.ErrInvalidTimeFormat
 	} else {
 		loc := user.GetLocation()
-		timeOfDay, err = buildDateTimeFromSelection(time.Now(), selection.SelectedTime, loc)
+		timeOfDay, err = buildDateTimeFromSelection(date, selection.SelectedTime, loc)
 		if err != nil {
 			return nil, err
 		}

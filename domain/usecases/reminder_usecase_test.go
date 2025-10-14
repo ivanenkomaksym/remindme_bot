@@ -25,15 +25,23 @@ func TestCreateReminder_ValidOnce(t *testing.T) {
 	remRepo := inmemory.NewInMemoryReminderRepository()
 	uc = NewReminderUseCase(remRepo, userRepo)
 
+	now := time.Now()
+	loc := time.Local
+
+	expectedTrigger := time.Date(now.Year(), now.Month(), now.Day()+7, 12, 0, 0, 0, loc)
+
 	sel := entities.NewUserSelection()
 	sel.RecurrenceType = entities.Once
-	sel.SelectedDate = time.Now().Add(24 * time.Hour) // Tomorrow
+	sel.SelectedDate = expectedTrigger // In a week
 	sel.SelectedTime = "12:00"
 	sel.ReminderMessage = "Check e-mail"
 
 	rem, err := uc.CreateReminder(1, sel)
 	if rem.NextTrigger == nil {
 		t.Fatalf("expected Next trigger to be set for once reminder")
+	}
+	if !rem.NextTrigger.Equal(expectedTrigger) {
+		t.Fatalf("expected next trigger %v, got %v", expectedTrigger, rem.NextTrigger)
 	}
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
