@@ -6,8 +6,20 @@ name: Go
 on:
   push:
     branches: [ "main" ]
+    paths-ignore:
+      - '**/*.md'
+      - 'docs/**'
+      - '*.md'
+      - 'LICENSE*'
+      - '.gitignore'
   pull_request:
     branches: [ "main" ]
+    paths-ignore:
+      - '**/*.md'
+      - 'docs/**'
+      - '*.md'
+      - 'LICENSE*'
+      - '.gitignore'
   workflow_dispatch: # Allows manual triggering from the GitHub Actions UI
 
 # Permissions required by dorny/test-reporter
