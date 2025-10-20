@@ -1,11 +1,14 @@
 package bootstrap
 
 import (
+	"fmt"
 	"log"
 
 	"github.com/ivanenkomaksym/remindme_bot/api/controllers"
 	"github.com/ivanenkomaksym/remindme_bot/config"
+	"github.com/ivanenkomaksym/remindme_bot/domain/entities"
 	"github.com/ivanenkomaksym/remindme_bot/domain/repositories"
+	"github.com/ivanenkomaksym/remindme_bot/domain/services"
 	"github.com/ivanenkomaksym/remindme_bot/domain/usecases"
 	"github.com/ivanenkomaksym/remindme_bot/repositories/inmemory"
 	"github.com/ivanenkomaksym/remindme_bot/repositories/persistent"
@@ -21,6 +24,9 @@ type Container struct {
 	UserRepo          repositories.UserRepository
 	ReminderRepo      repositories.ReminderRepository
 	UserSelectionRepo repositories.UserSelectionRepository
+
+	// Services
+	NLPService services.NLPService
 
 	// Use Cases
 	UserUseCase     usecases.UserUseCase
@@ -41,6 +47,9 @@ func NewContainer(app *Application) *Container {
 
 	// Initialize repositories
 	container.initRepositories(app.Env)
+
+	// Initialize services
+	container.initServices()
 
 	// Initialize use cases
 	container.initUseCases()
@@ -82,16 +91,37 @@ func (c *Container) initRepositories(env *Env) {
 	}
 }
 
+// initServices initializes all services
+func (c *Container) initServices() {
+	c.NLPService = &noOpNLPService{}
+	if !c.Config.OpenAI.Enabled {
+		return
+	}
+
+	var err error
+	c.NLPService, err = services.NewNLPService(&c.Config)
+	if err != nil {
+		log.Printf("Warning: NLP service initialization failed: %v", err)
+	}
+}
+
 // initUseCases initializes all use cases
 func (c *Container) initUseCases() {
 	c.UserUseCase = usecases.NewUserUseCase(c.UserRepo, c.UserSelectionRepo)
 	c.ReminderUseCase = usecases.NewReminderUseCase(c.ReminderRepo, c.UserRepo)
 }
 
+// noOpNLPService is a no-op implementation when OpenAI is not configured
+type noOpNLPService struct{}
+
+func (n *noOpNLPService) ParseReminderText(text string, userTimezone string, userLanguage string) (*entities.UserSelection, error) {
+	return nil, fmt.Errorf("NLP service is not configured - OpenAI API key required")
+}
+
 // initControllers initializes all controllers
 func (c *Container) initControllers(bot *tgbotapi.BotAPI) {
 	c.UserController = controllers.NewUserController(c.UserUseCase)
-	c.ReminderController = controllers.NewReminderController(c.ReminderUseCase)
+	c.ReminderController = controllers.NewReminderController(c.ReminderUseCase, c.NLPService, c.UserUseCase)
 	if bot != nil {
 		c.DateUseCase = usecases.NewDateUseCase(c.UserUseCase, bot)
 		c.BotUseCase = usecases.NewBotUseCase(c.UserUseCase, c.ReminderUseCase, c.DateUseCase, c.Config, bot)

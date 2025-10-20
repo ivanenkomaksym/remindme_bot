@@ -7,18 +7,23 @@ import (
 	"strconv"
 
 	"github.com/ivanenkomaksym/remindme_bot/domain/entities"
+	"github.com/ivanenkomaksym/remindme_bot/domain/services"
 	"github.com/ivanenkomaksym/remindme_bot/domain/usecases"
 )
 
 // ReminderController handles reminder-related HTTP requests
 type ReminderController struct {
 	reminderUseCase usecases.ReminderUseCase
+	nlpService      services.NLPService
+	userUseCase     usecases.UserUseCase
 }
 
 // NewReminderController creates a new reminder controller
-func NewReminderController(reminderUseCase usecases.ReminderUseCase) *ReminderController {
+func NewReminderController(reminderUseCase usecases.ReminderUseCase, nlpService services.NLPService, userUseCase usecases.UserUseCase) *ReminderController {
 	return &ReminderController{
 		reminderUseCase: reminderUseCase,
+		nlpService:      nlpService,
+		userUseCase:     userUseCase,
 	}
 }
 
@@ -86,6 +91,95 @@ func (c *ReminderController) CreateReminder(w http.ResponseWriter, r *http.Reque
 
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(reminder)
+}
+
+// CreateReminderFromTextRequest represents the request body for natural language reminder creation
+type CreateReminderFromTextRequest struct {
+	Text     string `json:"text"`
+	Timezone string `json:"timezone,omitempty"`
+	Language string `json:"language,omitempty"`
+}
+
+// CreateReminderFromText creates a new reminder from natural language text using OpenAI
+func (c *ReminderController) CreateReminderFromText(w http.ResponseWriter, r *http.Request) {
+	result, user, req := validateCreateReminderFromTextRequest(r, w, c)
+	if !result {
+		return
+	}
+
+	// Use provided timezone/language or fall back to user's settings
+	timezone := req.Timezone
+	if timezone == "" {
+		timezone = user.LocationName
+		if timezone == "" {
+			timezone = "UTC" // fallback to UTC if no timezone is set
+		}
+	}
+	language := req.Language
+	if language == "" {
+		language = user.Language
+		if language == "" {
+			language = "en" // fallback to English
+		}
+	}
+
+	// Parse the natural language text using NLP service
+	userSelection, err := c.nlpService.ParseReminderText(req.Text, timezone, language)
+	if err != nil {
+		log.Printf("NLP parsing failed for text '%s': %v", req.Text, err)
+		http.Error(w, "Failed to parse reminder text: "+err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	// Create the reminder using the parsed selection
+	reminder, err := c.reminderUseCase.CreateReminder(user.ID, userSelection)
+	if err != nil {
+		log.Printf("Failed to create reminder from NLP: %v", err)
+		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(reminder)
+}
+
+func validateCreateReminderFromTextRequest(r *http.Request, w http.ResponseWriter, c *ReminderController) (bool, *entities.User, *CreateReminderFromTextRequest) {
+	if r.Method != http.MethodPost {
+		http.Error(w, "Only POST requests are allowed", http.StatusMethodNotAllowed)
+		return false, nil, nil
+	}
+
+	userIDStr := r.PathValue("user_id")
+	if userIDStr == "" {
+		http.Error(w, "user_id parameter is required", http.StatusBadRequest)
+		return false, nil, nil
+	}
+
+	userID, err := strconv.ParseInt(userIDStr, 10, 64)
+	if err != nil {
+		http.Error(w, "Invalid user_id", http.StatusBadRequest)
+		return false, nil, nil
+	}
+
+	var req CreateReminderFromTextRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		http.Error(w, "Invalid request body", http.StatusBadRequest)
+		return false, nil, nil
+	}
+
+	if req.Text == "" {
+		http.Error(w, "text field is required", http.StatusBadRequest)
+		return false, nil, nil
+	}
+
+	user, err := c.userUseCase.GetUser(userID)
+	if err != nil {
+		log.Printf("Failed to get user %d: %v", userID, err)
+		http.Error(w, "User not found", http.StatusNotFound)
+		return false, nil, nil
+	}
+
+	return true, user, &req
 }
 
 // GetReminder returns a specific reminder by ID

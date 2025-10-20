@@ -42,6 +42,7 @@ func Setup(app *bootstrap.Application) {
 	mux.HandleFunc("GET /api/reminders", app.Container.ReminderController.GetAllReminders)
 	mux.HandleFunc("GET /api/reminders/{user_id}", app.Container.ReminderController.GetUserReminders)
 	mux.HandleFunc("POST /api/reminders/{user_id}", app.Container.ReminderController.CreateReminder)
+	mux.HandleFunc("POST /api/reminders/{user_id}/from-text", app.Container.ReminderController.CreateReminderFromText)
 	mux.HandleFunc("GET /api/reminders/{user_id}/{reminder_id}", app.Container.ReminderController.GetReminder)
 	mux.HandleFunc("PUT /api/reminders/{user_id}/{reminder_id}", app.Container.ReminderController.UpdateReminder)
 	mux.HandleFunc("DELETE /api/reminders/{user_id}/{reminder_id}", app.Container.ReminderController.DeleteReminder)
