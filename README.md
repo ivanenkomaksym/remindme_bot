@@ -1,21 +1,28 @@
 # remindme_bot
 
-**Never miss what matters most** - A powerful Telegram bot that transforms how you manage your busy schedule with intelligent reminders and seamless organization. Create, schedule, and manage reminders with recurring schedules, timezone detection, and intuitive date/time selection.
+**Never miss what matters most** - A revolutionary AI-powered Telegram bot that transforms how you manage your busy schedule. Create, schedule, and manage reminders with recurring schedules, timezone detection, and intuitive date/time selection. Simply type "tomorrow 2 PM visit dentist" and watch as advanced natural language processing creates perfectly scheduled reminders with zero effort.
 
 ## Overview
 
 In today's fast-paced world, keeping track of important tasks, appointments, and deadlines can be overwhelming. **RemindMeBot solves this challenge** by providing a sophisticated, yet intuitive reminder management system that integrates seamlessly into your daily workflow through Telegram.
 
-Whether you're a busy professional juggling multiple projects, a student managing coursework and deadlines, or anyone who values staying organized and productive, RemindMeBot ensures you **never miss critical moments** in your life. With advanced scheduling capabilities, intelligent recurrence patterns, and global timezone support, this bot adapts to your lifestyle and helps you maintain control over your demanding schedule.
+Whether you're a busy professional juggling multiple projects, a student managing coursework and deadlines, or anyone who values staying organized and productive, RemindMeBot ensures you **never miss critical moments** in your life. With **breakthrough AI natural language processing**, advanced scheduling capabilities, intelligent recurrence patterns, and global timezone support, this bot adapts to your lifestyle and helps you maintain control over your demanding schedule.
 
 **Key Value Propositions:**
 - 🎯 **Stay On Top of Everything**: Transform chaotic schedules into organized, manageable workflows
 - ⚡ **Instant Accessibility**: Access your reminders anywhere, anytime through Telegram - no additional apps needed
+- 🧠 **AI-Powered Simplicity**: Just say "tomorrow 2 PM visit dentist" or "щодня о 9 ранку приймати ліки" - AI understands and creates perfect reminders
 - 🌍 **Global-Ready**: Perfect for remote workers, international teams, and travelers with automatic timezone detection
-- 🧠 **Intelligent Scheduling**: Smart recurring patterns reduce manual setup while maximizing productivity
+- 🔄 **Intelligent Scheduling**: Smart recurring patterns reduce manual setup while maximizing productivity
 - 💼 **Professional & Personal**: Equally effective for business deadlines and personal commitments
 
 ## Key Features
+
+### 🧠 **AI-Powered Natural Language Processing**
+- **Smart Text Parsing**: Create reminders using natural language - just type what you want!
+- **Multi-Language AI**: Supports English and Ukrainian with OpenAI GPT integration
+- **Intelligent Understanding**: Handles complex time expressions like "in 20 minutes", "tomorrow at 2 PM", "every weekday at 8 AM"
+- **Context-Aware**: Automatically detects recurrence patterns, dates, times, and reminder messages from plain text
 
 ### 🤖 **Telegram Integration**
 - Interactive bot interface with intuitive commands
@@ -47,6 +54,7 @@ Whether you're a busy professional juggling multiple projects, a student managin
 
 ### 🚀 **API Support**
 - **Complete REST API**: Full CRUD operations for users and reminders
+- **NLP Endpoint**: `POST /api/reminders/{user_id}/from-text` for natural language reminder creation
 - **API Authentication**: Secure access with API keys
 - **Integration Ready**: Easy integration with external systems
 - **Comprehensive Testing**: Automated API tests with Postman collections
@@ -66,7 +74,8 @@ Whether you're a busy professional juggling multiple projects, a student managin
 - **MongoDB**: Persistent, scalable storage for production
 
 ### ⚙️ **Configuration**
-- **Environment Variables**: `BOT_TOKEN`, `API_KEY`, `DB_CONNECTION_STRING`
+- **Core Variables**: `BOT_TOKEN`, `API_KEY`, `DB_CONNECTION_STRING`
+- **AI Integration**: `OPENAI_API_KEY` for natural language processing
 - **`.env` File**: Local development configuration
 - **Runtime Settings**: Storage type, server address, notification intervals
 
@@ -145,5 +154,6 @@ Build → API Tests → Push Image → Deploy (GCP)
 - `DB_CONNECTION_STRING` - mongo connection string
 - `PROJECT_ID` - GCP project id
 - `GOOGLE_SERVICE_ACCOUNT_KEY` - GCP service account JSON key
+- `OPENAI_API_KEY` - OpenAI key for NLP
 
 **Test Results**: Visible in GitHub Actions UI, PR comments, and downloadable artifacts.
