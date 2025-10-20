@@ -15,6 +15,7 @@ type Config struct {
 	Database DatabaseConfig
 	Bot      BotConfig
 	App      AppConfig
+	OpenAI   OpenAIConfig
 }
 
 // ServerConfig holds server-related configuration
@@ -56,6 +57,13 @@ type AppConfig struct {
 	NotifierTimeout time.Duration
 }
 
+// OpenAIConfig holds OpenAI-related configuration
+type OpenAIConfig struct {
+	Enabled bool
+	APIKey  string
+	Model   string
+}
+
 // LoadConfig loads configuration from environment variables and config files
 func LoadConfig() *Config {
 	config := &Config{}
@@ -77,6 +85,7 @@ func LoadConfig() *Config {
 	config.loadDatabaseConfig()
 	config.loadBotConfig()
 	config.loadAppConfig()
+	config.loadOpenAIConfig()
 
 	// Validate configuration
 	config.validate()
@@ -119,6 +128,12 @@ func (c *Config) setDefaults() {
 		Timezone:        "UTC",
 		APIKey:          "",
 		NotifierTimeout: 1 * time.Minute,
+	}
+
+	c.OpenAI = OpenAIConfig{
+		Enabled: false,
+		APIKey:  "",
+		Model:   "gpt-4o-mini",
 	}
 }
 
@@ -222,6 +237,17 @@ func (c *Config) loadAppConfig() {
 		if duration, err := time.ParseDuration(notifierTimeout); err == nil {
 			c.App.NotifierTimeout = duration
 		}
+	}
+}
+
+// loadOpenAIConfig loads OpenAI configuration
+func (c *Config) loadOpenAIConfig() {
+	c.OpenAI.Enabled = viper.GetBool("OPENAI_ENABLED")
+	if apiKey := viper.GetString("OPENAI_API_KEY"); apiKey != "" {
+		c.OpenAI.APIKey = apiKey
+	}
+	if model := viper.GetString("OPENAI_MODEL"); model != "" {
+		c.OpenAI.Model = model
 	}
 }
 
