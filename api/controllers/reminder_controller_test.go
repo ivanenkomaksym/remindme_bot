@@ -12,7 +12,7 @@ import (
 )
 
 func TestReminderController_ValidationChecks(t *testing.T) {
-	c := NewReminderController(&reminderUseCaseMock{})
+	c := NewReminderController(&reminderUseCaseMock{}, &mockNLPService{}, &mockUserUseCase{})
 
 	tests := []struct {
 		name       string
@@ -149,7 +149,7 @@ func (m *reminderUseCaseMock) GetActiveReminders() ([]entities.Reminder, error) 
 }
 
 func TestReminderController_MethodGuards(t *testing.T) {
-	c := NewReminderController(&reminderUseCaseMock{})
+	c := NewReminderController(&reminderUseCaseMock{}, &mockNLPService{}, &mockUserUseCase{})
 
 	tests := []struct {
 		name    string
@@ -218,7 +218,7 @@ func TestReminderController_MethodGuards(t *testing.T) {
 }
 
 func TestReminderController_DeleteReminder_Validation(t *testing.T) {
-	c := NewReminderController(&reminderUseCaseMock{})
+	c := NewReminderController(&reminderUseCaseMock{}, &mockNLPService{}, &mockUserUseCase{})
 
 	// missing params
 	rw := httptest.NewRecorder()
@@ -273,7 +273,7 @@ func TestReminderController_GetUserReminders_Success(t *testing.T) {
 		},
 	}
 
-	c := NewReminderController(mock)
+	c := NewReminderController(mock, &mockNLPService{}, &mockUserUseCase{})
 
 	// Test successful retrieval
 	rw := httptest.NewRecorder()
@@ -303,7 +303,7 @@ func TestReminderController_GetReminder_Success(t *testing.T) {
 		},
 	}
 
-	c := NewReminderController(mock)
+	c := NewReminderController(mock, &mockNLPService{}, &mockUserUseCase{})
 
 	rw := httptest.NewRecorder()
 	req := httptest.NewRequest(http.MethodGet, "/reminders/123/1", nil)
@@ -340,7 +340,7 @@ func TestReminderController_CreateReminder_Success(t *testing.T) {
 		},
 	}
 
-	c := NewReminderController(mock)
+	c := NewReminderController(mock, &mockNLPService{}, &mockUserUseCase{})
 
 	body := `{
 		"recurrenceType": "Daily",
@@ -380,7 +380,7 @@ func TestReminderController_GetAllReminders_Success(t *testing.T) {
 		},
 	}
 
-	c := NewReminderController(mock)
+	c := NewReminderController(mock, &mockNLPService{}, &mockUserUseCase{})
 
 	rw := httptest.NewRecorder()
 	req := httptest.NewRequest(http.MethodGet, "/reminders/all", nil)
@@ -412,7 +412,7 @@ func TestReminderController_GetActiveReminders_Success(t *testing.T) {
 		},
 	}
 
-	c := NewReminderController(mock)
+	c := NewReminderController(mock, &mockNLPService{}, &mockUserUseCase{})
 
 	rw := httptest.NewRecorder()
 	req := httptest.NewRequest(http.MethodGet, "/reminders/active", nil)
@@ -434,7 +434,7 @@ func TestReminderController_DeleteReminder_Success(t *testing.T) {
 		},
 	}
 
-	c := NewReminderController(mock)
+	c := NewReminderController(mock, &mockNLPService{}, &mockUserUseCase{})
 
 	rw := httptest.NewRecorder()
 	req := httptest.NewRequest(http.MethodDelete, "/reminders/123/1", nil)
@@ -446,4 +446,53 @@ func TestReminderController_DeleteReminder_Success(t *testing.T) {
 	if rw.Code != http.StatusNoContent {
 		t.Fatalf("expected 204, got %d", rw.Code)
 	}
+}
+
+// Mock services for testing
+type mockNLPService struct{}
+
+func (m *mockNLPService) ParseReminderText(text string, userTimezone string, userLanguage string) (*entities.UserSelection, error) {
+	return nil, nil
+}
+
+type mockUserUseCase struct{}
+
+func (m *mockUserUseCase) GetUsers() ([]*entities.User, error) {
+	return nil, nil
+}
+
+func (m *mockUserUseCase) GetUser(userID int64) (*entities.User, error) {
+	return nil, nil
+}
+
+func (m *mockUserUseCase) CreateUser(userID int64, userName, firstName, lastName, language string) (*entities.User, error) {
+	return nil, nil
+}
+
+func (m *mockUserUseCase) GetOrCreateUser(userID int64, userName, firstName, lastName, language string) (*entities.User, error) {
+	return nil, nil
+}
+
+func (m *mockUserUseCase) UpdateUserLanguage(userID int64, language string) error {
+	return nil
+}
+
+func (m *mockUserUseCase) UpdateLocation(userID int64, location string) error {
+	return nil
+}
+
+func (m *mockUserUseCase) GetUserSelection(userID int64) (*entities.UserSelection, error) {
+	return nil, nil
+}
+
+func (m *mockUserUseCase) UpdateUserSelection(userID int64, selection *entities.UserSelection) error {
+	return nil
+}
+
+func (m *mockUserUseCase) ClearUserSelection(userID int64) error {
+	return nil
+}
+
+func (m *mockUserUseCase) DeleteUser(userID int64) error {
+	return nil
 }
