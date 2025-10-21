@@ -76,11 +76,14 @@ Whether you're a busy professional juggling multiple projects, a student managin
 ### ⚙️ **Configuration**
 - **Core Variables**: `BOT_TOKEN`, `API_KEY`, `DB_CONNECTION_STRING`
 - **AI Integration**: `OPENAI_API_KEY` for natural language processing
+- **Bot Monitoring**: Configure pending updates monitoring and auto-recovery
 - **`.env` File**: Local development configuration
 - **Runtime Settings**: Storage type, server address, notification intervals
 
 ### 🔄 **Background Services**
 - **Reminder Notifier**: Continuously monitors active reminders
+- **Bot Health Monitoring**: Tracks Telegram webhook pending updates to detect service issues
+- **Auto-Recovery**: Automatically clears excessive pending updates to prevent service degradation
 - **Configurable Intervals**: Adjustable check frequency (default: 15 minutes)
 - **Reliable Delivery**: Ensures notifications are sent even after failures
 

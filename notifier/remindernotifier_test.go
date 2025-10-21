@@ -5,6 +5,7 @@ import (
 	"time"
 
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
+	"github.com/ivanenkomaksym/remindme_bot/config"
 	"github.com/ivanenkomaksym/remindme_bot/domain/entities"
 	"github.com/ivanenkomaksym/remindme_bot/repositories/inmemory"
 	"github.com/ivanenkomaksym/remindme_bot/scheduler"
@@ -253,5 +254,85 @@ func TestProcessDueReminders_OneTimeDeactivates(t *testing.T) {
 	updated := reminders[0]
 	if updated.IsActive {
 		t.Fatalf("one-time reminder should be deactivated after sending")
+	}
+}
+
+func TestProcessDueRemindersWithConfig_MonitoringDisabled(t *testing.T) {
+	repo := inmemory.NewInMemoryReminderRepository()
+	loc, _ := time.LoadLocation("UTC")
+	user := entities.User{ID: 123, Location: loc}
+	
+	// Create a reminder that's due
+	past := time.Now().Add(-2 * time.Hour).Truncate(time.Minute).In(loc)
+	tod := past
+	rem, _ := repo.CreateDailyReminder(tod, &user, "test message")
+	rem.NextTrigger = &past
+	repo.UpdateReminder(rem)
+
+	sender := &fakeSender{}
+	
+	// Config with monitoring disabled
+	botConfig := config.BotConfig{
+		MonitorPendingUpdates:   false,
+		PendingUpdatesThreshold: 100,
+		AutoClearPendingUpdates: true,
+	}
+
+	now := past.Add(1 * time.Minute)
+	ProcessDueRemindersWithConfig(now, repo, sender, botConfig)
+
+	// Should still send reminder
+	if sender.sent != 1 {
+		t.Fatalf("expected 1 message sent, got %d", sender.sent)
+	}
+	
+	// Verify reminder was processed correctly
+	reminders, _ := repo.GetReminders()
+	updated := reminders[0]
+	if !updated.IsActive {
+		t.Fatalf("daily reminder should remain active")
+	}
+	if updated.NextTrigger == nil {
+		t.Fatalf("NextTrigger should be updated")
+	}
+}
+
+func TestProcessDueRemindersWithConfig_MonitoringEnabled(t *testing.T) {
+	repo := inmemory.NewInMemoryReminderRepository()
+	loc, _ := time.LoadLocation("UTC")
+	user := entities.User{ID: 123, Location: loc}
+	
+	// Create a reminder that's due
+	past := time.Now().Add(-2 * time.Hour).Truncate(time.Minute).In(loc)
+	tod := past
+	rem, _ := repo.CreateDailyReminder(tod, &user, "test message")
+	rem.NextTrigger = &past
+	repo.UpdateReminder(rem)
+
+	sender := &fakeSender{}
+	
+	// Config with monitoring enabled
+	botConfig := config.BotConfig{
+		MonitorPendingUpdates:   true,
+		PendingUpdatesThreshold: 50,
+		AutoClearPendingUpdates: false,
+	}
+
+	now := past.Add(1 * time.Minute)
+	ProcessDueRemindersWithConfig(now, repo, sender, botConfig)
+
+	// Should still send reminder (monitoring doesn't affect core functionality)
+	if sender.sent != 1 {
+		t.Fatalf("expected 1 message sent, got %d", sender.sent)
+	}
+	
+	// Verify reminder was processed correctly
+	reminders, _ := repo.GetReminders()
+	updated := reminders[0]
+	if !updated.IsActive {
+		t.Fatalf("daily reminder should remain active")
+	}
+	if updated.NextTrigger == nil {
+		t.Fatalf("NextTrigger should be updated")
 	}
 }

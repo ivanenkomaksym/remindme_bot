@@ -42,10 +42,13 @@ type DatabaseConfig struct {
 
 // BotConfig holds bot-related configuration
 type BotConfig struct {
-	Enabled   bool
-	Token     string
-	Debug     bool
-	PublicURL string
+	Enabled                 bool
+	Token                   string
+	Debug                   bool
+	PublicURL               string
+	MonitorPendingUpdates   bool
+	PendingUpdatesThreshold int
+	AutoClearPendingUpdates bool
 }
 
 // AppConfig holds application-related configuration
@@ -116,10 +119,13 @@ func (c *Config) setDefaults() {
 	}
 
 	c.Bot = BotConfig{
-		Enabled:   false,
-		Token:     "",
-		Debug:     false,
-		PublicURL: "",
+		Enabled:                 false,
+		Token:                   "",
+		Debug:                   false,
+		PublicURL:               "",
+		MonitorPendingUpdates:   true,
+		PendingUpdatesThreshold: 100,
+		AutoClearPendingUpdates: true,
 	}
 
 	c.App = AppConfig{
@@ -216,6 +222,21 @@ func (c *Config) loadBotConfig() {
 	}
 	if publicURL := viper.GetString("PUBLIC_URL"); publicURL != "" {
 		c.Bot.PublicURL = publicURL
+	}
+	if monitorUpdates := viper.GetString("BOT_MONITOR_PENDING_UPDATES"); monitorUpdates != "" {
+		if m, err := strconv.ParseBool(monitorUpdates); err == nil {
+			c.Bot.MonitorPendingUpdates = m
+		}
+	}
+	if threshold := viper.GetString("BOT_PENDING_UPDATES_THRESHOLD"); threshold != "" {
+		if t, err := strconv.Atoi(threshold); err == nil {
+			c.Bot.PendingUpdatesThreshold = t
+		}
+	}
+	if autoClear := viper.GetString("BOT_AUTO_CLEAR_PENDING_UPDATES"); autoClear != "" {
+		if a, err := strconv.ParseBool(autoClear); err == nil {
+			c.Bot.AutoClearPendingUpdates = a
+		}
 	}
 }
 

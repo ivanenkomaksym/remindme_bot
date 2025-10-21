@@ -55,7 +55,7 @@ func Setup(app *bootstrap.Application) {
 	})
 
 	if app.Env.Config.Bot.Enabled {
-		go notifier.StartReminderNotifier(app.Container.ReminderRepo, app.Env.Config.App, app.Bot)
+		go notifier.StartReminderNotifier(app.Container.ReminderRepo, app.Env.Config.App, app.Env.Config.Bot, app.Bot)
 	}
 
 	log.Printf("Starting HTTP server on %s", addr)
