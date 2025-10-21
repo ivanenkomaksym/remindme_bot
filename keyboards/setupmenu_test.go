@@ -11,8 +11,17 @@ func TestIsSetupMenuSelection(t *testing.T) {
 	}
 }
 
+func TestIsNlpTextInputCallback(t *testing.T) {
+	if !IsNlpTextInputCallback(CallbackNlpTextInput) {
+		t.Fatalf("CallbackNlpTextInput should be recognized")
+	}
+	if IsNlpTextInputCallback("not_nlp") {
+		t.Fatalf("Unexpected NLP callback recognition")
+	}
+}
+
 func TestGetSetupMenuMarkup(t *testing.T) {
-	expectedRows := 8
+	expectedRows := 9
 	m := GetSetupMenuMarkup(LangEN)
 	if len(m.InlineKeyboard) != expectedRows {
 		t.Fatalf("expected %d rows, got %d", expectedRows, len(m.InlineKeyboard))

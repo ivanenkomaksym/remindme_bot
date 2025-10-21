@@ -82,6 +82,12 @@ type Strings struct {
 	// Timezone selection i18n
 	TzManualSelect string
 	TzSelectPrompt string
+	// NLP text input i18n
+	NlpMenuTitle    string
+	NlpInstructions string
+	NlpExamples     string
+	NlpEnterText    string
+	BtnNlpTextInput string
 }
 
 var stringsByLang = map[string]Strings{
@@ -161,17 +167,24 @@ var stringsByLang = map[string]Strings{
 		CmdListDesc:                "Show or remove reminders",
 		CmdSetupDesc:               "Set up time, recurrence, and reminder settings",
 		CmdAccountDesc:             "Manage account settings",
-		AccTitle:                   "👤 Account Information",
-		AccUsername:                "Username",
-		AccLanguage:                "Language",
-		AccTimezone:                "Timezone",
-		AccCreatedAt:               "Created",
-		AccNoUsername:              "Not set",
-		AccNoTimezone:              "Not set",
-		AccChangeLanguage:          "🌐 Change Language",
-		AccChangeTimezone:          "🌍 Change Timezone",
-		TzManualSelect:             "📍 Select Manually",
-		TzSelectPrompt:             "Select your timezone:",
+
+		// NLP-related strings
+		NlpMenuTitle:      "🤖 Smart Text Reminder",
+		NlpInstructions:   "Just tell me what you want to be reminded about in plain language! I'll understand the time, recurrence, and message automatically.",
+		NlpExamples:       "📝 Examples:\n• \"Remind me to call mom tomorrow at 6 PM\"\n• \"Meeting with team every Monday at 9 AM\"\n• \"Take medication daily at 8:30\"\n• \"Dentist appointment next Friday at 2 PM\"",
+		NlpEnterText:      "💬 Enter your reminder in plain text:",
+		BtnNlpTextInput:   "📝 Create from Text",
+		AccTitle:          "👤 Account Information",
+		AccUsername:       "Username",
+		AccLanguage:       "Language",
+		AccTimezone:       "Timezone",
+		AccCreatedAt:      "Created",
+		AccNoUsername:     "Not set",
+		AccNoTimezone:     "Not set",
+		AccChangeLanguage: "🌐 Change Language",
+		AccChangeTimezone: "🌍 Change Timezone",
+		TzManualSelect:    "📍 Select Manually",
+		TzSelectPrompt:    "Select your timezone:",
 	},
 	LangUK: {
 		Welcome: "Ласкаво просимо до бота-нагадувача!",
@@ -249,17 +262,24 @@ var stringsByLang = map[string]Strings{
 		CmdListDesc:                "Показати або видалити нагадування",
 		CmdSetupDesc:               "Налаштувати час, повторення та параметри нагадувань",
 		CmdAccountDesc:             "Управління налаштуваннями акаунту",
-		AccTitle:                   "👤 Інформація про рахунок",
-		AccUsername:                "Ім'я користувача",
-		AccLanguage:                "Мова",
-		AccTimezone:                "Часовий пояс",
-		AccCreatedAt:               "Створено",
-		AccNoUsername:              "Не встановлено",
-		AccNoTimezone:              "Не встановлено",
-		AccChangeLanguage:          "🌐 Змінити мову",
-		AccChangeTimezone:          "🌍 Змінити часовий пояс",
-		TzManualSelect:             "📍 Обрати вручну",
-		TzSelectPrompt:             "Оберіть свій часовий пояс:",
+
+		// NLP-related strings
+		NlpMenuTitle:      "🤖 Розумне текстове нагадування",
+		NlpInstructions:   "Просто скажіть мені, що ви хочете, щоб я нагадав, звичайною мовою! Я автоматично зрозумію час, повторення та повідомлення.",
+		NlpExamples:       "📝 Приклади:\n• \"Нагадай мені подзвонити мамі завтра о 18:00\"\n• \"Зустріч з командою щопонеділка о 9:00\"\n• \"Приймати ліки щодня о 8:30\"\n• \"Прийом у стоматолога наступної п'ятниці о 14:00\"",
+		NlpEnterText:      "💬 Введіть ваше нагадування звичайним текстом:",
+		BtnNlpTextInput:   "📝 Створити з тексту",
+		AccTitle:          "👤 Інформація про рахунок",
+		AccUsername:       "Ім'я користувача",
+		AccLanguage:       "Мова",
+		AccTimezone:       "Часовий пояс",
+		AccCreatedAt:      "Створено",
+		AccNoUsername:     "Не встановлено",
+		AccNoTimezone:     "Не встановлено",
+		AccChangeLanguage: "🌐 Змінити мову",
+		AccChangeTimezone: "🌍 Змінити часовий пояс",
+		TzManualSelect:    "📍 Обрати вручну",
+		TzSelectPrompt:    "Оберіть свій часовий пояс:",
 	},
 }
 

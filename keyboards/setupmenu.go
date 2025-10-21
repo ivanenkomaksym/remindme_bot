@@ -6,16 +6,24 @@ import (
 )
 
 const (
-	SetupMenu = "setup_menu"
+	SetupMenu            = "setup_menu"
+	CallbackNlpTextInput = "nlp_text_input"
 )
 
 func IsSetupMenuSelection(callbackData string) bool {
 	return callbackData == SetupMenu
 }
 
+func IsNlpTextInputCallback(callbackData string) bool {
+	return callbackData == CallbackNlpTextInput
+}
+
 func GetSetupMenuMarkup(lang string) *tgbotapi.InlineKeyboardMarkup {
 	s := T(lang)
 	setupMenu := tgbotapi.NewInlineKeyboardMarkup(
+		tgbotapi.NewInlineKeyboardRow(
+			tgbotapi.NewInlineKeyboardButtonData(s.BtnNlpTextInput, CallbackNlpTextInput),
+		),
 		tgbotapi.NewInlineKeyboardRow(
 			tgbotapi.NewInlineKeyboardButtonData(RecurrenceTypeLabel(lang, entities.Once), entities.Once.String()),
 		),
