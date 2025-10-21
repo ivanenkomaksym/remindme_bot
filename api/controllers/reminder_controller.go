@@ -2,6 +2,7 @@ package controllers
 
 import (
 	"encoding/json"
+	"fmt"
 	"log"
 	"net/http"
 	"strconv"
@@ -135,7 +136,7 @@ func (c *ReminderController) CreateReminderFromText(w http.ResponseWriter, r *ht
 	reminder, err := c.reminderUseCase.CreateReminder(user.ID, userSelection)
 	if err != nil {
 		log.Printf("Failed to create reminder from NLP: %v", err)
-		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		http.Error(w, fmt.Sprintf("Failed to create reminder from text: %v", err), http.StatusInternalServerError)
 		return
 	}
 

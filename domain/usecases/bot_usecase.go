@@ -29,16 +29,22 @@ type botUseCase struct {
 	dateUseCase     DateUseCase
 	config          config.Config
 	bot             *tgbotapi.BotAPI
+	nlpService      interface {
+		ParseReminderText(text string, userTimezone string, userLanguage string) (*entities.UserSelection, error)
+	}
 }
 
 // NewBotUseCase creates a new bot use case
-func NewBotUseCase(userUseCase UserUseCase, reminderUseCase ReminderUseCase, dateUseCase DateUseCase, config config.Config, bot *tgbotapi.BotAPI) BotUseCase {
+func NewBotUseCase(userUseCase UserUseCase, reminderUseCase ReminderUseCase, dateUseCase DateUseCase, config config.Config, bot *tgbotapi.BotAPI, nlpService interface {
+	ParseReminderText(text string, userTimezone string, userLanguage string) (*entities.UserSelection, error)
+}) BotUseCase {
 	return &botUseCase{
 		userUseCase:     userUseCase,
 		reminderUseCase: reminderUseCase,
 		dateUseCase:     dateUseCase,
 		config:          config,
 		bot:             bot,
+		nlpService:      nlpService,
 	}
 }
 
@@ -111,6 +117,11 @@ func (b *botUseCase) HandleCallbackQuery(user *tgbotapi.User, message *tgbotapi.
 	// Handle timezone selection callbacks
 	if keyboards.IsTimezoneCallback(callbackData) {
 		return b.handleTimezoneSelection(user, callbackData, userEntity)
+	}
+
+	// Handle NLP text input callback
+	if keyboards.IsNlpTextInputCallback(callbackData) {
+		return b.handleNlpTextInputCallback(user, userEntity)
 	}
 
 	// Handle other callback types
@@ -317,6 +328,10 @@ func (b *botUseCase) handleTimezoneSelection(user *tgbotapi.User, callbackData s
 	return result, nil
 }
 
+func (b *botUseCase) handleNlpTextInputCallback(user *tgbotapi.User, userEntity *entities.User) (*keyboards.SelectionResult, error) {
+	return keyboards.HandleNlpTextInputCallback(userEntity, b.userUseCase.UpdateUserSelection)
+}
+
 func (b *botUseCase) handleRecurrenceSelection(message *tgbotapi.Message, user *tgbotapi.User, callbackData string, userEntity *entities.User, selection *entities.UserSelection) (*keyboards.SelectionResult, error) {
 	result, err := keyboards.HandleRecurrenceTypeSelection(callbackData, userEntity, selection)
 	if err != nil {
@@ -416,6 +431,12 @@ func (b *botUseCase) handleCustomTimeInput(user *tgbotapi.User, text string, use
 }
 
 func (b *botUseCase) handleCustomTextInput(user *tgbotapi.User, text string, userEntity *entities.User, selection *entities.UserSelection) (*keyboards.SelectionResult, error) {
+	// Check if we're in NLP mode (identified by the marker in ReminderMessage)
+	if selection.ReminderMessage == "NLP_MODE" {
+		return b.handleNlpTextProcessing(user, text, userEntity)
+	}
+
+	// Handle regular custom text input
 	selectionResult, completed := keyboards.HandleCustomText(text, &tgbotapi.MessageConfig{}, userEntity, selection)
 
 	// Update user selection
@@ -441,6 +462,16 @@ func (b *botUseCase) handleCustomTextInput(user *tgbotapi.User, text string, use
 	}
 
 	return selectionResult, nil
+}
+
+func (b *botUseCase) handleNlpTextProcessing(user *tgbotapi.User, text string, userEntity *entities.User) (*keyboards.SelectionResult, error) {
+	return keyboards.HandleNlpTextProcessing(
+		text,
+		userEntity,
+		b.nlpService,
+		b.reminderUseCase.CreateReminder,
+		b.userUseCase.ClearUserSelection,
+	)
 }
 
 func (b *botUseCase) handleCustomIntervalInput(user *tgbotapi.User, text string, userEntity *entities.User, selection *entities.UserSelection) (*keyboards.SelectionResult, error) {
