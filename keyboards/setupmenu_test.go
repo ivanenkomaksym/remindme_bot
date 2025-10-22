@@ -21,15 +21,20 @@ func TestIsNlpTextInputCallback(t *testing.T) {
 }
 
 func TestGetSetupMenuMarkup(t *testing.T) {
-	expectedRows := 9
+	expectedRows := 5
+	expectedButtonsPerRow := []int{1, 2, 2, 2, 2} // NLP (1), Once+Daily (2), Weekly+Monthly (2), Interval+Spaced (2), MyReminders+Back (2)
+
 	m := GetSetupMenuMarkup(LangEN)
 	if len(m.InlineKeyboard) != expectedRows {
 		t.Fatalf("expected %d rows, got %d", expectedRows, len(m.InlineKeyboard))
 	}
-	// Each row should contain exactly 1 button
+
+	// Check button count for each row
 	for i := 0; i < expectedRows; i++ {
-		if len(m.InlineKeyboard[i]) != 1 {
-			t.Fatalf("row %d expected 1 button, got %d", i, len(m.InlineKeyboard[i]))
+		expected := expectedButtonsPerRow[i]
+		actual := len(m.InlineKeyboard[i])
+		if actual != expected {
+			t.Fatalf("row %d expected %d buttons, got %d", i, expected, actual)
 		}
 	}
 }
