@@ -48,6 +48,11 @@ env:
   PROJECT_ID: remindmebot-473606
   GOOGLE_SERVICE_ACCOUNT_KEY: ${{ secrets.GOOGLE_SERVICE_ACCOUNT_KEY }}
 
+  # OpenAI
+  OPENAI_ENABLED: true
+  OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+  OPENAI_MODEL: gpt-4o-mini  # Optional, defaults to gpt-4o-mini
+
 jobs:
 
   build:
@@ -165,7 +170,9 @@ jobs:
             --platform managed \
             --region europe-west1 \
             --allow-unauthenticated \
-            --set-env-vars "BOT_ENABLED=${{ env.BOT_ENABLED }},BOT_TOKEN=${{ env.BOT_TOKEN }},PUBLIC_URL=${{ env.PUBLIC_URL }},API_KEY=${{ env.API_KEY }},STORAGE=${{ env.STORAGE }},DB_CONNECTION_STRING=${{ env.DB_CONNECTION_STRING }},NOTIFIER_TIMEOUT=${{ env.NOTIFIER_TIMEOUT }}"
+            --set-env-vars "BOT_ENABLED=${{ env.BOT_ENABLED }},BOT_TOKEN=${{ env.BOT_TOKEN }},PUBLIC_URL=${{ env.PUBLIC_URL }},API_KEY=${{ env.API_KEY }},
+                            STORAGE=${{ env.STORAGE }},DB_CONNECTION_STRING=${{ env.DB_CONNECTION_STRING }},NOTIFIER_TIMEOUT=${{ env.NOTIFIER_TIMEOUT }},
+                            OPENAI_ENABLED=${{ env.OPENAI_ENABLED }},OPENAI_API_KEY=${{ env.OPENAI_API_KEY }},OPENAI_MODEL=${{ env.OPENAI_MODEL }}"
       
   deploy-to-aws-app-runner:
     name: Build and Deploy to AWS App Runner
@@ -218,7 +225,10 @@ jobs:
                   "API_KEY": "%s",
                   "STORAGE": "mongo",
                   "DB_CONNECTION_STRING": "%s",
-                  "NOTIFIER_TIMEOUT": "%s"
+                  "NOTIFIER_TIMEOUT": "%s",
+                  "OPENAI_ENABLED": "%s",
+                  "OPENAI_API_KEY": "%s",
+                  "OPENAI_MODEL": "%s"
                 }
               }
             }
@@ -229,6 +239,9 @@ jobs:
           "$API_KEY" \
           "$DB_CONNECTION_STRING" \
           "$NOTIFIER_TIMEOUT" \
+          "$OPENAI_ENABLED" \
+          "$OPENAI_API_KEY" \
+          "$OPENAI_MODEL"
           )
 
           # Update the App Runner service using the generated JSON configuration.
