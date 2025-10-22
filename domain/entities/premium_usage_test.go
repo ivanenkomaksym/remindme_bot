@@ -85,31 +85,53 @@ func TestPremiumUsage_ShouldReset(t *testing.T) {
 	now := time.Now()
 
 	tests := []struct {
-		name      string
-		lastReset time.Time
-		expected  bool
+		name           string
+		lastReset      time.Time
+		premiumStatus  PremiumStatus
+		premiumUpgrade *time.Time
+		expected       bool
 	}{
 		{
-			name:      "Same month",
-			lastReset: now.AddDate(0, 0, -10), // 10 days ago
-			expected:  false,
+			name:          "Free user - same month",
+			lastReset:     now.AddDate(0, 0, -10), // 10 days ago
+			premiumStatus: PremiumStatusFree,
+			expected:      false,
 		},
 		{
-			name:      "Previous month",
-			lastReset: now.AddDate(0, -1, 0), // 1 month ago
-			expected:  true,
+			name:          "Free user - previous month",
+			lastReset:     now.AddDate(0, -1, 0), // 1 month ago
+			premiumStatus: PremiumStatusFree,
+			expected:      true,
 		},
 		{
-			name:      "Previous year",
-			lastReset: now.AddDate(-1, 0, 0), // 1 year ago
-			expected:  true,
+			name:           "Premium user - within 30 days of upgrade",
+			lastReset:      now.AddDate(0, 0, -10), // 10 days ago
+			premiumStatus:  PremiumStatusBasic,
+			premiumUpgrade: &[]time.Time{now.AddDate(0, 0, -10)}[0], // upgraded 10 days ago
+			expected:       false,
+		},
+		{
+			name:           "Premium user - after 30 days from upgrade",
+			lastReset:      now.AddDate(0, 0, -35), // 35 days ago
+			premiumStatus:  PremiumStatusBasic,
+			premiumUpgrade: &[]time.Time{now.AddDate(0, 0, -35)}[0], // upgraded 35 days ago
+			expected:       true,
+		},
+		{
+			name:           "Premium user - no upgrade date (fallback)",
+			lastReset:      now.AddDate(0, -1, 0), // 1 month ago
+			premiumStatus:  PremiumStatusBasic,
+			premiumUpgrade: nil,
+			expected:       true,
 		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			usage := &PremiumUsage{
-				LastReset: tt.lastReset,
+				LastReset:        tt.lastReset,
+				PremiumStatus:    tt.premiumStatus,
+				PremiumUpgradeAt: tt.premiumUpgrade,
 			}
 
 			result := usage.ShouldReset()
@@ -187,4 +209,73 @@ func TestPremiumUsage_GetRemainingRequests(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestPremiumUsage_PremiumSubscriptionFeatures(t *testing.T) {
+	t.Run("Upgrade from free to premium", func(t *testing.T) {
+		usage := NewPremiumUsage(123)
+
+		// Initially free
+		if usage.PremiumStatus != PremiumStatusFree {
+			t.Errorf("Expected PremiumStatusFree, got %s", usage.PremiumStatus)
+		}
+
+		// Upgrade to basic
+		usage.SetPremiumStatus(PremiumStatusBasic)
+
+		if usage.PremiumStatus != PremiumStatusBasic {
+			t.Errorf("Expected PremiumStatusBasic, got %s", usage.PremiumStatus)
+		}
+
+		if usage.PremiumUpgradeAt == nil {
+			t.Error("Expected PremiumUpgradeAt to be set")
+		}
+
+		if usage.PremiumExpiresAt == nil {
+			t.Error("Expected PremiumExpiresAt to be set")
+		}
+
+		if usage.RequestsUsed != 0 {
+			t.Errorf("Expected RequestsUsed to be reset to 0, got %d", usage.RequestsUsed)
+		}
+	})
+
+	t.Run("Premium expiration check", func(t *testing.T) {
+		usage := NewPremiumUsage(123)
+
+		// Set as premium with past expiration
+		pastTime := time.Now().AddDate(0, 0, -1) // 1 day ago
+		usage.PremiumStatus = PremiumStatusBasic
+		usage.PremiumExpiresAt = &pastTime
+
+		if !usage.IsPremiumExpired() {
+			t.Error("Expected premium to be expired")
+		}
+
+		// Handle expiration
+		if !usage.HandleExpiredPremium() {
+			t.Error("Expected HandleExpiredPremium to return true")
+		}
+
+		if usage.PremiumStatus != PremiumStatusFree {
+			t.Errorf("Expected status to be downgraded to free, got %s", usage.PremiumStatus)
+		}
+	})
+
+	t.Run("Days until expiration", func(t *testing.T) {
+		usage := NewPremiumUsage(123)
+		usage.SetPremiumStatus(PremiumStatusBasic)
+
+		days := usage.GetDaysUntilExpiration()
+		if days < 29 || days > 30 {
+			t.Errorf("Expected approximately 30 days until expiration, got %d", days)
+		}
+
+		// Free user should return -1
+		usage.SetPremiumStatus(PremiumStatusFree)
+		days = usage.GetDaysUntilExpiration()
+		if days != -1 {
+			t.Errorf("Expected -1 for free user, got %d", days)
+		}
+	})
 }

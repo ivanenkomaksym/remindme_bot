@@ -84,11 +84,15 @@ func (c *Container) initRepositories(env *Env) {
 		if err != nil {
 			log.Fatalf("Failed to init Mongo reminder repo: %v", err)
 		}
+		premiumRepo, err := persistent.NewMongoPremiumUsageRepository(conn, dbName)
+		if err != nil {
+			log.Fatalf("Failed to init Mongo premium usage repo: %v", err)
+		}
 		c.UserRepo = userRepo
 		c.ReminderRepo = remRepo
-		// User selections and premium usage always in-memory for now
+		c.PremiumUsageRepo = premiumRepo
+		// User selections still in-memory for now
 		c.UserSelectionRepo = inmemory.NewInMemoryUserSelectionRepository()
-		c.PremiumUsageRepo = inmemory.NewInMemoryPremiumUsageRepository()
 	default:
 		log.Fatalf("Unsupported storage type: %v", env.StorageType)
 	}
