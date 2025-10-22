@@ -24,6 +24,7 @@ type Container struct {
 	UserRepo          repositories.UserRepository
 	ReminderRepo      repositories.ReminderRepository
 	UserSelectionRepo repositories.UserSelectionRepository
+	PremiumUsageRepo  repositories.PremiumUsageRepository
 
 	// Services
 	NLPService services.NLPService
@@ -67,6 +68,7 @@ func (c *Container) initRepositories(env *Env) {
 		c.UserRepo = inmemory.NewInMemoryUserRepository()
 		c.ReminderRepo = inmemory.NewInMemoryReminderRepository()
 		c.UserSelectionRepo = inmemory.NewInMemoryUserSelectionRepository()
+		c.PremiumUsageRepo = inmemory.NewInMemoryPremiumUsageRepository()
 	case repositories.Mongo:
 		// Expect connection string and database name from config
 		conn := env.Config.Database.ConnectionString
@@ -84,8 +86,9 @@ func (c *Container) initRepositories(env *Env) {
 		}
 		c.UserRepo = userRepo
 		c.ReminderRepo = remRepo
-		// User selections always in-memory
+		// User selections and premium usage always in-memory for now
 		c.UserSelectionRepo = inmemory.NewInMemoryUserSelectionRepository()
+		c.PremiumUsageRepo = inmemory.NewInMemoryPremiumUsageRepository()
 	default:
 		log.Fatalf("Unsupported storage type: %v", env.StorageType)
 	}
@@ -99,7 +102,7 @@ func (c *Container) initServices() {
 	}
 
 	var err error
-	c.NLPService, err = services.NewNLPService(&c.Config)
+	c.NLPService, err = services.NewNLPService(&c.Config, c.PremiumUsageRepo)
 	if err != nil {
 		log.Printf("Warning: NLP service initialization failed: %v", err)
 	}
@@ -114,7 +117,7 @@ func (c *Container) initUseCases() {
 // noOpNLPService is a no-op implementation when OpenAI is not configured
 type noOpNLPService struct{}
 
-func (n *noOpNLPService) ParseReminderText(text string, userTimezone string, userLanguage string) (*entities.UserSelection, error) {
+func (n *noOpNLPService) ParseReminderText(userID int64, text string, userTimezone string, userLanguage string) (*entities.UserSelection, error) {
 	return nil, fmt.Errorf("NLP service is not configured - OpenAI API key required")
 }
 

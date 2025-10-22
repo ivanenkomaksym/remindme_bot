@@ -13,7 +13,7 @@ type mockNLPService struct {
 	result     *entities.UserSelection
 }
 
-func (m *mockNLPService) ParseReminderText(text, timezone, language string) (*entities.UserSelection, error) {
+func (m *mockNLPService) ParseReminderText(userID int64, text, timezone, language string) (*entities.UserSelection, error) {
 	if m.shouldFail {
 		return nil, errors.New("mock NLP parsing failed")
 	}

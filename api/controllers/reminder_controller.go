@@ -125,7 +125,7 @@ func (c *ReminderController) CreateReminderFromText(w http.ResponseWriter, r *ht
 	}
 
 	// Parse the natural language text using NLP service
-	userSelection, err := c.nlpService.ParseReminderText(req.Text, timezone, language)
+	userSelection, err := c.nlpService.ParseReminderText(user.ID, req.Text, timezone, language)
 	if err != nil {
 		log.Printf("NLP parsing failed for text '%s': %v", req.Text, err)
 		http.Error(w, "Failed to parse reminder text: "+err.Error(), http.StatusBadRequest)

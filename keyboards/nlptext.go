@@ -4,6 +4,7 @@ import (
 	"log"
 
 	"github.com/ivanenkomaksym/remindme_bot/domain/entities"
+	"github.com/ivanenkomaksym/remindme_bot/domain/services"
 
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 )
@@ -45,7 +46,7 @@ func HandleNlpTextInputCallback(userEntity *entities.User, updateUserSelection f
 
 // NLPService interface for parsing reminder text
 type NLPService interface {
-	ParseReminderText(text string, userTimezone string, userLanguage string) (*entities.UserSelection, error)
+	ParseReminderText(userID int64, text string, userTimezone string, userLanguage string) (*entities.UserSelection, error)
 }
 
 // HandleNlpTextProcessing processes the NLP text input and creates a reminder
@@ -64,10 +65,25 @@ func HandleNlpTextProcessing(
 		timezone = userEntity.GetLocation().String()
 	}
 
-	// Use NLP service to parse the text
-	nlpSelection, err := nlpService.ParseReminderText(text, timezone, userEntity.Language)
+	// Use rate-limited NLP service to parse the text
+	nlpSelection, err := nlpService.ParseReminderText(userEntity.ID, text, timezone, userEntity.Language)
 	if err != nil {
 		log.Printf("Failed to parse NLP text: %v", err)
+
+		// Check if it's a rate limit error and provide specific messaging
+		if isRateLimitError(err) {
+			return &SelectionResult{
+				Text: err.Error(),
+				Markup: &tgbotapi.InlineKeyboardMarkup{
+					InlineKeyboard: [][]tgbotapi.InlineKeyboardButton{
+						{tgbotapi.NewInlineKeyboardButtonData(s.NlpUpgradePremium, "upgrade_premium")},
+						{tgbotapi.NewInlineKeyboardButtonData(s.BtnBack, CallbackSetup)},
+					},
+				},
+			}, nil
+		}
+
+		// Generic parsing error
 		return &SelectionResult{
 			Text: "❌ " + s.MsgParsingFailed + "\n\n" + s.NlpEnterText,
 			Markup: &tgbotapi.InlineKeyboardMarkup{
@@ -97,4 +113,13 @@ func HandleNlpTextProcessing(
 	// Format confirmation message
 	confirmationResult := FormatReminderConfirmation(userEntity, nlpSelection)
 	return confirmationResult, nil
+}
+
+// isRateLimitError checks if an error is a rate limiting error
+func isRateLimitError(err error) bool {
+	if err == nil {
+		return false
+	}
+	errorMsg := err.Error()
+	return errorMsg != "" && err.Error() == services.NLPErrorRateLimit
 }

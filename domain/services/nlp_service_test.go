@@ -30,7 +30,7 @@ func (m *MockNLPService) AddError(text string, err error) {
 	m.errors[text] = err
 }
 
-func (m *MockNLPService) ParseReminderText(text string, userTimezone string, userLanguage string) (*entities.UserSelection, error) {
+func (m *MockNLPService) ParseReminderText(userID int64, text string, userTimezone string, userLanguage string) (*entities.UserSelection, error) {
 	if err, exists := m.errors[text]; exists {
 		return nil, err
 	}
@@ -50,7 +50,7 @@ func TestNLPService_Creation(t *testing.T) {
 			},
 		}
 
-		_, err := NewNLPService(config)
+		_, err := NewNLPService(config, nil)
 		if err == nil {
 			t.Error("Expected error when creating NLP service without API key")
 		}
@@ -64,7 +64,7 @@ func TestNLPService_Creation(t *testing.T) {
 			},
 		}
 
-		service, err := NewNLPService(config)
+		service, err := NewNLPService(config, nil)
 		if err != nil {
 			t.Errorf("Expected no error, got: %v", err)
 		}
@@ -79,6 +79,7 @@ func TestNLPService_MockedParsing(t *testing.T) {
 
 	testCases := []struct {
 		name         string
+		userID       int64
 		text         string
 		timezone     string
 		language     string
@@ -89,6 +90,7 @@ func TestNLPService_MockedParsing(t *testing.T) {
 	}{
 		{
 			name:         "English - call boss in 20 min",
+			userID:       1,
 			text:         "call boss in 20 min",
 			timezone:     "UTC",
 			language:     "en",
@@ -99,6 +101,7 @@ func TestNLPService_MockedParsing(t *testing.T) {
 		},
 		{
 			name:         "English - go to clinic on Monday 9:00",
+			userID:       1,
 			text:         "go to clinic on Monday 9:00",
 			timezone:     "UTC",
 			language:     "en",
@@ -109,6 +112,7 @@ func TestNLPService_MockedParsing(t *testing.T) {
 		},
 		{
 			name:         "English - tomorrow 2 PM visit dentist",
+			userID:       1,
 			text:         "tomorrow 2 PM visit dentist",
 			timezone:     "UTC",
 			language:     "en",
@@ -119,6 +123,7 @@ func TestNLPService_MockedParsing(t *testing.T) {
 		},
 		{
 			name:         "English - 9 of May 10 AM buy tickets",
+			userID:       1,
 			text:         "9 of May 10 AM buy tickets",
 			timezone:     "UTC",
 			language:     "en",
@@ -129,6 +134,7 @@ func TestNLPService_MockedParsing(t *testing.T) {
 		},
 		{
 			name:         "English - every weekday at 8 wake up",
+			userID:       1,
 			text:         "every weekday at 8 wake up",
 			timezone:     "UTC",
 			language:     "en",
@@ -139,6 +145,7 @@ func TestNLPService_MockedParsing(t *testing.T) {
 		},
 		{
 			name:         "English - every Wed and Fri english lesson at 10",
+			userID:       1,
 			text:         "every Wed and Fri english lesson at 10",
 			timezone:     "UTC",
 			language:     "en",
@@ -149,6 +156,7 @@ func TestNLPService_MockedParsing(t *testing.T) {
 		},
 		{
 			name:         "Ukrainian - подзвонити босу через 20 хвилин",
+			userID:       1,
 			text:         "подзвонити босу через 20 хвилин",
 			timezone:     "Europe/Kiev",
 			language:     "uk",
@@ -159,6 +167,7 @@ func TestNLPService_MockedParsing(t *testing.T) {
 		},
 		{
 			name:         "Ukrainian - піти до клініки в понеділок о 9:00",
+			userID:       1,
 			text:         "піти до клініки в понеділок о 9:00",
 			timezone:     "Europe/Kiev",
 			language:     "uk",
@@ -205,7 +214,7 @@ func TestNLPService_MockedParsing(t *testing.T) {
 	// Run tests
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			result, err := mock.ParseReminderText(tc.text, tc.timezone, tc.language)
+			result, err := mock.ParseReminderText(tc.userID, tc.text, tc.timezone, tc.language)
 
 			if tc.expectError {
 				if err == nil {
@@ -244,26 +253,31 @@ func TestNLPService_EdgeCases(t *testing.T) {
 
 	testCases := []struct {
 		name        string
+		userID      int64
 		text        string
 		expectError bool
 	}{
 		{
 			name:        "Empty text",
+			userID:      1,
 			text:        "",
 			expectError: true,
 		},
 		{
 			name:        "Unclear text",
+			userID:      1,
 			text:        "something unclear",
 			expectError: true,
 		},
 		{
 			name:        "Missing time",
+			userID:      1,
 			text:        "call doctor",
 			expectError: true,
 		},
 		{
 			name:        "Invalid time format",
+			userID:      1,
 			text:        "call at 25:00",
 			expectError: true,
 		},
@@ -278,7 +292,7 @@ func TestNLPService_EdgeCases(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			result, err := mock.ParseReminderText(tc.text, "UTC", "en")
+			result, err := mock.ParseReminderText(tc.userID, tc.text, "UTC", "en")
 
 			if tc.expectError {
 				if err == nil {
@@ -312,7 +326,7 @@ func TestNLPService_TimezoneHandling(t *testing.T) {
 
 	for _, tz := range timezones {
 		t.Run("Timezone_"+tz, func(t *testing.T) {
-			result, err := mock.ParseReminderText("meeting at 2 PM", tz, "en")
+			result, err := mock.ParseReminderText(1, "meeting at 2 PM", tz, "en")
 
 			if err != nil {
 				t.Errorf("Unexpected error for timezone %s: %v", tz, err)
@@ -349,16 +363,19 @@ func TestNLPService_LanguageHandling(t *testing.T) {
 	mock.AddResponse("щодня прокидатися о 8 ранку", ukrainianSelection)
 
 	testCases := []struct {
+		userID   int64
 		text     string
 		language string
 		expected string
 	}{
 		{
+			userID:   1,
 			text:     "wake up at 8 AM daily",
 			language: "en",
 			expected: "wake up",
 		},
 		{
+			userID:   1,
 			text:     "щодня прокидатися о 8 ранку",
 			language: "uk",
 			expected: "прокинутися",
@@ -367,7 +384,7 @@ func TestNLPService_LanguageHandling(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run("Language_"+tc.language, func(t *testing.T) {
-			result, err := mock.ParseReminderText(tc.text, "UTC", tc.language)
+			result, err := mock.ParseReminderText(tc.userID, tc.text, "UTC", tc.language)
 
 			if err != nil {
 				t.Errorf("Unexpected error for language %s: %v", tc.language, err)

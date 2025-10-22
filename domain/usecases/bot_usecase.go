@@ -30,13 +30,13 @@ type botUseCase struct {
 	config          config.Config
 	bot             *tgbotapi.BotAPI
 	nlpService      interface {
-		ParseReminderText(text string, userTimezone string, userLanguage string) (*entities.UserSelection, error)
+		ParseReminderText(userID int64, text string, userTimezone string, userLanguage string) (*entities.UserSelection, error)
 	}
 }
 
 // NewBotUseCase creates a new bot use case
 func NewBotUseCase(userUseCase UserUseCase, reminderUseCase ReminderUseCase, dateUseCase DateUseCase, config config.Config, bot *tgbotapi.BotAPI, nlpService interface {
-	ParseReminderText(text string, userTimezone string, userLanguage string) (*entities.UserSelection, error)
+	ParseReminderText(userID int64, text string, userTimezone string, userLanguage string) (*entities.UserSelection, error)
 }) BotUseCase {
 	return &botUseCase{
 		userUseCase:     userUseCase,

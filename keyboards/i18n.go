@@ -83,11 +83,18 @@ type Strings struct {
 	TzManualSelect string
 	TzSelectPrompt string
 	// NLP text input i18n
-	NlpMenuTitle    string
-	NlpInstructions string
-	NlpExamples     string
-	NlpEnterText    string
-	BtnNlpTextInput string
+	NlpMenuTitle        string
+	NlpInstructions     string
+	NlpExamples         string
+	NlpEnterText        string
+	BtnNlpTextInput     string
+	NlpRateLimitFree    string
+	NlpRateLimitBasic   string
+	NlpRateLimitGeneral string
+	NlpUsageTitle       string
+	NlpUsageRemaining   string
+	NlpUsageUnlimited   string
+	NlpUpgradePremium   string
 }
 
 var stringsByLang = map[string]Strings{
@@ -169,22 +176,29 @@ var stringsByLang = map[string]Strings{
 		CmdAccountDesc:             "Manage account settings",
 
 		// NLP-related strings
-		NlpMenuTitle:      "🤖 Smart Text Reminder",
-		NlpInstructions:   "Just tell me what you want to be reminded about in plain language! I'll understand the time, recurrence, and message automatically.",
-		NlpExamples:       "📝 Examples:\n• \"Remind me to call mom tomorrow at 6 PM\"\n• \"Meeting with team every Monday at 9 AM\"\n• \"Take medication daily at 8:30\"\n• \"Dentist appointment next Friday at 2 PM\"",
-		NlpEnterText:      "💬 Enter your reminder in plain text:",
-		BtnNlpTextInput:   "📝 Create from Text",
-		AccTitle:          "👤 Account Information",
-		AccUsername:       "Username",
-		AccLanguage:       "Language",
-		AccTimezone:       "Timezone",
-		AccCreatedAt:      "Created",
-		AccNoUsername:     "Not set",
-		AccNoTimezone:     "Not set",
-		AccChangeLanguage: "🌐 Change Language",
-		AccChangeTimezone: "🌍 Change Timezone",
-		TzManualSelect:    "📍 Select Manually",
-		TzSelectPrompt:    "Select your timezone:",
+		NlpMenuTitle:        "🤖 Smart Text Reminder",
+		NlpInstructions:     "Just tell me what you want to be reminded about in plain language! I'll understand the time, recurrence, and message automatically.",
+		NlpExamples:         "📝 Examples:\n• \"Remind me to call mom tomorrow at 6 PM\"\n• \"Meeting with team every Monday at 9 AM\"\n• \"Take medication daily at 8:30\"\n• \"Dentist appointment next Friday at 2 PM\"",
+		NlpEnterText:        "💬 Enter your reminder in plain text:",
+		BtnNlpTextInput:     "📝 Create from Text",
+		NlpRateLimitFree:    "⚠️ You've reached your monthly limit of %d AI text reminders.\n\n🌟 Upgrade to Premium for %d requests per month!\n\n⏰ Free limit resets in %d days.",
+		NlpRateLimitBasic:   "⚠️ You've reached your monthly limit of %d AI text reminders.\n\n✨ Upgrade to Pro for unlimited requests!\n\n⏰ Limit resets in %d days.",
+		NlpRateLimitGeneral: "⚠️ AI text reminder limit reached. Please try again later.",
+		NlpUsageTitle:       "🤖 AI Text Reminders",
+		NlpUsageRemaining:   "📊 Usage: %d/%d requests this month",
+		NlpUsageUnlimited:   "📊 Usage: %d requests (Unlimited)",
+		NlpUpgradePremium:   "🌟 Upgrade to Premium",
+		AccTitle:            "👤 Account Information",
+		AccUsername:         "Username",
+		AccLanguage:         "Language",
+		AccTimezone:         "Timezone",
+		AccCreatedAt:        "Created",
+		AccNoUsername:       "Not set",
+		AccNoTimezone:       "Not set",
+		AccChangeLanguage:   "🌐 Change Language",
+		AccChangeTimezone:   "🌍 Change Timezone",
+		TzManualSelect:      "📍 Select Manually",
+		TzSelectPrompt:      "Select your timezone:",
 	},
 	LangUK: {
 		Welcome: "Ласкаво просимо до бота-нагадувача!",
@@ -264,22 +278,29 @@ var stringsByLang = map[string]Strings{
 		CmdAccountDesc:             "Управління налаштуваннями акаунту",
 
 		// NLP-related strings
-		NlpMenuTitle:      "🤖 Розумне текстове нагадування",
-		NlpInstructions:   "Просто скажіть мені, що ви хочете, щоб я нагадав, звичайною мовою! Я автоматично зрозумію час, повторення та повідомлення.",
-		NlpExamples:       "📝 Приклади:\n• \"Нагадай мені подзвонити мамі завтра о 18:00\"\n• \"Зустріч з командою щопонеділка о 9:00\"\n• \"Приймати ліки щодня о 8:30\"\n• \"Прийом у стоматолога наступної п'ятниці о 14:00\"",
-		NlpEnterText:      "💬 Введіть ваше нагадування звичайним текстом:",
-		BtnNlpTextInput:   "📝 Створити з тексту",
-		AccTitle:          "👤 Інформація про рахунок",
-		AccUsername:       "Ім'я користувача",
-		AccLanguage:       "Мова",
-		AccTimezone:       "Часовий пояс",
-		AccCreatedAt:      "Створено",
-		AccNoUsername:     "Не встановлено",
-		AccNoTimezone:     "Не встановлено",
-		AccChangeLanguage: "🌐 Змінити мову",
-		AccChangeTimezone: "🌍 Змінити часовий пояс",
-		TzManualSelect:    "📍 Обрати вручну",
-		TzSelectPrompt:    "Оберіть свій часовий пояс:",
+		NlpMenuTitle:        "🤖 Розумне текстове нагадування",
+		NlpInstructions:     "Просто скажіть мені, що ви хочете, щоб я нагадав, звичайною мовою! Я автоматично зрозумію час, повторення та повідомлення.",
+		NlpExamples:         "📝 Приклади:\n• \"Нагадай мені подзвонити мамі завтра о 18:00\"\n• \"Зустріч з командою щопонеділка о 9:00\"\n• \"Приймати ліки щодня о 8:30\"\n• \"Прийом у стоматолога наступної п'ятниці о 14:00\"",
+		NlpEnterText:        "💬 Введіть ваше нагадування звичайним текстом:",
+		BtnNlpTextInput:     "📝 Створити з тексту",
+		NlpRateLimitFree:    "⚠️ Ви досягли місячного ліміту %d ШІ текстових нагадувань.\n\n🌟 Оновіться до Преміум для %d запитів на місяць!\n\n⏰ Безкоштовний ліміт оновиться через %d днів.",
+		NlpRateLimitBasic:   "⚠️ Ви досягли місячного ліміту %d ШІ текстових нагадувань.\n\n✨ Оновіться до Про для необмежених запитів!\n\n⏰ Ліміт оновиться через %d днів.",
+		NlpRateLimitGeneral: "⚠️ Ліміт ШІ текстових нагадувань досягнуто. Спробуйте пізніше.",
+		NlpUsageTitle:       "🤖 ШІ Текстові Нагадування",
+		NlpUsageRemaining:   "📊 Використання: %d/%d запитів цього місяця",
+		NlpUsageUnlimited:   "📊 Використання: %d запитів (Необмежено)",
+		NlpUpgradePremium:   "🌟 Оновити до Преміум",
+		AccTitle:            "👤 Інформація про рахунок",
+		AccUsername:         "Ім'я користувача",
+		AccLanguage:         "Мова",
+		AccTimezone:         "Часовий пояс",
+		AccCreatedAt:        "Створено",
+		AccNoUsername:       "Не встановлено",
+		AccNoTimezone:       "Не встановлено",
+		AccChangeLanguage:   "🌐 Змінити мову",
+		AccChangeTimezone:   "🌍 Змінити часовий пояс",
+		TzManualSelect:      "📍 Обрати вручну",
+		TzSelectPrompt:      "Оберіть свій часовий пояс:",
 	},
 }
 

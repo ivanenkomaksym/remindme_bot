@@ -451,7 +451,7 @@ func TestReminderController_DeleteReminder_Success(t *testing.T) {
 // Mock services for testing
 type mockNLPService struct{}
 
-func (m *mockNLPService) ParseReminderText(text string, userTimezone string, userLanguage string) (*entities.UserSelection, error) {
+func (m *mockNLPService) ParseReminderText(userID int64, text string, userTimezone string, userLanguage string) (*entities.UserSelection, error) {
 	return nil, nil
 }
 

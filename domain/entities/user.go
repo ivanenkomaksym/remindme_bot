@@ -6,29 +6,31 @@ import (
 
 // User represents a user in the system
 type User struct {
-	ID           int64          `json:"id,string" bson:"id"`
-	UserName     string         `json:"userName" bson:"userName"`
-	FirstName    string         `json:"firstName" bson:"firstName"`
-	LastName     string         `json:"lastName" bson:"lastName"`
-	Language     string         `json:"language" bson:"language"`
-	LocationName string         `json:"location" bson:"location"`
-	Location     *time.Location `json:"-" bson:"-"` // Ignore
-	CreatedAt    time.Time      `json:"createdAt" bson:"createdAt"`
-	UpdatedAt    time.Time      `json:"updatedAt" bson:"updatedAt"`
+	ID            int64          `json:"id,string" bson:"id"`
+	UserName      string         `json:"userName" bson:"userName"`
+	FirstName     string         `json:"firstName" bson:"firstName"`
+	LastName      string         `json:"lastName" bson:"lastName"`
+	Language      string         `json:"language" bson:"language"`
+	LocationName  string         `json:"location" bson:"location"`
+	Location      *time.Location `json:"-" bson:"-"` // Ignore
+	PremiumStatus PremiumStatus  `json:"premiumStatus" bson:"premiumStatus"`
+	CreatedAt     time.Time      `json:"createdAt" bson:"createdAt"`
+	UpdatedAt     time.Time      `json:"updatedAt" bson:"updatedAt"`
 }
 
 // NewUser creates a new user entity
 func NewUser(id int64, userName, firstName, lastName, language string) *User {
 	now := time.Now()
 	return &User{
-		ID:        id,
-		UserName:  userName,
-		FirstName: firstName,
-		LastName:  lastName,
-		Language:  language,
-		Location:  time.Now().Location(),
-		CreatedAt: now,
-		UpdatedAt: now,
+		ID:            id,
+		UserName:      userName,
+		FirstName:     firstName,
+		LastName:      lastName,
+		Language:      language,
+		Location:      time.Now().Location(),
+		PremiumStatus: PremiumStatusFree, // Default to free tier
+		CreatedAt:     now,
+		UpdatedAt:     now,
 	}
 }
 
@@ -63,4 +65,15 @@ func (u *User) SetLocation(loc *time.Location) {
 	} else {
 		u.LocationName = ""
 	}
+}
+
+// SetPremiumStatus updates the user's premium status
+func (u *User) SetPremiumStatus(status PremiumStatus) {
+	u.PremiumStatus = status
+	u.UpdatedAt = time.Now()
+}
+
+// IsPremium checks if the user has any premium status
+func (u *User) IsPremium() bool {
+	return u.PremiumStatus != PremiumStatusFree
 }
