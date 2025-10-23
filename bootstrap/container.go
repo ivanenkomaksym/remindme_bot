@@ -36,10 +36,11 @@ type Container struct {
 	DateUseCase     usecases.DateUseCase
 
 	// Controllers
-	BotController      *controllers.BotController
-	UserController     *controllers.UserController
-	ReminderController *controllers.ReminderController
-	TimezoneController *controllers.TimezoneController
+	BotController          *controllers.BotController
+	UserController         *controllers.UserController
+	ReminderController     *controllers.ReminderController
+	TimezoneController     *controllers.TimezoneController
+	PremiumUsageController *controllers.PremiumUsageController
 }
 
 // NewContainer creates a new dependency injection container
@@ -129,6 +130,7 @@ func (n *noOpNLPService) ParseReminderText(userID int64, text string, userTimezo
 func (c *Container) initControllers(bot *tgbotapi.BotAPI) {
 	c.UserController = controllers.NewUserController(c.UserUseCase)
 	c.ReminderController = controllers.NewReminderController(c.ReminderUseCase, c.NLPService, c.UserUseCase)
+	c.PremiumUsageController = controllers.NewPremiumUsageController(c.PremiumUsageRepo, c.UserRepo)
 	if bot != nil {
 		c.DateUseCase = usecases.NewDateUseCase(c.UserUseCase, bot)
 		c.BotUseCase = usecases.NewBotUseCase(c.UserUseCase, c.ReminderUseCase, c.DateUseCase, c.Config, bot, c.NLPService)
