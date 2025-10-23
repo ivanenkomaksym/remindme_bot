@@ -24,27 +24,29 @@ type BotUseCase interface {
 }
 
 type botUseCase struct {
-	userUseCase     UserUseCase
-	reminderUseCase ReminderUseCase
-	dateUseCase     DateUseCase
-	config          config.Config
-	bot             *tgbotapi.BotAPI
-	nlpService      interface {
+	userUseCase         UserUseCase
+	reminderUseCase     ReminderUseCase
+	dateUseCase         DateUseCase
+	config              config.Config
+	bot                 *tgbotapi.BotAPI
+	premiumUsageUseCase PremiumUsageUseCase
+	nlpService          interface {
 		ParseReminderText(userID int64, text string, userTimezone string, userLanguage string) (*entities.UserSelection, error)
 	}
 }
 
 // NewBotUseCase creates a new bot use case
-func NewBotUseCase(userUseCase UserUseCase, reminderUseCase ReminderUseCase, dateUseCase DateUseCase, config config.Config, bot *tgbotapi.BotAPI, nlpService interface {
+func NewBotUseCase(userUseCase UserUseCase, reminderUseCase ReminderUseCase, dateUseCase DateUseCase, config config.Config, bot *tgbotapi.BotAPI, premiumUsageUseCase PremiumUsageUseCase, nlpService interface {
 	ParseReminderText(userID int64, text string, userTimezone string, userLanguage string) (*entities.UserSelection, error)
 }) BotUseCase {
 	return &botUseCase{
-		userUseCase:     userUseCase,
-		reminderUseCase: reminderUseCase,
-		dateUseCase:     dateUseCase,
-		config:          config,
-		bot:             bot,
-		nlpService:      nlpService,
+		userUseCase:         userUseCase,
+		reminderUseCase:     reminderUseCase,
+		dateUseCase:         dateUseCase,
+		config:              config,
+		bot:                 bot,
+		premiumUsageUseCase: premiumUsageUseCase,
+		nlpService:          nlpService,
 	}
 }
 
@@ -307,7 +309,16 @@ func (b *botUseCase) handleNavigationSelection(user *tgbotapi.User, callbackData
 
 func (b *botUseCase) handleAccountSelection(user *tgbotapi.User, callbackData string, userEntity *entities.User) (*keyboards.SelectionResult, error) {
 	url := buildTimezoneURL(b, userEntity)
-	return keyboards.HandleAccountSelection(user, callbackData, userEntity, url)
+
+	// Get user's premium usage for the account selection
+	userUsage, err := b.premiumUsageUseCase.GetOrCreateUserUsage(user.ID)
+	if err != nil {
+		log.Printf("Failed to get premium usage for user %d: %v", user.ID, err)
+		// Continue with nil usage - the UI will handle it gracefully
+		userUsage = nil
+	}
+
+	return keyboards.HandleAccountSelection(user, callbackData, userEntity, url, userUsage)
 }
 
 func (b *botUseCase) handleTimezoneSelection(user *tgbotapi.User, callbackData string, userEntity *entities.User) (*keyboards.SelectionResult, error) {

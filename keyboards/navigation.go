@@ -15,6 +15,7 @@ const (
 	// Account management callbacks
 	CallbackAccountChangeLanguage = "acc_change_lang"
 	CallbackAccountChangeTimezone = "acc_change_tz"
+	CallbackAccountViewPremium    = "acc_view_premium"
 	// General back to main menu callback
 	CallbackBackToMainMenu = "back_to_main"
 	// Timezone selection callbacks
@@ -62,6 +63,9 @@ func GetAccountMenuMarkup(lang string) *tgbotapi.InlineKeyboardMarkup {
 			tgbotapi.NewInlineKeyboardButtonData(s.AccChangeTimezone, CallbackAccountChangeTimezone),
 		),
 		tgbotapi.NewInlineKeyboardRow(
+			tgbotapi.NewInlineKeyboardButtonData(s.AccViewPremium, CallbackAccountViewPremium),
+		),
+		tgbotapi.NewInlineKeyboardRow(
 			tgbotapi.NewInlineKeyboardButtonData(s.BtnBack, CallbackBackToMainMenu),
 		),
 	)
@@ -102,10 +106,61 @@ func FormatAccountInfo(user *entities.User, lang string) string {
 		s.AccCreatedAt, createdAt)
 }
 
+// FormatPremiumUsageInfo formats premium usage information for display
+func FormatPremiumUsageInfo(usage *entities.PremiumUsage, lang string) string {
+	s := T(lang)
+
+	var statusText string
+	if usage.PremiumStatus == entities.PremiumStatusFree {
+		statusText = s.PremiumFreeStatus
+	} else if usage.PremiumStatus == entities.PremiumStatusBasic {
+		statusText = s.PremiumBasicStatus
+	} else if usage.PremiumStatus == entities.PremiumStatusPro {
+		statusText = s.PremiumProStatus
+	}
+
+	remaining := s.PremiumUnlimited
+	if usage.RequestsLimit > 0 {
+		remaining = fmt.Sprintf("%d", usage.RequestsLimit-usage.RequestsUsed)
+	}
+
+	limit := s.PremiumUnlimited
+	if usage.RequestsLimit > 0 {
+		limit = fmt.Sprintf("%d", usage.RequestsLimit)
+	}
+
+	var resetInfo string
+	if usage.PremiumStatus != entities.PremiumStatusFree {
+		daysUntilExpiration := usage.GetDaysUntilExpiration()
+		if daysUntilExpiration > 0 {
+			resetInfo = fmt.Sprintf("\n📅 %s", fmt.Sprintf(s.PremiumDaysLeft, daysUntilExpiration))
+		} else {
+			resetInfo = fmt.Sprintf("\n⚠️ %s", s.PremiumExpired)
+		}
+	} else {
+		if usage.ShouldReset() {
+			resetInfo = fmt.Sprintf("\n🔄 %s", s.PremiumResetsNext)
+		}
+	}
+
+	return fmt.Sprintf("%s\n\n"+
+		"📊 %s: %s\n"+
+		"📈 %s: %d\n"+
+		"📋 %s: %s\n"+
+		"⭐ %s: %s%s",
+		s.PremiumTitle,
+		s.PremiumStatus, statusText,
+		s.PremiumUsed, usage.RequestsUsed,
+		s.PremiumLimit, limit,
+		s.PremiumRemaining, remaining,
+		resetInfo)
+}
+
 // IsAccountCallback checks if the callback data is for account management
 func IsAccountCallback(callbackData string) bool {
 	return callbackData == CallbackAccountChangeLanguage ||
-		callbackData == CallbackAccountChangeTimezone
+		callbackData == CallbackAccountChangeTimezone ||
+		callbackData == CallbackAccountViewPremium
 }
 
 // HandleNavigationCallback handles navigation menu callbacks

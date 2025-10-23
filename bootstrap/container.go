@@ -30,10 +30,11 @@ type Container struct {
 	NLPService services.NLPService
 
 	// Use Cases
-	UserUseCase     usecases.UserUseCase
-	ReminderUseCase usecases.ReminderUseCase
-	BotUseCase      usecases.BotUseCase
-	DateUseCase     usecases.DateUseCase
+	UserUseCase         usecases.UserUseCase
+	ReminderUseCase     usecases.ReminderUseCase
+	PremiumUsageUseCase usecases.PremiumUsageUseCase
+	BotUseCase          usecases.BotUseCase
+	DateUseCase         usecases.DateUseCase
 
 	// Controllers
 	BotController          *controllers.BotController
@@ -117,6 +118,7 @@ func (c *Container) initServices() {
 func (c *Container) initUseCases() {
 	c.UserUseCase = usecases.NewUserUseCase(c.UserRepo, c.UserSelectionRepo)
 	c.ReminderUseCase = usecases.NewReminderUseCase(c.ReminderRepo, c.UserRepo)
+	c.PremiumUsageUseCase = usecases.NewPremiumUsageUseCase(c.PremiumUsageRepo)
 }
 
 // noOpNLPService is a no-op implementation when OpenAI is not configured
@@ -133,7 +135,7 @@ func (c *Container) initControllers(bot *tgbotapi.BotAPI) {
 	c.PremiumUsageController = controllers.NewPremiumUsageController(c.PremiumUsageRepo, c.UserRepo)
 	if bot != nil {
 		c.DateUseCase = usecases.NewDateUseCase(c.UserUseCase, bot)
-		c.BotUseCase = usecases.NewBotUseCase(c.UserUseCase, c.ReminderUseCase, c.DateUseCase, c.Config, bot, c.NLPService)
+		c.BotUseCase = usecases.NewBotUseCase(c.UserUseCase, c.ReminderUseCase, c.DateUseCase, c.Config, bot, c.PremiumUsageUseCase, c.NLPService)
 		c.BotController = controllers.NewBotController(c.BotUseCase, c.UserUseCase, c.DateUseCase, bot)
 		c.TimezoneController = controllers.NewTimezoneController(c.UserUseCase, bot, c.Config)
 	}

@@ -79,6 +79,7 @@ type Strings struct {
 	AccNoTimezone     string
 	AccChangeLanguage string
 	AccChangeTimezone string
+	AccViewPremium    string
 	// Timezone selection i18n
 	TzManualSelect string
 	TzSelectPrompt string
@@ -95,6 +96,22 @@ type Strings struct {
 	NlpUsageRemaining   string
 	NlpUsageUnlimited   string
 	NlpUpgradePremium   string
+	// Premium usage display strings
+	PremiumTitle       string
+	PremiumStatus      string
+	PremiumUsed        string
+	PremiumLimit       string
+	PremiumRemaining   string
+	PremiumFreeStatus  string
+	PremiumBasicStatus string
+	PremiumProStatus   string
+	PremiumDaysLeft    string
+	PremiumExpired     string
+	PremiumResetsNext  string
+	PremiumUnlimited   string
+	PremiumLoadError   string
+	// Language selection
+	LanguageSelectPrompt string
 }
 
 var stringsByLang = map[string]Strings{
@@ -184,21 +201,38 @@ var stringsByLang = map[string]Strings{
 		NlpRateLimitFree:    "⚠️ You've reached your monthly limit of %d AI text reminders.\n\n🌟 Upgrade to Premium for %d requests per month!\n\n⏰ Free limit resets in %d days.",
 		NlpRateLimitBasic:   "⚠️ You've reached your monthly limit of %d AI text reminders.\n\n✨ Upgrade to Pro for unlimited requests!\n\n⏰ Limit resets in %d days.",
 		NlpRateLimitGeneral: "⚠️ AI text reminder limit reached. Please try again later.",
-		NlpUsageTitle:       "🤖 AI Text Reminders",
+		NlpUsageTitle:       "💎 AI Text Reminders",
 		NlpUsageRemaining:   "📊 Usage: %d/%d requests this month",
 		NlpUsageUnlimited:   "📊 Usage: %d requests (Unlimited)",
 		NlpUpgradePremium:   "🌟 Upgrade to Premium",
-		AccTitle:            "👤 Account Information",
-		AccUsername:         "Username",
-		AccLanguage:         "Language",
-		AccTimezone:         "Timezone",
-		AccCreatedAt:        "Created",
-		AccNoUsername:       "Not set",
-		AccNoTimezone:       "Not set",
-		AccChangeLanguage:   "🌐 Change Language",
-		AccChangeTimezone:   "🌍 Change Timezone",
-		TzManualSelect:      "📍 Select Manually",
-		TzSelectPrompt:      "Select your timezone:",
+		// Premium usage display strings
+		PremiumTitle:       "💎 Premium Usage",
+		PremiumStatus:      "Status",
+		PremiumUsed:        "Used",
+		PremiumLimit:       "Limit",
+		PremiumRemaining:   "Remaining",
+		PremiumFreeStatus:  "Free",
+		PremiumBasicStatus: "Basic Premium",
+		PremiumProStatus:   "Pro Premium",
+		PremiumDaysLeft:    "Days until expiration: %d",
+		PremiumExpired:     "Subscription expired",
+		PremiumResetsNext:  "Resets next month",
+		PremiumUnlimited:   "Unlimited",
+		PremiumLoadError:   "⚠️ Unable to load usage data",
+		// Language selection
+		LanguageSelectPrompt: "Select language / Оберіть мову:",
+		AccTitle:             "👤 Account Information",
+		AccUsername:          "Username",
+		AccLanguage:          "Language",
+		AccTimezone:          "Timezone",
+		AccCreatedAt:         "Created",
+		AccNoUsername:        "Not set",
+		AccNoTimezone:        "Not set",
+		AccChangeLanguage:    "🌐 Change Language",
+		AccChangeTimezone:    "🌍 Change Timezone",
+		AccViewPremium:       "💎 Premium Usage",
+		TzManualSelect:       "📍 Select Manually",
+		TzSelectPrompt:       "Select your timezone:",
 	},
 	LangUK: {
 		Welcome: "Ласкаво просимо до бота-нагадувача!",
@@ -290,17 +324,34 @@ var stringsByLang = map[string]Strings{
 		NlpUsageRemaining:   "📊 Використання: %d/%d запитів цього місяця",
 		NlpUsageUnlimited:   "📊 Використання: %d запитів (Необмежено)",
 		NlpUpgradePremium:   "🌟 Оновити до Преміум",
-		AccTitle:            "👤 Інформація про рахунок",
-		AccUsername:         "Ім'я користувача",
-		AccLanguage:         "Мова",
-		AccTimezone:         "Часовий пояс",
-		AccCreatedAt:        "Створено",
-		AccNoUsername:       "Не встановлено",
-		AccNoTimezone:       "Не встановлено",
-		AccChangeLanguage:   "🌐 Змінити мову",
-		AccChangeTimezone:   "🌍 Змінити часовий пояс",
-		TzManualSelect:      "📍 Обрати вручну",
-		TzSelectPrompt:      "Оберіть свій часовий пояс:",
+		// Premium usage display strings
+		PremiumTitle:       "💎 Преміум Статус",
+		PremiumStatus:      "Статус",
+		PremiumUsed:        "Використано",
+		PremiumLimit:       "Ліміт",
+		PremiumRemaining:   "Залишилось",
+		PremiumFreeStatus:  "Безкоштовний",
+		PremiumBasicStatus: "Базовий Преміум",
+		PremiumProStatus:   "Про Преміум",
+		PremiumDaysLeft:    "Дні до закінчення: %d",
+		PremiumExpired:     "Підписка закінчилася",
+		PremiumResetsNext:  "Скинути в новому місяці",
+		PremiumUnlimited:   "Необмежено",
+		PremiumLoadError:   "⚠️ Не вдалося завантажити дані про використання",
+		// Language selection
+		LanguageSelectPrompt: "Select language / Оберіть мову:",
+		AccTitle:             "👤 Інформація про рахунок",
+		AccUsername:          "Ім'я користувача",
+		AccLanguage:          "Мова",
+		AccTimezone:          "Часовий пояс",
+		AccCreatedAt:         "Створено",
+		AccNoUsername:        "Не встановлено",
+		AccNoTimezone:        "Не встановлено",
+		AccChangeLanguage:    "🌐 Змінити мову",
+		AccChangeTimezone:    "🌍 Змінити часовий пояс",
+		AccViewPremium:       "💎 Преміум статус",
+		TzManualSelect:       "📍 Обрати вручну",
+		TzSelectPrompt:       "Оберіть свій часовий пояс:",
 	},
 }
 
