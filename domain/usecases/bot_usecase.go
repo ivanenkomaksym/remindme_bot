@@ -116,6 +116,11 @@ func (b *botUseCase) HandleCallbackQuery(user *tgbotapi.User, message *tgbotapi.
 		return b.handleAccountSelection(user, callbackData, userEntity)
 	}
 
+	// Handle premium management callbacks
+	if keyboards.IsPremiumCallback(callbackData) {
+		return b.handlePremiumSelection(user, callbackData, userEntity)
+	}
+
 	// Handle timezone selection callbacks
 	if keyboards.IsTimezoneCallback(callbackData) {
 		return b.handleTimezoneSelection(user, callbackData, userEntity)
@@ -319,6 +324,18 @@ func (b *botUseCase) handleAccountSelection(user *tgbotapi.User, callbackData st
 	}
 
 	return keyboards.HandleAccountSelection(user, callbackData, userEntity, url, userUsage)
+}
+
+func (b *botUseCase) handlePremiumSelection(user *tgbotapi.User, callbackData string, userEntity *entities.User) (*keyboards.SelectionResult, error) {
+	// Get user's premium usage for the premium selection
+	userUsage, err := b.premiumUsageUseCase.GetOrCreateUserUsage(user.ID)
+	if err != nil {
+		log.Printf("Failed to get premium usage for user %d: %v", user.ID, err)
+		// Continue with nil usage - the UI will handle it gracefully
+		userUsage = nil
+	}
+
+	return keyboards.HandlePremiumSelection(user, callbackData, userEntity, userUsage)
 }
 
 func (b *botUseCase) handleTimezoneSelection(user *tgbotapi.User, callbackData string, userEntity *entities.User) (*keyboards.SelectionResult, error) {

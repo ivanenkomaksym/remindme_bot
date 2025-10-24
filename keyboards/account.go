@@ -18,18 +18,8 @@ func HandleAccountSelection(user *tgbotapi.User, callbackData string, userEntity
 		// Show timezone setup
 		return HandleTimezoneSelection(userEntity, timezoneURL)
 	case CallbackAccountViewPremium:
-		// Show premium usage information
-		s := T(userEntity.Language)
-		var text string
-		if userUsage != nil {
-			text = FormatPremiumUsageInfo(userUsage, userEntity.Language)
-		} else {
-			text = s.PremiumTitle + "\n\n" + s.PremiumLoadError
-		}
-		return &SelectionResult{
-			Text:   text,
-			Markup: GetAccountMenuMarkup(userEntity.Language),
-		}, nil
+		// Delegate to premium selection handler
+		return HandlePremiumSelection(user, callbackData, userEntity, userUsage)
 	case CallbackBackToMainMenu:
 		// Return to main navigation menu
 		s := T(userEntity.Language)

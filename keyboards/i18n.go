@@ -97,19 +97,21 @@ type Strings struct {
 	NlpUsageUnlimited   string
 	NlpUpgradePremium   string
 	// Premium usage display strings
-	PremiumTitle       string
-	PremiumStatus      string
-	PremiumUsed        string
-	PremiumLimit       string
-	PremiumRemaining   string
-	PremiumFreeStatus  string
-	PremiumBasicStatus string
-	PremiumProStatus   string
-	PremiumDaysLeft    string
-	PremiumExpired     string
-	PremiumResetsNext  string
-	PremiumUnlimited   string
-	PremiumLoadError   string
+	PremiumTitle             string
+	PremiumStatus            string
+	PremiumUsed              string
+	PremiumLimit             string
+	PremiumRemaining         string
+	PremiumFreeStatus        string
+	PremiumBasicStatus       string
+	PremiumProStatus         string
+	PremiumDaysLeft          string
+	PremiumExpired           string
+	PremiumResetsNext        string
+	PremiumUnlimited         string
+	PremiumLoadError         string
+	PremiumUpgradeBtn        string
+	PremiumUpgradeComingSoon string
 	// Language selection
 	LanguageSelectPrompt string
 }
@@ -206,19 +208,21 @@ var stringsByLang = map[string]Strings{
 		NlpUsageUnlimited:   "📊 Usage: %d requests (Unlimited)",
 		NlpUpgradePremium:   "🌟 Upgrade to Premium",
 		// Premium usage display strings
-		PremiumTitle:       "💎 Premium Usage",
-		PremiumStatus:      "Status",
-		PremiumUsed:        "Used",
-		PremiumLimit:       "Limit",
-		PremiumRemaining:   "Remaining",
-		PremiumFreeStatus:  "Free",
-		PremiumBasicStatus: "Basic Premium",
-		PremiumProStatus:   "Pro Premium",
-		PremiumDaysLeft:    "Days until expiration: %d",
-		PremiumExpired:     "Subscription expired",
-		PremiumResetsNext:  "Resets next month",
-		PremiumUnlimited:   "Unlimited",
-		PremiumLoadError:   "⚠️ Unable to load usage data",
+		PremiumTitle:             "💎 Premium Usage",
+		PremiumStatus:            "Status",
+		PremiumUsed:              "Used",
+		PremiumLimit:             "Limit",
+		PremiumRemaining:         "Remaining",
+		PremiumFreeStatus:        "Free",
+		PremiumBasicStatus:       "Basic Premium",
+		PremiumProStatus:         "Pro Premium",
+		PremiumDaysLeft:          "Days until expiration: %d",
+		PremiumExpired:           "Subscription expired",
+		PremiumResetsNext:        "Resets next month",
+		PremiumUnlimited:         "Unlimited",
+		PremiumLoadError:         "⚠️ Unable to load usage data",
+		PremiumUpgradeBtn:        "⬆️ Upgrade Premium",
+		PremiumUpgradeComingSoon: "🚀 Premium upgrades coming soon!\n\nWe're working hard to bring you premium features. Stay tuned for updates!",
 		// Language selection
 		LanguageSelectPrompt: "Select language / Оберіть мову:",
 		AccTitle:             "👤 Account Information",
@@ -325,19 +329,21 @@ var stringsByLang = map[string]Strings{
 		NlpUsageUnlimited:   "📊 Використання: %d запитів (Необмежено)",
 		NlpUpgradePremium:   "🌟 Оновити до Преміум",
 		// Premium usage display strings
-		PremiumTitle:       "💎 Преміум Статус",
-		PremiumStatus:      "Статус",
-		PremiumUsed:        "Використано",
-		PremiumLimit:       "Ліміт",
-		PremiumRemaining:   "Залишилось",
-		PremiumFreeStatus:  "Безкоштовний",
-		PremiumBasicStatus: "Базовий Преміум",
-		PremiumProStatus:   "Про Преміум",
-		PremiumDaysLeft:    "Дні до закінчення: %d",
-		PremiumExpired:     "Підписка закінчилася",
-		PremiumResetsNext:  "Скинути в новому місяці",
-		PremiumUnlimited:   "Необмежено",
-		PremiumLoadError:   "⚠️ Не вдалося завантажити дані про використання",
+		PremiumTitle:             "💎 Преміум Статус",
+		PremiumStatus:            "Статус",
+		PremiumUsed:              "Використано",
+		PremiumLimit:             "Ліміт",
+		PremiumRemaining:         "Залишилось",
+		PremiumFreeStatus:        "Безкоштовний",
+		PremiumBasicStatus:       "Базовий Преміум",
+		PremiumProStatus:         "Про Преміум",
+		PremiumDaysLeft:          "Дні до закінчення: %d",
+		PremiumExpired:           "Підписка закінчилася",
+		PremiumResetsNext:        "Скинути в новому місяці",
+		PremiumUnlimited:         "Необмежено",
+		PremiumLoadError:         "⚠️ Не вдалося завантажити дані про використання",
+		PremiumUpgradeBtn:        "⬆️ Оновити Преміум",
+		PremiumUpgradeComingSoon: "🚀 Оновлення преміум скоро!\n\nМи наполегливо працюємо над тим, щоб надати вам преміум функції. Слідкуйте за оновленнями!",
 		// Language selection
 		LanguageSelectPrompt: "Select language / Оберіть мову:",
 		AccTitle:             "👤 Інформація про рахунок",
