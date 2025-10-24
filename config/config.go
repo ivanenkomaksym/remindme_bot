@@ -65,6 +65,7 @@ type OpenAIConfig struct {
 	Enabled bool
 	APIKey  string
 	Model   string
+	UseMock bool
 }
 
 // LoadConfig loads configuration from environment variables and config files
@@ -140,6 +141,7 @@ func (c *Config) setDefaults() {
 		Enabled: false,
 		APIKey:  "",
 		Model:   "gpt-4o-mini",
+		UseMock: false,
 	}
 }
 
@@ -270,6 +272,7 @@ func (c *Config) loadOpenAIConfig() {
 	if model := viper.GetString("OPENAI_MODEL"); model != "" {
 		c.OpenAI.Model = model
 	}
+	c.OpenAI.UseMock = viper.GetBool("OPENAI_USE_MOCK")
 }
 
 // validate validates the configuration

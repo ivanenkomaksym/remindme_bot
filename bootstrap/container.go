@@ -12,6 +12,7 @@ import (
 	"github.com/ivanenkomaksym/remindme_bot/domain/usecases"
 	"github.com/ivanenkomaksym/remindme_bot/repositories/inmemory"
 	"github.com/ivanenkomaksym/remindme_bot/repositories/persistent"
+	"github.com/sashabaranov/go-openai"
 
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 )
@@ -107,11 +108,21 @@ func (c *Container) initServices() {
 		return
 	}
 
-	var err error
-	c.NLPService, err = services.NewNLPService(&c.Config, c.PremiumUsageUseCase)
-	if err != nil {
-		log.Printf("Warning: NLP service initialization failed: %v", err)
+	// Create OpenAI client based on configuration
+	var client services.OpenAIClientInterface
+	if c.Config.OpenAI.UseMock {
+		log.Printf("Using mock OpenAI client for testing")
+		client = services.NewMockOpenAIClient()
+	} else {
+		if c.Config.OpenAI.APIKey == "" {
+			log.Printf("Warning: OpenAI API key not provided, using no-op service")
+			return
+		}
+		client = openai.NewClient(c.Config.OpenAI.APIKey)
 	}
+
+	// Create NLP service with the appropriate client
+	c.NLPService = services.NewNLPService(client, &c.Config, c.PremiumUsageUseCase)
 }
 
 // initUseCases initializes all use cases

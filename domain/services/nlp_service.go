@@ -37,7 +37,7 @@ type NLPService interface {
 }
 
 type nlpService struct {
-	client         *openai.Client
+	client         OpenAIClientInterface
 	config         *config.Config
 	premiumUsageUC PremiumUsageService
 }
@@ -62,17 +62,12 @@ type ReminderRequest struct {
 }
 
 // NewNLPService creates a new NLP service
-func NewNLPService(config *config.Config, premiumUsageUC PremiumUsageService) (NLPService, error) {
-	if config.OpenAI.APIKey == "" {
-		return nil, fmt.Errorf("OpenAI API key is required")
-	}
-
-	client := openai.NewClient(config.OpenAI.APIKey)
+func NewNLPService(client OpenAIClientInterface, config *config.Config, premiumUsageUC PremiumUsageService) NLPService {
 	return &nlpService{
 		client:         client,
 		config:         config,
 		premiumUsageUC: premiumUsageUC,
-	}, nil
+	}
 }
 
 // ParseReminderText uses OpenAI to parse natural language text into a UserSelection

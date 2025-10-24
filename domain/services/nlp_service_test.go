@@ -42,32 +42,16 @@ func (m *MockNLPService) ParseReminderText(userID int64, text string, userTimezo
 }
 
 func TestNLPService_Creation(t *testing.T) {
-	t.Run("fails without API key", func(t *testing.T) {
+	t.Run("succeeds with mock client", func(t *testing.T) {
 		config := &config.Config{
 			OpenAI: config.OpenAIConfig{
-				APIKey: "",
-				Model:  "gpt-4o-mini",
+				Model: "gpt-4o-mini",
 			},
 		}
 
-		_, err := NewNLPService(config, nil)
-		if err == nil {
-			t.Error("Expected error when creating NLP service without API key")
-		}
-	})
+		mockClient := NewMockOpenAIClient()
+		service := NewNLPService(mockClient, config, nil)
 
-	t.Run("succeeds with API key", func(t *testing.T) {
-		config := &config.Config{
-			OpenAI: config.OpenAIConfig{
-				APIKey: "test-key",
-				Model:  "gpt-4o-mini",
-			},
-		}
-
-		service, err := NewNLPService(config, nil)
-		if err != nil {
-			t.Errorf("Expected no error, got: %v", err)
-		}
 		if service == nil {
 			t.Error("Expected service to be created")
 		}
