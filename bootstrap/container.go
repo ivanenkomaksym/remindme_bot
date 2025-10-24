@@ -51,11 +51,11 @@ func NewContainer(app *Application) *Container {
 	// Initialize repositories
 	container.initRepositories(app.Env)
 
-	// Initialize services
-	container.initServices()
-
 	// Initialize use cases
 	container.initUseCases()
+
+	// Initialize services
+	container.initServices()
 
 	// Initialize controllers
 	container.initControllers(app.Bot)
@@ -108,7 +108,7 @@ func (c *Container) initServices() {
 	}
 
 	var err error
-	c.NLPService, err = services.NewNLPService(&c.Config, c.PremiumUsageRepo)
+	c.NLPService, err = services.NewNLPService(&c.Config, c.PremiumUsageUseCase)
 	if err != nil {
 		log.Printf("Warning: NLP service initialization failed: %v", err)
 	}

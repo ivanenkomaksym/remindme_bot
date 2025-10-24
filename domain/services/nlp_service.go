@@ -10,7 +10,6 @@ import (
 
 	"github.com/ivanenkomaksym/remindme_bot/config"
 	"github.com/ivanenkomaksym/remindme_bot/domain/entities"
-	"github.com/ivanenkomaksym/remindme_bot/domain/repositories"
 	"github.com/sashabaranov/go-openai"
 )
 
@@ -38,9 +37,15 @@ type NLPService interface {
 }
 
 type nlpService struct {
-	client    *openai.Client
-	config    *config.Config
-	usageRepo repositories.PremiumUsageRepository
+	client         *openai.Client
+	config         *config.Config
+	premiumUsageUC PremiumUsageService
+}
+
+// PremiumUsageService defines the interface that NLP service needs for premium usage
+type PremiumUsageService interface {
+	ValidateCanMakeRequest(userID int64) error
+	ConsumeRequest(userID int64) error
 }
 
 // ReminderRequest represents the structure we want OpenAI to return
@@ -57,24 +62,28 @@ type ReminderRequest struct {
 }
 
 // NewNLPService creates a new NLP service
-func NewNLPService(config *config.Config, usageRepo repositories.PremiumUsageRepository) (NLPService, error) {
+func NewNLPService(config *config.Config, premiumUsageUC PremiumUsageService) (NLPService, error) {
 	if config.OpenAI.APIKey == "" {
 		return nil, fmt.Errorf("OpenAI API key is required")
 	}
 
 	client := openai.NewClient(config.OpenAI.APIKey)
 	return &nlpService{
-		client:    client,
-		config:    config,
-		usageRepo: usageRepo,
+		client:         client,
+		config:         config,
+		premiumUsageUC: premiumUsageUC,
 	}, nil
 }
 
 // ParseReminderText uses OpenAI to parse natural language text into a UserSelection
 func (s *nlpService) ParseReminderText(userID int64, text string, userTimezone string, userLanguage string) (*entities.UserSelection, error) {
-	premiumUsageResult := s.validatePremiumUsage(userID)
-	if premiumUsageResult != nil {
-		return nil, premiumUsageResult
+	// Validate user can make request
+	if err := s.premiumUsageUC.ValidateCanMakeRequest(userID); err != nil {
+		return nil, &NLPError{
+			Type:    NLPErrorRateLimit,
+			Message: err.Error(),
+			Code:    "MONTHLY_LIMIT_EXCEEDED",
+		}
 	}
 
 	prompt := s.buildPrompt(text, userTimezone, userLanguage)
@@ -129,62 +138,19 @@ func (s *nlpService) ParseReminderText(userID int64, text string, userTimezone s
 		return nil, fmt.Errorf("incomplete or invalid request: %s", reminderReq.ErrorMessage)
 	}
 
-	return s.convertToUserSelection(&reminderReq, userTimezone)
-}
-
-func (s *nlpService) validatePremiumUsage(userID int64) error {
-	// Get or create user usage record
-	usage, err := s.usageRepo.GetOrCreateUserUsage(userID)
+	// Convert to user selection
+	userSelection, err := s.convertToUserSelection(&reminderReq, userTimezone)
 	if err != nil {
-		log.Printf("Failed to get NLP usage for user %d: %v", userID, err)
-		return &NLPError{
-			Type:    NLPErrorInternal,
-			Message: "Failed to check usage limits",
-			Code:    "USAGE_CHECK_FAILED",
-		}
+		return nil, err
 	}
 
-	// Check if user can make a request
-	if usage.CanMakeRequest() {
-		return nil
+	// Consume the request from user's quota after successful processing
+	if err := s.premiumUsageUC.ConsumeRequest(userID); err != nil {
+		log.Printf("Failed to consume request for user %d: %v", userID, err)
+		// Don't fail the request if we can't update usage - this is better UX
 	}
 
-	log.Printf("User %d exceeded NLP rate limit: %d/%d requests used", userID, usage.RequestsUsed, usage.RequestsLimit)
-
-	remainingDays := s.getDaysUntilReset(usage)
-	var errorMsg string
-
-	switch usage.PremiumStatus {
-	case entities.PremiumStatusFree:
-		errorMsg = fmt.Sprintf("You've reached your monthly limit of %d AI text reminders. Upgrade to Premium for more requests or try again in %d days.",
-			usage.RequestsLimit, remainingDays)
-	case entities.PremiumStatusBasic:
-		errorMsg = fmt.Sprintf("You've reached your monthly limit of %d AI text reminders. Upgrade to Pro for unlimited requests or try again in %d days.",
-			usage.RequestsLimit, remainingDays)
-	default:
-		errorMsg = "Rate limit exceeded. Please try again later."
-	}
-
-	return &NLPError{
-		Type:    NLPErrorRateLimit,
-		Message: errorMsg,
-		Code:    "MONTHLY_LIMIT_EXCEEDED",
-	}
-}
-
-// getDaysUntilReset calculates days until the monthly reset
-func (s *nlpService) getDaysUntilReset(usage *entities.PremiumUsage) int {
-	now := usage.LastReset
-	nextMonth := now.AddDate(0, 1, 0)
-
-	// Get the first day of next month
-	firstOfNextMonth := nextMonth.AddDate(0, 0, -nextMonth.Day()+1)
-
-	days := int(firstOfNextMonth.Sub(now).Hours() / 24)
-	if days < 1 {
-		days = 1
-	}
-	return days
+	return userSelection, nil
 }
 
 // getSystemPrompt returns the system prompt for OpenAI
