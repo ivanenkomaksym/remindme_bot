@@ -31,6 +31,8 @@ services:
       - PORT=8080
       - STORAGE=mongo
       - DB_CONNECTION_STRING=mongodb://root:password@mongo:27017
+      - OPENAI_ENABLED=true
+      - OPENAI_USE_MOCK=true
     ports:
       - "8080:8080"
     networks:

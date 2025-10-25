@@ -231,7 +231,7 @@ func TestPremiumUsageController_UpgradeUserPremium(t *testing.T) {
 		}
 		body, _ := json.Marshal(requestBody)
 
-		req := httptest.NewRequest(http.MethodPut, "/api/premium/123/upgrade", bytes.NewReader(body))
+		req := httptest.NewRequest(http.MethodPost, "/api/premium/123/upgrade", bytes.NewReader(body))
 		req.SetPathValue("user_id", "123")
 		w := httptest.NewRecorder()
 
@@ -254,7 +254,7 @@ func TestPremiumUsageController_UpgradeUserPremium(t *testing.T) {
 		}
 		body, _ := json.Marshal(requestBody)
 
-		req := httptest.NewRequest(http.MethodPut, "/api/premium/123/upgrade", bytes.NewReader(body))
+		req := httptest.NewRequest(http.MethodPost, "/api/premium/123/upgrade", bytes.NewReader(body))
 		req.SetPathValue("user_id", "123")
 		w := httptest.NewRecorder()
 

@@ -139,9 +139,9 @@ func (c *PremiumUsageController) GetAllPremiumUsage(w http.ResponseWriter, r *ht
 	response.WriteSuccess(w, "Premium usage list retrieved successfully", responses)
 }
 
-// UpgradeUserPremium handles PUT /api/premium/{user_id}/upgrade
+// UpgradeUserPremium handles POST /api/premium/{user_id}/upgrade
 func (c *PremiumUsageController) UpgradeUserPremium(w http.ResponseWriter, r *http.Request) {
-	if r.Method != http.MethodPut {
+	if r.Method != http.MethodPost {
 		response.WriteError(w, http.StatusMethodNotAllowed, "Method not allowed", nil)
 		return
 	}

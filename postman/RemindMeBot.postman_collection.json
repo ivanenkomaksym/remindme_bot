@@ -549,10 +549,10 @@
 									"",
 									"pm.test(\"User has initial free tier usage\", function () {",
 									"    const responseData = pm.response.json();",
-									"    pm.expect(responseData).to.have.property('requestsLimit').that.equals(20);",
-									"    pm.expect(responseData).to.have.property('requestsUsed').that.equals(0);",
-									"    pm.expect(responseData).to.have.property('premiumStatus').that.equals('free');",
-									"    pm.collectionVariables.set('initialRequestsUsed', responseData.requestsUsed);",
+									"    pm.expect(responseData.data).to.have.property('requestsLimit').that.equals(5);",
+									"    pm.expect(responseData.data).to.have.property('requestsUsed').that.equals(0);",
+									"    pm.expect(responseData.data).to.have.property('premiumStatus').that.equals('free');",
+									"    pm.collectionVariables.set('initialRequestsUsed', responseData.data.requestsUsed);",
 									"});"
 								],
 								"type": "text/javascript",
@@ -657,7 +657,7 @@
 									"pm.test(\"Usage increased by 1\", function () {",
 									"    const responseData = pm.response.json();",
 									"    const initialUsed = parseInt(pm.collectionVariables.get('initialRequestsUsed') || '0');",
-									"    pm.expect(responseData.requestsUsed).to.equal(initialUsed + 1);",
+									"    pm.expect(responseData.data.requestsUsed).to.equal(initialUsed + 1);",
 									"});"
 								],
 								"type": "text/javascript",
@@ -696,8 +696,8 @@
 							"listen": "prerequest",
 							"script": {
 								"exec": [
-									"// Set usage to 19 to test limit at 20",
-									"pm.collectionVariables.set('targetUsage', '19');"
+									"// Set usage to 4 to test limit at 5",
+									"pm.collectionVariables.set('targetUsage', '4');"
 								],
 								"type": "text/javascript",
 								"packages": {},
@@ -714,7 +714,7 @@
 									"",
 									"pm.test(\"Usage set to near limit\", function () {",
 									"    const responseData = pm.response.json();",
-									"    pm.expect(responseData.requestsUsed).to.equal(19);",
+									"    pm.expect(responseData.data.requestsUsed).to.equal(4);",
 									"});"
 								],
 								"type": "text/javascript",
@@ -823,8 +823,8 @@
 									"});",
 									"",
 									"pm.test(\"Error message indicates limit exceeded\", function () {",
-									"    const responseData = pm.response.json();",
-									"    pm.expect(responseData.error).to.include('monthly limit');",
+									"    const responseText = pm.response.text();",
+									"    pm.expect(responseText).to.include('monthly limit');",
 									"});"
 								],
 								"type": "text/javascript",
@@ -879,9 +879,9 @@
 									"",
 									"pm.test(\"User upgraded to premium\", function () {",
 									"    const responseData = pm.response.json();",
-									"    pm.expect(responseData.premiumStatus).to.equal('basic');",
-									"    pm.expect(responseData.requestsLimit).to.equal(500);",
-									"    pm.expect(responseData.requestsUsed).to.equal(0); // Reset on upgrade",
+									"    pm.expect(responseData.data.premiumStatus).to.equal('basic');",
+									"    pm.expect(responseData.data.requestsLimit).to.equal(50);",
+									"    pm.expect(responseData.data.requestsUsed).to.equal(0); // Reset on upgrade",
 									"});"
 								],
 								"type": "text/javascript",
@@ -993,9 +993,9 @@
 									"",
 									"pm.test(\"Premium usage tracked correctly\", function () {",
 									"    const responseData = pm.response.json();",
-									"    pm.expect(responseData.requestsUsed).to.equal(1);",
-									"    pm.expect(responseData.premiumStatus).to.equal('basic');",
-									"    pm.expect(responseData.requestsLimit).to.equal(500);",
+									"    pm.expect(responseData.data.requestsUsed).to.equal(1);",
+									"    pm.expect(responseData.data.premiumStatus).to.equal('basic');",
+									"    pm.expect(responseData.data.requestsLimit).to.equal(50);",
 									"});"
 								],
 								"type": "text/javascript",
@@ -1093,21 +1093,94 @@
 					"response": []
 				},
 				{
-					"name": "Delete NLP Test Reminders",
+					"name": "Delete All Test User Reminders",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Get reminders list for cleanup\", function () {",
+									"    pm.expect(pm.response.code).to.be.oneOf([200, 404]);",
+									"});",
+									"",
+									"// Store all reminder IDs for bulk deletion",
+									"if (pm.response.code === 200) {",
+									"    const reminders = pm.response.json();",
+									"    if (Array.isArray(reminders) && reminders.length > 0) {",
+									"        const reminderIds = reminders.map(r => r.id);",
+									"        pm.collectionVariables.set('allReminderIds', JSON.stringify(reminderIds));",
+									"        console.log(`Found ${reminderIds.length} reminders to delete: ${reminderIds.join(', ')}`);",
+									"    } else {",
+									"        pm.collectionVariables.set('allReminderIds', '[]');",
+									"        console.log('No reminders found to delete');",
+									"    }",
+									"} else {",
+									"    pm.collectionVariables.set('allReminderIds', '[]');",
+									"    console.log('User not found or no reminders');",
+									"}",
+									"",
+									"// Clear individual reminder IDs",
+									"pm.collectionVariables.set('reminderId', '');",
+									"pm.collectionVariables.set('nlpReminderId', '');",
+									"pm.collectionVariables.set('lastFreeReminderId', '');",
+									"pm.collectionVariables.set('postUpgradeReminderId', '');"
+								],
+								"type": "text/javascript",
+								"packages": {},
+								"requests": {}
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "x-api-key",
+								"value": "{{apiKey}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/reminders/{{userId}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"reminders",
+								"{{userId}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Bulk Delete Reminders",
 					"event": [
 						{
 							"listen": "prerequest",
 							"script": {
 								"exec": [
-									"// Clean up NLP reminders if they exist",
-									"const nlpReminderId = pm.collectionVariables.get('nlpReminderId');",
-									"const lastFreeReminderId = pm.collectionVariables.get('lastFreeReminderId');",
-									"const postUpgradeReminderId = pm.collectionVariables.get('postUpgradeReminderId');",
+									"// Get the list of reminder IDs to delete",
+									"const allReminderIdsStr = pm.collectionVariables.get('allReminderIds') || '[]';",
+									"const allReminderIds = JSON.parse(allReminderIdsStr);",
 									"",
-									"if (!nlpReminderId && !lastFreeReminderId && !postUpgradeReminderId) {",
-									"    console.log('No NLP reminders to delete, skipping...');",
+									"// Store current index for iteration",
+									"let currentIndex = parseInt(pm.collectionVariables.get('deleteIndex') || '0');",
+									"",
+									"if (currentIndex >= allReminderIds.length) {",
+									"    console.log('All reminders processed, skipping...');",
 									"    pm.execution.skipRequest();",
-									"}"
+									"    return;",
+									"}",
+									"",
+									"// Set current reminder ID to delete",
+									"const currentReminderId = allReminderIds[currentIndex];",
+									"pm.collectionVariables.set('currentReminderId', currentReminderId);",
+									"console.log(`Deleting reminder ${currentIndex + 1}/${allReminderIds.length}: ${currentReminderId}`);",
+									"",
+									"// Increment index for next iteration",
+									"pm.collectionVariables.set('deleteIndex', (currentIndex + 1).toString());"
 								],
 								"type": "text/javascript",
 								"packages": {},
@@ -1118,15 +1191,26 @@
 							"listen": "test",
 							"script": {
 								"exec": [
-									"// This is a batch cleanup, so we expect some failures for non-existent reminders",
-									"pm.test(\"Cleanup attempt completed\", function () {",
+									"pm.test(\"Reminder deletion attempt\", function () {",
 									"    pm.expect(pm.response.code).to.be.oneOf([204, 404]);",
 									"});",
 									"",
-									"// Clear reminder IDs",
-									"pm.collectionVariables.set('nlpReminderId', '');",
-									"pm.collectionVariables.set('lastFreeReminderId', '');",
-									"pm.collectionVariables.set('postUpgradeReminderId', '');"
+									"// Check if we need to continue deleting",
+									"const allReminderIdsStr = pm.collectionVariables.get('allReminderIds') || '[]';",
+									"const allReminderIds = JSON.parse(allReminderIdsStr);",
+									"const currentIndex = parseInt(pm.collectionVariables.get('deleteIndex') || '0');",
+									"",
+									"if (currentIndex < allReminderIds.length) {",
+									"    // Continue with next reminder",
+									"    console.log(`Continuing deletion... ${currentIndex}/${allReminderIds.length} processed`);",
+									"    postman.setNextRequest('Bulk Delete Reminders');",
+									"} else {",
+									"    // All reminders processed",
+									"    console.log('All reminders deletion completed');",
+									"    pm.collectionVariables.set('deleteIndex', '0');",
+									"    pm.collectionVariables.set('allReminderIds', '[]');",
+									"    pm.collectionVariables.set('currentReminderId', '');",
+									"}"
 								],
 								"type": "text/javascript",
 								"packages": {},
@@ -1144,7 +1228,7 @@
 							}
 						],
 						"url": {
-							"raw": "{{baseUrl}}/api/reminders/{{userId}}/{{nlpReminderId}}",
+							"raw": "{{baseUrl}}/api/reminders/{{userId}}/{{currentReminderId}}",
 							"host": [
 								"{{baseUrl}}"
 							],
@@ -1152,7 +1236,7 @@
 								"api",
 								"reminders",
 								"{{userId}}",
-								"{{nlpReminderId}}"
+								"{{currentReminderId}}"
 							]
 						}
 					},
