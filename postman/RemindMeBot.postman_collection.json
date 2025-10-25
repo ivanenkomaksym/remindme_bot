@@ -534,6 +534,502 @@
 			]
 		},
 		{
+			"name": "Premium Usage & NLP",
+			"item": [
+				{
+					"name": "Get Initial Premium Usage",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"User has initial free tier usage\", function () {",
+									"    const responseData = pm.response.json();",
+									"    pm.expect(responseData).to.have.property('requestsLimit').that.equals(20);",
+									"    pm.expect(responseData).to.have.property('requestsUsed').that.equals(0);",
+									"    pm.expect(responseData).to.have.property('premiumStatus').that.equals('free');",
+									"    pm.collectionVariables.set('initialRequestsUsed', responseData.requestsUsed);",
+									"});"
+								],
+								"type": "text/javascript",
+								"packages": {},
+								"requests": {}
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "x-api-key",
+								"value": "{{apiKey}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/premium/{{userId}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"premium",
+								"{{userId}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Create NLP Reminder (Success)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"NLP reminder created successfully\", function () {",
+									"    const responseData = pm.response.json();",
+									"    pm.expect(responseData).to.have.property('id');",
+									"    pm.expect(responseData).to.have.property('message');",
+									"    pm.expect(responseData).to.have.property('userId').that.equals(pm.variables.get('userId'));",
+									"    // Store NLP reminder ID for cleanup",
+									"    pm.collectionVariables.set('nlpReminderId', responseData.id.toString());",
+									"});"
+								],
+								"type": "text/javascript",
+								"packages": {},
+								"requests": {}
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "x-api-key",
+								"value": "{{apiKey}}",
+								"type": "text"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\"text\": \"remind me to buy groceries tomorrow at 2pm\"}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/reminders/{{userId}}/from-text",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"reminders",
+								"{{userId}}",
+								"from-text"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Check Usage After NLP Request",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Usage increased by 1\", function () {",
+									"    const responseData = pm.response.json();",
+									"    const initialUsed = parseInt(pm.collectionVariables.get('initialRequestsUsed') || '0');",
+									"    pm.expect(responseData.requestsUsed).to.equal(initialUsed + 1);",
+									"});"
+								],
+								"type": "text/javascript",
+								"packages": {},
+								"requests": {}
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "x-api-key",
+								"value": "{{apiKey}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/premium/{{userId}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"premium",
+								"{{userId}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Exhaust Free Tier Requests",
+					"event": [
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									"// Set usage to 19 to test limit at 20",
+									"pm.collectionVariables.set('targetUsage', '19');"
+								],
+								"type": "text/javascript",
+								"packages": {},
+								"requests": {}
+							}
+						},
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Usage set to near limit\", function () {",
+									"    const responseData = pm.response.json();",
+									"    pm.expect(responseData.requestsUsed).to.equal(19);",
+									"});"
+								],
+								"type": "text/javascript",
+								"packages": {},
+								"requests": {}
+							}
+						}
+					],
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "x-api-key",
+								"value": "{{apiKey}}",
+								"type": "text"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\"requestsUsed\": {{targetUsage}}}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/premium/{{userId}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"premium",
+								"{{userId}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Create NLP Reminder (Should Succeed - Last Free Request)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Last free NLP reminder created\", function () {",
+									"    const responseData = pm.response.json();",
+									"    pm.expect(responseData).to.have.property('id');",
+									"    pm.collectionVariables.set('lastFreeReminderId', responseData.id.toString());",
+									"});"
+								],
+								"type": "text/javascript",
+								"packages": {},
+								"requests": {}
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "x-api-key",
+								"value": "{{apiKey}}",
+								"type": "text"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\"text\": \"remind me to call mom tomorrow at 3pm\"}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/reminders/{{userId}}/from-text",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"reminders",
+								"{{userId}}",
+								"from-text"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Create NLP Reminder (Should Fail - Limit Exceeded)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 400 (Bad Request) - Rate limit exceeded\", function () {",
+									"    pm.response.to.have.status(400);",
+									"});",
+									"",
+									"pm.test(\"Error message indicates limit exceeded\", function () {",
+									"    const responseData = pm.response.json();",
+									"    pm.expect(responseData.error).to.include('monthly limit');",
+									"});"
+								],
+								"type": "text/javascript",
+								"packages": {},
+								"requests": {}
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "x-api-key",
+								"value": "{{apiKey}}",
+								"type": "text"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\"text\": \"remind me to exercise tomorrow at 7am\"}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/reminders/{{userId}}/from-text",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"reminders",
+								"{{userId}}",
+								"from-text"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Upgrade to Premium",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"User upgraded to premium\", function () {",
+									"    const responseData = pm.response.json();",
+									"    pm.expect(responseData.premiumStatus).to.equal('basic');",
+									"    pm.expect(responseData.requestsLimit).to.equal(500);",
+									"    pm.expect(responseData.requestsUsed).to.equal(0); // Reset on upgrade",
+									"});"
+								],
+								"type": "text/javascript",
+								"packages": {},
+								"requests": {}
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "x-api-key",
+								"value": "{{apiKey}}",
+								"type": "text"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\"premiumStatus\": \"basic\"}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/premium/{{userId}}/upgrade",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"premium",
+								"{{userId}}",
+								"upgrade"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Create NLP Reminder After Upgrade (Should Succeed)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"NLP reminder created after upgrade\", function () {",
+									"    const responseData = pm.response.json();",
+									"    pm.expect(responseData).to.have.property('id');",
+									"    pm.expect(responseData).to.have.property('message');",
+									"    pm.collectionVariables.set('postUpgradeReminderId', responseData.id.toString());",
+									"});"
+								],
+								"type": "text/javascript",
+								"packages": {},
+								"requests": {}
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "x-api-key",
+								"value": "{{apiKey}}",
+								"type": "text"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\"text\": \"remind me to exercise tomorrow at 7am\"}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/reminders/{{userId}}/from-text",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"reminders",
+								"{{userId}}",
+								"from-text"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Verify Usage After Premium Request",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Premium usage tracked correctly\", function () {",
+									"    const responseData = pm.response.json();",
+									"    pm.expect(responseData.requestsUsed).to.equal(1);",
+									"    pm.expect(responseData.premiumStatus).to.equal('basic');",
+									"    pm.expect(responseData.requestsLimit).to.equal(500);",
+									"});"
+								],
+								"type": "text/javascript",
+								"packages": {},
+								"requests": {}
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "x-api-key",
+								"value": "{{apiKey}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/premium/{{userId}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"premium",
+								"{{userId}}"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
 			"name": "Cleanup",
 			"item": [
 				{
@@ -591,6 +1087,115 @@
 								"reminders",
 								"{{userId}}",
 								"{{reminderId}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Delete NLP Test Reminders",
+					"event": [
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									"// Clean up NLP reminders if they exist",
+									"const nlpReminderId = pm.collectionVariables.get('nlpReminderId');",
+									"const lastFreeReminderId = pm.collectionVariables.get('lastFreeReminderId');",
+									"const postUpgradeReminderId = pm.collectionVariables.get('postUpgradeReminderId');",
+									"",
+									"if (!nlpReminderId && !lastFreeReminderId && !postUpgradeReminderId) {",
+									"    console.log('No NLP reminders to delete, skipping...');",
+									"    pm.execution.skipRequest();",
+									"}"
+								],
+								"type": "text/javascript",
+								"packages": {},
+								"requests": {}
+							}
+						},
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"// This is a batch cleanup, so we expect some failures for non-existent reminders",
+									"pm.test(\"Cleanup attempt completed\", function () {",
+									"    pm.expect(pm.response.code).to.be.oneOf([204, 404]);",
+									"});",
+									"",
+									"// Clear reminder IDs",
+									"pm.collectionVariables.set('nlpReminderId', '');",
+									"pm.collectionVariables.set('lastFreeReminderId', '');",
+									"pm.collectionVariables.set('postUpgradeReminderId', '');"
+								],
+								"type": "text/javascript",
+								"packages": {},
+								"requests": {}
+							}
+						}
+					],
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "x-api-key",
+								"value": "{{apiKey}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/reminders/{{userId}}/{{nlpReminderId}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"reminders",
+								"{{userId}}",
+								"{{nlpReminderId}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Reset Premium Usage",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Premium usage reset or deleted\", function () {",
+									"    pm.expect(pm.response.code).to.be.oneOf([200, 204, 404]);",
+									"});",
+									"",
+									"// Clear premium-related variables",
+									"pm.collectionVariables.set('initialRequestsUsed', '0');"
+								],
+								"type": "text/javascript",
+								"packages": {},
+								"requests": {}
+							}
+						}
+					],
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "x-api-key",
+								"value": "{{apiKey}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/premium/{{userId}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"premium",
+								"{{userId}}"
 							]
 						}
 					},
@@ -710,6 +1315,22 @@
 			"key": "reminderMessage",
 			"value": "Test reminder message",
 			"type": "default"
+		},
+		{
+			"key": "nlpReminderId",
+			"value": ""
+		},
+		{
+			"key": "lastFreeReminderId",
+			"value": ""
+		},
+		{
+			"key": "postUpgradeReminderId",
+			"value": ""
+		},
+		{
+			"key": "initialRequestsUsed",
+			"value": "0"
 		}
 	]
 }
