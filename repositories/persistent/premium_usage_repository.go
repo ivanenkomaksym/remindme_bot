@@ -27,20 +27,6 @@ func NewMongoPremiumUsageRepository(connectionString string, databaseName string
 
 	collection := client.Database(databaseName).Collection("premium_usage")
 
-	// Create index on UserID for fast lookups
-	indexModel := mongo.IndexModel{
-		Keys:    bson.D{{Key: "userId", Value: 1}},
-		Options: options.Index().SetUnique(true),
-	}
-
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-	defer cancel()
-
-	_, err = collection.Indexes().CreateOne(ctx, indexModel)
-	if err != nil {
-		return nil, fmt.Errorf("failed to create index: %w", err)
-	}
-
 	return &MongoPremiumUsageRepository{
 		collection: collection,
 	}, nil

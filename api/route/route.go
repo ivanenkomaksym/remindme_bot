@@ -51,6 +51,7 @@ func Setup(app *bootstrap.Application) {
 	// API endpoints - Premium Usage
 	mux.HandleFunc("GET /api/premium", app.Container.PremiumUsageController.GetAllPremiumUsage)
 	mux.HandleFunc("GET /api/premium/{user_id}", app.Container.PremiumUsageController.GetUserPremiumUsage)
+	mux.HandleFunc("PUT /api/premium/{user_id}", app.Container.PremiumUsageController.UpdateUserPremiumUsage)
 	mux.HandleFunc("PUT /api/premium/{user_id}/upgrade", app.Container.PremiumUsageController.UpgradeUserPremium)
 	mux.HandleFunc("POST /api/premium/{user_id}/reset", app.Container.PremiumUsageController.ResetUserUsage)
 	mux.HandleFunc("DELETE /api/premium/{user_id}", app.Container.PremiumUsageController.DeleteUserPremiumUsage)

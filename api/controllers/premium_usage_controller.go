@@ -286,6 +286,63 @@ func (c *PremiumUsageController) GetPremiumUsageByStatus(w http.ResponseWriter, 
 	response.WriteSuccess(w, "Premium usage by status retrieved successfully", responses)
 }
 
+// UpdateUserPremiumUsage handles PUT /api/premium/{user_id}
+func (c *PremiumUsageController) UpdateUserPremiumUsage(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPut {
+		response.WriteError(w, http.StatusMethodNotAllowed, "Method not allowed", nil)
+		return
+	}
+
+	userIDStr := r.PathValue("user_id")
+	if userIDStr == "" {
+		response.WriteBadRequest(w, "Missing user_id parameter")
+		return
+	}
+
+	userID, err := strconv.ParseInt(userIDStr, 10, 64)
+	if err != nil {
+		response.WriteBadRequest(w, "Invalid user_id parameter")
+		return
+	}
+
+	// Parse request body
+	var updateRequest struct {
+		RequestsUsed *int `json:"requestsUsed"`
+	}
+
+	if err := json.NewDecoder(r.Body).Decode(&updateRequest); err != nil {
+		response.WriteBadRequest(w, "Invalid JSON body")
+		return
+	}
+
+	// Check if user exists
+	_, err = c.userRepo.GetUser(userID)
+	if err != nil {
+		response.WriteNotFound(w, "User not found")
+		return
+	}
+
+	// Get or create premium usage
+	usage, err := c.premiumUsageRepo.GetOrCreateUserUsage(userID)
+	if err != nil {
+		response.WriteInternalError(w, "Failed to get premium usage", err)
+		return
+	}
+
+	// Update fields if provided
+	if updateRequest.RequestsUsed != nil {
+		usage.RequestsUsed = *updateRequest.RequestsUsed
+	}
+
+	// Update premium usage
+	if err := c.premiumUsageRepo.UpdateUserUsage(usage); err != nil {
+		response.WriteInternalError(w, "Failed to update premium usage", err)
+		return
+	}
+
+	response.WriteSuccess(w, "Premium usage updated successfully", toPremiumUsageResponse(usage))
+}
+
 // DeleteUserPremiumUsage handles DELETE /api/premium/{user_id}
 func (c *PremiumUsageController) DeleteUserPremiumUsage(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodDelete {
