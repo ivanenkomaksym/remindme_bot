@@ -9,6 +9,10 @@ const (
 	PremiumStatusFree  PremiumStatus = "free"
 	PremiumStatusBasic PremiumStatus = "basic"
 	PremiumStatusPro   PremiumStatus = "pro"
+
+	RequestLimitFree  = 5
+	RequestLimitBasic = 50
+	RequestLimitPro   = -1 // Unlimited
 )
 
 // String returns the string representation of PremiumStatus
@@ -47,13 +51,13 @@ func NewPremiumUsage(userID int64) *PremiumUsage {
 func GetDefaultRequestLimit(status PremiumStatus) int {
 	switch status {
 	case PremiumStatusFree:
-		return 20 // 20 free requests per month
+		return RequestLimitFree
 	case PremiumStatusBasic:
-		return 500 // 500 requests per month for basic premium
+		return RequestLimitBasic
 	case PremiumStatusPro:
-		return -1 // Unlimited for pro users
+		return RequestLimitPro
 	default:
-		return 20
+		return RequestLimitFree
 	}
 }
 

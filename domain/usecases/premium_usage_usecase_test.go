@@ -54,8 +54,8 @@ func TestPremiumUsageUseCase_UpgradeUser(t *testing.T) {
 		t.Errorf("Expected basic premium status, got %s", usage.PremiumStatus)
 	}
 
-	if usage.RequestsLimit != 500 {
-		t.Errorf("Expected 500 requests limit, got %d", usage.RequestsLimit)
+	if usage.RequestsLimit != entities.RequestLimitBasic {
+		t.Errorf("Expected %d requests limit, got %d", entities.RequestLimitBasic, usage.RequestsLimit)
 	}
 }
 

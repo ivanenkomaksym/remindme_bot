@@ -17,8 +17,8 @@ func TestNewPremiumUsage(t *testing.T) {
 		t.Errorf("Expected RequestsUsed 0, got %d", usage.RequestsUsed)
 	}
 
-	if usage.RequestsLimit != 20 {
-		t.Errorf("Expected RequestsLimit 20, got %d", usage.RequestsLimit)
+	if usage.RequestsLimit != RequestLimitFree {
+		t.Errorf("Expected RequestsLimit %d, got %d", RequestLimitFree, usage.RequestsLimit)
 	}
 
 	if usage.PremiumStatus != PremiumStatusFree {
@@ -150,8 +150,8 @@ func TestPremiumUsage_SetPremiumStatus(t *testing.T) {
 	if usage.PremiumStatus != PremiumStatusBasic {
 		t.Errorf("Expected PremiumStatus %s, got %s", PremiumStatusBasic, usage.PremiumStatus)
 	}
-	if usage.RequestsLimit != 500 {
-		t.Errorf("Expected RequestsLimit 500, got %d", usage.RequestsLimit)
+	if usage.RequestsLimit != RequestLimitBasic {
+		t.Errorf("Expected RequestsLimit %d, got %d", RequestLimitBasic, usage.RequestsLimit)
 	}
 
 	// Test upgrading to pro
